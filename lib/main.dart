@@ -5,6 +5,7 @@ import 'package:book_app/route/route_pages.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
 void main() async {
@@ -32,6 +33,7 @@ class App extends StatelessWidget {
       fallbackLocale: LangService.fallbackLocale,
       translations: LangService(),
       theme: ThemeConfig.lightTheme,
+      builder: EasyLoading.init(),
     );
   }
 }
