@@ -74,4 +74,15 @@ class ChapterDbProvider extends BaseDbProvider {
       [content, id]
     );
   }
+
+  Future<void> deleteByBookId(bookId) async{
+    Database db = await getDataBase();
+    await db.rawDelete(
+      '''
+      delete from $name
+      where $columnBookId = ?
+      ''',
+      [bookId]
+    );
+  }
 }

@@ -58,7 +58,6 @@ abstract class BaseDbProvider {
     Database db = await getDataBase();
     var batch = db.batch();
     for (var element in list) {
-      Log.i(element.toJson());
       batch.insert(tableName(), element.toJson());
     }
     batch.commit();

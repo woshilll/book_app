@@ -29,7 +29,10 @@ class HomeController extends GetxController {
   }
   deleteBook(index) async {
     Book book = books[index];
+    // 数据库删除
     await _bookDbProvider.commonDelete(book.id);
+    // 删除对应的章节信息
+    await _chapterDbProvider.deleteByBookId(book.id);
     Log.i("删除 --> $book");
     books.removeWhere((element) => element.id == book.id);
     update(['bookList']);
@@ -52,6 +55,7 @@ class HomeController extends GetxController {
         }
         _chapterDbProvider.commonBatchInsert(list);
       }
+      book.id = selected.id;
       selected = book;
       selected.chapters = [];
     }

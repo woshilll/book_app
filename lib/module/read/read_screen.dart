@@ -2,13 +2,16 @@ import 'package:book_app/log/log.dart';
 import 'package:book_app/module/read/component/custom_drawer.dart';
 import 'package:book_app/module/read/read_controller.dart';
 import 'package:book_app/util/no_shadow_scroll_behavior.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
 class ReadScreen extends GetView<ReadController> {
   const ReadScreen({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
+    controller.context = context;
     return Scaffold(
       body: _body(context),
       // floatingActionButton: SizedBox(
@@ -19,10 +22,14 @@ class ReadScreen extends GetView<ReadController> {
       //     style: ButtonStyle(
       //       shape: MaterialStateProperty.all(const CircleBorder()),
       //     ),
-      //     onPressed: () => controller.cal(context),
+      //     onPressed: () {
+      //     },
       //   ),
       // ),
       drawer: _drawer(context),
+      onDrawerChanged: (e) {
+        Log.i(e);
+      },
     );
   }
 
@@ -30,16 +37,46 @@ class ReadScreen extends GetView<ReadController> {
     return Stack(
       children: [
         Positioned(
-          child: ScrollConfiguration(
-            behavior: NoShadowScrollBehavior(),
-            child: SingleChildScrollView(
-              child: Container(
-                margin: EdgeInsets.only(left: 5, top: MediaQuery.of(context).padding.top),
+          child: Container(
+            margin: EdgeInsets.only(left: 5, top: MediaQuery.of(context).padding.top),
+            child: ScrollConfiguration(
+              behavior: NoShadowScrollBehavior(),
+              child: NotificationListener<ScrollNotification>(
+                onNotification: _handleScrollNotification,
                 child: GetBuilder<ReadController>(
                   id: 'content',
                   builder: (controller) {
-                    return Text("${controller.curChapter.content}",
-                      style: const TextStyle(fontSize: 18, height: 1.8),
+                    return ListView.separated(
+                      controller: controller.contentController,
+                      padding: const EdgeInsets.only(top: 0),
+                      shrinkWrap: true,
+                      itemCount: controller.readChapters.length,
+                      itemBuilder: (context, index) {
+                        return Listener(
+                          child: Container(
+                            key: Key("${controller.readChapters[index].id}"),
+                            margin: const EdgeInsets.only(left: 5, right: 5),
+                            child: Text.rich(
+                              TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: "${controller.readChapters[index].name}",
+                                      style: const TextStyle(fontSize: 18, height: 3, fontWeight: FontWeight.bold),
+                                    ),
+                                    const TextSpan(
+                                      text: "\n",
+                                    ),
+                                    TextSpan(
+                                      text: "${controller.readChapters[index].content}",
+                                      style: const TextStyle(fontSize: 18, height: 1.8),
+                                    )
+                                  ]
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                      separatorBuilder: (context, index) => Container(),
                     );
                   },
                 ),
@@ -85,34 +122,40 @@ class ReadScreen extends GetView<ReadController> {
                     ),
                   ),
                   Expanded(
-                    child: ScrollConfiguration(
-                      behavior: NoShadowScrollBehavior(),
-                      child: Scrollbar(
-                        notificationPredicate: _handleScrollNotification,
-                        child: GetBuilder<ReadController>(
-                          id: 'content',
-                          builder: (controller) {
-                            return ListView.separated(
-                              itemBuilder: (context, index) {
-                                return InkWell(
-                                  child: Container(
-                                    margin: const EdgeInsets.only(left: 10, top: 10, bottom: 10),
-                                    child: Text("${controller.chapters[index].name}", style: const TextStyle(fontSize: 16),),
-                                  ),
-                                  onTap: () {
-
-                                  },
-                                );
-                              },
-                              itemCount: controller.chapters.length,
-                              cacheExtent: 200,
-                              separatorBuilder: (context, index) {
-                                return Divider(height: 1.0, color: Colors.grey[300]);
-                              },
-                            );
-                          },
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          child: ScrollConfiguration(
+                            behavior: NoShadowScrollBehavior(),
+                            child: Scrollbar(
+                              notificationPredicate: _handleScrollNotification,
+                              child: GetBuilder<ReadController>(
+                                id: 'content',
+                                builder: (controller) {
+                                  return ListView.separated(
+                                    itemBuilder: (context, index) {
+                                      return InkWell(
+                                        child: Container(
+                                          margin: const EdgeInsets.only(left: 10, top: 10, bottom: 10),
+                                          child: Text("${controller.chapters[index].name}", style: const TextStyle(fontSize: 16),),
+                                        ),
+                                        onTap: () async{
+                                          await controller.jumpTo(index);
+                                        },
+                                      );
+                                    },
+                                    itemCount: controller.chapters.length,
+                                    cacheExtent: 200,
+                                    separatorBuilder: (context, index) {
+                                      return Divider(height: 1.0, color: Colors.grey[300]);
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   )
                 ],
@@ -125,7 +168,6 @@ class ReadScreen extends GetView<ReadController> {
   }
   bool _handleScrollNotification(ScrollNotification notification) {
     final ScrollMetrics metrics = notification.metrics;
-    controller.drawerY.value =  -1 + (metrics.pixels / metrics.maxScrollExtent) * 2;
     return true;
   }
 }
