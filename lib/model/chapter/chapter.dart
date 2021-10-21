@@ -9,8 +9,10 @@ class Chapter extends Base{
   String? name;
   String? content;
   String? url;
+  @JsonKey(ignore: true)
+  double height;
 
-  Chapter({this.id, this.bookId, this.name, this.content, this.url});
+  Chapter({this.id, this.bookId, this.name, this.content, this.url, this.height = 0});
 
   factory Chapter.fromJson(Map<String, dynamic> json) => _$ChapterFromJson(json);
 

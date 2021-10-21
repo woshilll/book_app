@@ -1,11 +1,12 @@
 import 'package:book_app/log/log.dart';
-import 'package:book_app/module/read/component/custom_drawer.dart';
-import 'package:book_app/module/read/read_controller.dart';
+import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/util/no_shadow_scroll_behavior.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
+
+import 'component/custom_drawer.dart';
 
 class ReadScreen extends GetView<ReadController> {
   const ReadScreen({Key? key}) : super(key: key);
@@ -28,7 +29,11 @@ class ReadScreen extends GetView<ReadController> {
       // ),
       drawer: _drawer(context),
       onDrawerChanged: (e) {
-        Log.i(e);
+        if (e) {
+          controller.menuJump();
+        } else {
+          controller.menuJumpFlag = false;
+        }
       },
     );
   }
@@ -43,43 +48,7 @@ class ReadScreen extends GetView<ReadController> {
               behavior: NoShadowScrollBehavior(),
               child: NotificationListener<ScrollNotification>(
                 onNotification: _handleScrollNotification,
-                child: GetBuilder<ReadController>(
-                  id: 'content',
-                  builder: (controller) {
-                    return ListView.separated(
-                      controller: controller.contentController,
-                      padding: const EdgeInsets.only(top: 0),
-                      shrinkWrap: true,
-                      itemCount: controller.readChapters.length,
-                      itemBuilder: (context, index) {
-                        return Listener(
-                          child: Container(
-                            key: Key("${controller.readChapters[index].id}"),
-                            margin: const EdgeInsets.only(left: 5, right: 5),
-                            child: Text.rich(
-                              TextSpan(
-                                  children: [
-                                    TextSpan(
-                                      text: "${controller.readChapters[index].name}",
-                                      style: const TextStyle(fontSize: 18, height: 3, fontWeight: FontWeight.bold),
-                                    ),
-                                    const TextSpan(
-                                      text: "\n",
-                                    ),
-                                    TextSpan(
-                                      text: "${controller.readChapters[index].content}",
-                                      style: const TextStyle(fontSize: 18, height: 1.8),
-                                    )
-                                  ]
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                      separatorBuilder: (context, index) => Container(),
-                    );
-                  },
-                ),
+                child: _content(),
               ),
             ),
           ),
@@ -128,16 +97,18 @@ class ReadScreen extends GetView<ReadController> {
                           child: ScrollConfiguration(
                             behavior: NoShadowScrollBehavior(),
                             child: Scrollbar(
-                              notificationPredicate: _handleScrollNotification,
                               child: GetBuilder<ReadController>(
                                 id: 'content',
                                 builder: (controller) {
                                   return ListView.separated(
+                                    controller: controller.menuController,
                                     itemBuilder: (context, index) {
                                       return InkWell(
                                         child: Container(
-                                          margin: const EdgeInsets.only(left: 10, top: 10, bottom: 10),
-                                          child: Text("${controller.chapters[index].name}", style: const TextStyle(fontSize: 16),),
+                                          height: controller.menuHeight,
+                                          padding: const EdgeInsets.only(left: 10),
+                                          alignment: Alignment.centerLeft,
+                                          child: Text("${controller.chapters[index].name}", style: TextStyle(fontSize: 16, color: controller.chapters[index].id == controller.curChapter.id ? Colors.green : Colors.black),),
                                         ),
                                         onTap: () async{
                                           await controller.jumpTo(index);
@@ -167,7 +138,47 @@ class ReadScreen extends GetView<ReadController> {
     );
   }
   bool _handleScrollNotification(ScrollNotification notification) {
-    final ScrollMetrics metrics = notification.metrics;
-    return true;
+    if (notification is ScrollEndNotification) {
+      controller.calWhenScrollEndCurChapter(notification.metrics.pixels);
+    }
+    return false;
+  }
+  Widget _content() {
+    return GetBuilder<ReadController>(
+      id: 'content',
+      builder: (controller) {
+        return ListView.builder(
+          controller: controller.contentController,
+          padding: const EdgeInsets.only(top: 0),
+          shrinkWrap: true,
+          cacheExtent: 5,
+          itemCount: controller.readChapters.length,
+          itemBuilder: (context, index) {
+            return Listener(
+              child: Container(
+                key: Key("${controller.readChapters[index].id}"),
+                child: Text.rich(
+                  TextSpan(
+                      children: [
+                        TextSpan(
+                          text: "${controller.readChapters[index].name}",
+                          style: const TextStyle(fontSize: 18, height: 3, fontWeight: FontWeight.bold),
+                        ),
+                        const TextSpan(
+                          text: "\n",
+                        ),
+                        TextSpan(
+                          text: "${controller.readChapters[index].content}",
+                          style: const TextStyle(fontSize: 18, height: 1.8),
+                        )
+                      ]
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 }

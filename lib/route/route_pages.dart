@@ -1,7 +1,11 @@
+import 'package:book_app/module/book/home/book_home_binding.dart';
+import 'package:book_app/module/book/home/book_home_screen.dart';
+import 'package:book_app/module/book/read/read_binding.dart';
+import 'package:book_app/module/book/read/read_screen.dart';
+import 'package:book_app/module/book/search/search_binding.dart';
+import 'package:book_app/module/book/search/search_screen.dart';
 import 'package:book_app/module/home/home_binding.dart';
 import 'package:book_app/module/home/home_screen.dart';
-import 'package:book_app/module/read/read_binding.dart';
-import 'package:book_app/module/read/read_screen.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/splash/splash_binding.dart';
 import 'package:book_app/splash/splash_screen.dart';
@@ -21,9 +25,19 @@ class RoutePages {
       binding: HomeBinding()
     ),
     GetPage(
+        name: Routes.bookHome,
+        page: () => const BookHomeScreen(),
+        binding: BookHomeBinding()
+    ),
+    GetPage(
         name: Routes.read,
         page: () => const ReadScreen(),
         binding: ReadBinding()
+    ),
+    GetPage(
+        name: Routes.search,
+        page: () => const SearchScreen(),
+        binding: SearchBinding()
     )
   ];
 }
