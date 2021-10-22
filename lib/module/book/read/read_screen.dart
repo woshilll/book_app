@@ -12,59 +12,63 @@ class ReadScreen extends GetView<ReadController> {
   const ReadScreen({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    controller.context = context;
     return Scaffold(
       body: _body(context),
-      // floatingActionButton: SizedBox(
-      //   width: 60,
-      //   height: 60,
-      //   child: ElevatedButton(
-      //     child: const Text("搜书", style: TextStyle(fontSize: 14)),
-      //     style: ButtonStyle(
-      //       shape: MaterialStateProperty.all(const CircleBorder()),
-      //     ),
-      //     onPressed: () {
-      //     },
-      //   ),
-      // ),
       drawer: _drawer(context),
-      onDrawerChanged: (e) {
-        if (e) {
-          controller.menuJump();
-        } else {
-          controller.menuJumpFlag = false;
-        }
-      },
     );
   }
 
   Widget _body(context) {
+    return GetBuilder<ReadController>(
+      id: "content",
+      builder: (controller) {
+        return PageView.builder(
+          itemCount: controller.pages.length,
+          itemBuilder: (context, index) {
+            return _content(context, index);
+          },
+          onPageChanged: (index) async{
+            if (index + 2 >= controller.pages.length) {
+              await controller.pageChangeListen(index);
+            }
+          },
+        );
+      },
+    );
+  }
+
+  Widget _content(context, index) {
     return Stack(
       children: [
         Positioned(
-          child: Container(
-            margin: EdgeInsets.only(left: 5, top: MediaQuery.of(context).padding.top),
-            child: ScrollConfiguration(
-              behavior: NoShadowScrollBehavior(),
-              child: NotificationListener<ScrollNotification>(
-                onNotification: _handleScrollNotification,
-                child: _content(),
+            top: MediaQuery.of(context).padding.top,
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              padding: EdgeInsets.only(left: (MediaQuery.of(context).size.width % controller.pages[index].wordWith) / 2),
+              child: Text.rich(
+                TextSpan(
+                    text: controller.pages[index].content,
+                    style: controller.pages[index].style),
               ),
+            )),
+        Positioned(
+          bottom: 0,
+          child: Container(
+            margin: const EdgeInsets.only(left: 10),
+            child: Text(
+              "${controller.pages[index].chapterName}",
+              style: const TextStyle(fontSize: 14, color: Colors.black54),
             ),
           ),
         ),
-        // Positioned(
-        //   bottom: 0,
-        //   left: 0,
-        //   right: 0,
-        //   child: Opacity(
-        //     opacity: 0.7,
-        //     child: Container(
-        //       height: 40,
-        //       color: Colors.black,
-        //     ),
-        //   ),
-        // )
+        Positioned(
+          bottom: 0,
+          right: 10,
+          child: Text(
+            "${controller.pages[index].index}/${controller.calThisChapterTotalPage(index)}",
+            style: const TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+        )
       ],
     );
   }
@@ -101,17 +105,15 @@ class ReadScreen extends GetView<ReadController> {
                                 id: 'content',
                                 builder: (controller) {
                                   return ListView.separated(
-                                    controller: controller.menuController,
                                     itemBuilder: (context, index) {
                                       return InkWell(
                                         child: Container(
-                                          height: controller.menuHeight,
+                                          height: 40,
                                           padding: const EdgeInsets.only(left: 10),
                                           alignment: Alignment.centerLeft,
-                                          child: Text("${controller.chapters[index].name}", style: TextStyle(fontSize: 16, color: controller.chapters[index].id == controller.curChapter.id ? Colors.green : Colors.black),),
+                                          child: Text("${controller.chapters[index].name}",),
                                         ),
                                         onTap: () async{
-                                          await controller.jumpTo(index);
                                         },
                                       );
                                     },
@@ -137,48 +139,5 @@ class ReadScreen extends GetView<ReadController> {
         )
     );
   }
-  bool _handleScrollNotification(ScrollNotification notification) {
-    if (notification is ScrollEndNotification) {
-      controller.calWhenScrollEndCurChapter(notification.metrics.pixels);
-    }
-    return false;
-  }
-  Widget _content() {
-    return GetBuilder<ReadController>(
-      id: 'content',
-      builder: (controller) {
-        return ListView.builder(
-          controller: controller.contentController,
-          padding: const EdgeInsets.only(top: 0),
-          shrinkWrap: true,
-          cacheExtent: 5,
-          itemCount: controller.readChapters.length,
-          itemBuilder: (context, index) {
-            return Listener(
-              child: Container(
-                key: Key("${controller.readChapters[index].id}"),
-                child: Text.rich(
-                  TextSpan(
-                      children: [
-                        TextSpan(
-                          text: "${controller.readChapters[index].name}",
-                          style: const TextStyle(fontSize: 18, height: 3, fontWeight: FontWeight.bold),
-                        ),
-                        const TextSpan(
-                          text: "\n",
-                        ),
-                        TextSpan(
-                          text: "${controller.readChapters[index].content}",
-                          style: const TextStyle(fontSize: 18, height: 1.8),
-                        )
-                      ]
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+
 }

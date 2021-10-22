@@ -6,3 +6,4 @@ getAppBarTop() {
 double getStatusBarHeight(BuildContext context) {
   return MediaQuery.of(context).padding.top;
 }
+late BuildContext globalContext;
