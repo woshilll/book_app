@@ -14,7 +14,9 @@ class SplashScreen extends GetView<SplashController>{
       body: Stack(
         children: [
           PageView.builder(
-            itemBuilder: (context, index) => const Center(child: Text("666"),),
+            itemBuilder: (context, index) {
+              return Image.asset("lib/resource/image/front.png", height: 100, width: 50,);
+            },
             itemCount: controller.defaultInitPage.length,
             onPageChanged: (index) => controller.setPageIndex(index),
           ),

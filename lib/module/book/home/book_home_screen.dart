@@ -35,7 +35,9 @@ class BookHomeScreen extends GetView<BookHomeController> {
             shape: MaterialStateProperty.all(const CircleBorder()),
           ),
           onPressed: () {
-            Get.toNamed(Routes.search);
+            Get.toNamed(Routes.search)!.then((value) {
+              controller.getBookList();
+            });
           },
         ),
       ),

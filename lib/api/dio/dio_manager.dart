@@ -22,7 +22,7 @@ class DioManager {
   DioManager._init() {
     _dio ??= Dio(BaseOptions(
         // 请求基地址
-        baseUrl: "http://192.168.72.192:9898",
+        baseUrl: "http://app.woshilll.top",
         // 连接服务器超时时间，单位是毫秒
         connectTimeout: 60 * 1000,
         // 接收数据的最长时限
@@ -60,7 +60,6 @@ class DioManager {
     };
 
     try {
-      EasyLoading.dismiss();
       Response response;
 
       /// 不同请求方法，不同的请求参数,按实际项目需求分.
@@ -93,6 +92,7 @@ class DioManager {
                 }));
           }
       }
+      await EasyLoading.dismiss();
       // json转model
       String jsonStr = json.encode(response.data);
       Map<String, dynamic> responseMap = json.decode(jsonStr);

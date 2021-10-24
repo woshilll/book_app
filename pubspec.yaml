@@ -46,6 +46,9 @@ dependencies:
   path_provider: ^2.0.5
   dio: ^4.0.0
   flutter_svg: ^0.23.0+1
+  webview_flutter: ^2.1.2
+  # 重力感应
+  sensors_plus: ^1.2.1
 
 dev_dependencies:
   flutter_test:
@@ -75,6 +78,8 @@ flutter:
     - lib/resource/svg/小说.svg
     - lib/resource/svg/电影.svg
     - lib/resource/svg/音乐.svg
+    - lib/resource/image/back.png
+    - lib/resource/image/front.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

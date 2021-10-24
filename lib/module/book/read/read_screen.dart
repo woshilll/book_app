@@ -12,9 +12,15 @@ class ReadScreen extends GetView<ReadController> {
   const ReadScreen({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _body(context),
-      drawer: _drawer(context),
+    return WillPopScope(
+      child: Scaffold(
+        body: _body(context),
+        drawer: _drawer(context),
+      ),
+      onWillPop: () async {
+        await controller.pop();
+        return false;
+      },
     );
   }
 
@@ -23,11 +29,13 @@ class ReadScreen extends GetView<ReadController> {
       id: "content",
       builder: (controller) {
         return PageView.builder(
+          controller: controller.contentPageController,
           itemCount: controller.pages.length,
           itemBuilder: (context, index) {
             return _content(context, index);
           },
           onPageChanged: (index) async{
+            controller.pageIndex = index;
             if (index + 2 >= controller.pages.length) {
               await controller.pageChangeListen(index);
             }
@@ -114,6 +122,7 @@ class ReadScreen extends GetView<ReadController> {
                                           child: Text("${controller.chapters[index].name}",),
                                         ),
                                         onTap: () async{
+                                          await controller.jumpPage(index);
                                         },
                                       );
                                     },

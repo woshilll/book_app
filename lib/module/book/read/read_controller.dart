@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:book_app/api/chapter_api.dart';
 import 'package:book_app/log/log.dart';
+import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/chapter/chapter.dart';
@@ -13,15 +14,20 @@ import 'package:get/get.dart';
 class ReadController extends GetxController {
   /// 数据库
   static final ChapterDbProvider _chapterDbProvider = ChapterDbProvider();
+  static final BookDbProvider _bookDbProvider = BookDbProvider();
   /// 主页传来的书籍信息
   late Book book;
   /// 所有章节
   List<Chapter> chapters = [];
   /// 上下文
   BuildContext context = globalContext;
+  /// 阅读的页
   List<ContentPage> pages = [];
+  /// 当前阅读页索引
+  int pageIndex = 0;
+  PageController contentPageController = PageController();
   final TextPainter _painter = TextPainter(textDirection: TextDirection.ltr);
-  TextStyle contentStyle = const TextStyle(color: Colors.green, fontSize: 22);
+  TextStyle contentStyle = const TextStyle(color: Colors.green, fontSize: 20);
   @override
   void onInit() async{
     super.onInit();
@@ -46,8 +52,8 @@ class ReadController extends GetxController {
     calWordHeightAndWidth();
     String content = alphanumericToFullLength(chapter.content);
     _painter.text = TextSpan(text: content, style: contentStyle);
-    // 一页最大行数
-    double screenHeight = MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - 30;
+    // 一页最大行数 context获取的是主页的context， 带appBar所以高度会减少56
+    double screenHeight = MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top + 26;
     // 第一页最大行数
     int maxLines = screenHeight ~/ wordHeight;
     _painter.maxLines = maxLines;
@@ -146,9 +152,6 @@ class ReadController extends GetxController {
   int maxLines = 0;
 
   calWordHeightAndWidth() {
-    if (wordHeight > 0) {
-      return;
-    }
     _painter.text = TextSpan(text: "哈", style: contentStyle);
     _painter.layout(maxWidth: MediaQuery.of(context).size.width);
     var cal = _painter.computeLineMetrics()[0];
@@ -174,5 +177,28 @@ class ReadController extends GetxController {
     Chapter chapter = chapters[index + 1];
     chapter.content = await getContent(chapter.id, chapter.url);
     initPage(chapter);
+  }
+
+  pop() async{
+    // 更新当前的章节和页数
+    var chapterId = pages[pageIndex].chapterId;
+    await _bookDbProvider.updateCurChapter(book.id, chapterId);
+    Get.back();
+  }
+
+  /// 跳转章节
+  jumpPage(index) async{
+    Chapter chapter = chapters[index];
+    index = pages.indexWhere((element) => chapter.id == element.chapterId);
+    if (index >= 0) {
+      // 已存在
+      contentPageController.jumpToPage(index);
+    } else {
+      chapter.content = await getContent(chapter.id, chapter.url);
+      pages.clear();
+      await initPage(chapter);
+      contentPageController.jumpToPage(0);
+    }
+    Navigator.of(context).pop();
   }
 }

@@ -1,7 +1,11 @@
 import 'dart:async';
 
+import 'package:book_app/log/log.dart';
 import 'package:book_app/route/routes.dart';
+import 'package:book_app/util/constant.dart';
+import 'package:book_app/util/save_util.dart';
 import 'package:get/get.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 class SplashController extends GetxController {
   final String title = '启动页';
@@ -22,6 +26,10 @@ class SplashController extends GetxController {
         timeCountDown();
       }
     });
+    // 陀螺仪监控
+    // gyroscopeEvents.listen((GyroscopeEvent event) {
+    //   // Log.i(event);
+    // });
   }
 
   /// 获取启动页图片
@@ -43,7 +51,10 @@ class SplashController extends GetxController {
 
   toHome() {
     if (timeCountdown <= 0) {
+      SaveUtil.setTrue(Constant.splashTrue);
       Get.offAndToNamed(Routes.home);
     }
   }
+
+
 }

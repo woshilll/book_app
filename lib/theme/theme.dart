@@ -177,7 +177,7 @@ class ThemeConfig {
   static ThemeData get lightTheme => createTheme(
     brightness: Brightness.light,
     background: ColorConstants.lightScaffoldBackgroundColor,
-    cardBackground: ColorConstants.secondaryAppColor,
+    cardBackground: Colors.lightBlue,
     primaryText: Colors.black,
     secondaryText: Colors.white,
     accentColor: ColorConstants.secondaryAppColor,

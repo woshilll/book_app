@@ -1,4 +1,5 @@
 import 'package:book_app/api/book_api.dart';
+import 'package:book_app/api/chapter_api.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
@@ -20,8 +21,8 @@ class BookHomeController extends GetxController {
 
   getBookList() async{
     books = await _bookDbProvider.getBooks();
-    Log.i(books);
     update(['bookList']);
+    Log.i(books);
   }
   insertBook() async {
     await _bookDbProvider.commonInsert(Book(name: '伏天氏', author: '净无痕', indexImg: 'https://www.biqooge.com/files/article/image/0/1/1s.jpg', url: 'https://www.biqooge.com/0_1/',));
@@ -44,23 +45,24 @@ class BookHomeController extends GetxController {
     if (count <= 0) {
       // 没有内容
       // 发起请求获取
-      Book book = await BookApi.parseBook(selected.url);
-      // 更新书籍
-      _bookDbProvider.commonUpdate(book);
+      List<Chapter> chapters = await ChapterApi.parseChapters(selected.url);
       // 添加章节
-      List<Chapter> list = book.chapters ?? [];
-      if (list.isNotEmpty) {
-        for (var element in list) {
+      if (chapters.isNotEmpty) {
+        for (var element in chapters) {
           element.bookId = selected.id;
         }
-        _chapterDbProvider.commonBatchInsert(list);
+        _chapterDbProvider.commonBatchInsert(chapters);
       }
-      book.id = selected.id;
-      selected = book;
       selected.chapters = [];
     }
-    Get.toNamed(Routes.read, arguments: {"book": selected});
+    Get.toNamed(Routes.read, arguments: {"book": selected})!.then((value) async{
+      Log.i(value);
+      // 重新更新页面数据
+      Book? book = await _bookDbProvider.getBookById(selected.id);
+      if (book != null) {
+        books[index] = book;
+        update(['bookList']);
+      }
+    });
   }
-
-
 }

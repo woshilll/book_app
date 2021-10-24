@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.woshilll.book_app">
    <application
-        android:label="book_app"
+        android:label="小小说"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

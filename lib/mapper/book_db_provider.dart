@@ -45,7 +45,7 @@ class BookDbProvider extends BaseDbProvider {
   }
 
   /// 获取书籍详情
-  Future<Book?> getBookById(int id) async {
+  Future<Book?> getBookById(id) async {
     Database db = await getDataBase();
     List<Map<String, dynamic>> maps = await db.rawQuery("select * from $name where $columnId = $id");
     if (maps.isEmpty) {
@@ -63,6 +63,17 @@ class BookDbProvider extends BaseDbProvider {
       list.add(Book.fromJson(element));
     }
     return list;
+  }
+  /// 获取书籍数量
+  Future<int?> getBookCount(url) async {
+    Database db = await getDataBase();
+    return Sqflite.firstIntValue(await db.rawQuery("select count(*) from $name where $columnUrl = ?", [url]));
+  }
+
+  /// 更新阅读章节
+  updateCurChapter(id, chapterId) async{
+    Database db = await getDataBase();
+    db.rawUpdate("update $name set $columnCurChapter = ? where $columnId = ?", [chapterId, id]);
   }
 
   // Future<void> update(Book book) async {
