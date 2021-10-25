@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:sqflite/utils/utils.dart';
 
 import 'color.dart';
 class ThemeConfig {
@@ -177,7 +178,7 @@ class ThemeConfig {
   static ThemeData get lightTheme => createTheme(
     brightness: Brightness.light,
     background: ColorConstants.lightScaffoldBackgroundColor,
-    cardBackground: Colors.lightBlue,
+    cardBackground: hexToColor("#409EFF"),
     primaryText: Colors.black,
     secondaryText: Colors.white,
     accentColor: ColorConstants.secondaryAppColor,
@@ -185,7 +186,7 @@ class ThemeConfig {
     buttonBackground: Colors.black38,
     buttonText: ColorConstants.secondaryAppColor,
     disabled: ColorConstants.secondaryAppColor,
-    error: Colors.red,
+    error: hexToColor("#F56C6C"),
   );
 
   static ThemeData get darkTheme => createTheme(
@@ -199,6 +200,6 @@ class ThemeConfig {
     buttonBackground: Colors.white,
     buttonText: ColorConstants.secondaryDarkAppColor,
     disabled: ColorConstants.secondaryDarkAppColor,
-    error: Colors.red,
+    error: hexToColor("#F56C6C"),
   );
 }

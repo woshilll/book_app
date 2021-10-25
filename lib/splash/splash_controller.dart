@@ -4,6 +4,7 @@ import 'package:book_app/log/log.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/util/constant.dart';
 import 'package:book_app/util/save_util.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
@@ -13,6 +14,7 @@ class SplashController extends GetxController {
   int pageIndex = 0;
   int timeCountdown = 5;
   late final Timer timeCountdownTimer;
+  late BuildContext context;
 
 
   @override
@@ -22,6 +24,7 @@ class SplashController extends GetxController {
     timeCountdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (timeCountdown < 1) {
         timeCountdownTimer.cancel();
+        toHome();
       } else {
         timeCountDown();
       }

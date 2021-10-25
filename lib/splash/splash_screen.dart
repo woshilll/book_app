@@ -1,5 +1,6 @@
 
 import 'package:book_app/route/routes.dart';
+import 'package:book_app/splash/component/text_paint.dart';
 import 'package:book_app/splash/splash_controller.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
@@ -10,19 +11,22 @@ class SplashScreen extends GetView<SplashController>{
 
   @override
   Widget build(BuildContext context) {
+    controller.context = context;
     return Scaffold(
       body: Stack(
         children: [
-          PageView.builder(
-            itemBuilder: (context, index) {
-              return Image.asset("lib/resource/image/front.png", height: 100, width: 50,);
-            },
-            itemCount: controller.defaultInitPage.length,
-            onPageChanged: (index) => controller.setPageIndex(index),
+          Container(),
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            child: Image.asset("lib/resource/image/front.png"),
           ),
-          _pointDraw(),
+          _textDraw(),
+          // _pointDraw(),
           _timeCountdownDraw(context),
-          _lastPageButtonDraw(context)
+          // _lastPageButtonDraw(context)
         ],
       ),
     );
@@ -69,7 +73,7 @@ class SplashScreen extends GetView<SplashController>{
             builder: (controller) {
               return Container(
                 padding: const EdgeInsets.fromLTRB(13, 3, 13, 3),
-                child: Text("${controller.timeCountdown <= 0 ? '跳过' : controller.timeCountdown}${controller.timeCountdown <= 0 ? '' : 's'}"),
+                child: Text("${controller.timeCountdown}s"),
               );
             },
           ),
@@ -100,6 +104,12 @@ class SplashScreen extends GetView<SplashController>{
           return Container();
         },
       ),
+    );
+  }
+
+  Widget _textDraw() {
+    return CustomPaint(
+      painter: TextPaint("求推荐"),
     );
   }
 }

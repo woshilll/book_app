@@ -4,6 +4,7 @@ import 'package:book_app/route/routes.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
 import 'package:book_app/model/book/book.dart';
 
@@ -16,6 +17,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
       appBar: AppBar(
         title: const Text("书架"),
         centerTitle: true,
+        elevation: 0,
         actions: [
           Center(
             child: Container(
@@ -47,46 +49,62 @@ class BookHomeScreen extends GetView<BookHomeController> {
     return GetBuilder<BookHomeController>(
       id: 'bookList',
       builder: (controller) {
-        return Container(
-          margin: const EdgeInsets.only(left: 10, right: 10, top: 15),
-          child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 5,
-                  mainAxisSpacing: 5,
-                  childAspectRatio: 2 / 3
-              ),
-              itemCount: controller.books.length,
-              itemBuilder: (context, index) {
-                return Column(
-                  children: [
-                    Expanded(child: InkWell(
-                      child: _bookImageWidget(context, index),
-                      onLongPress: () {
-                        _handleDelete(context, index);
-                      },
-                      onTap: () => controller.getBookInfo(index),
-                    )),
-                    Center(
-                      child: Text("${controller.books[index].name}"),
-                    )
-                  ],
-                );
-              }
-          ),
-        );
+        return StaggeredGridView.countBuilder(
+            crossAxisCount: 4,
+            crossAxisSpacing: 4,
+            mainAxisSpacing: 10,
+            itemCount: controller.books.length,
+            padding: const EdgeInsets.all(4),
+            itemBuilder: (context, index) {
+              return InkWell(
+                child: _bookImageWidget(context, index),
+                onLongPress: () {
+                  _handleDelete(context, index);
+                },
+                onTap: () => controller.getBookInfo(index)
+              );
+            },
+            staggeredTileBuilder: (index) =>
+                StaggeredTile.count(2, index == 0 ? 2.5 : 3));
       },
     );
   }
+  // Widget _body(context) {
+  //   return GetBuilder<BookHomeController>(
+  //     id: 'bookList',
+  //     builder: (controller) {
+  //       return Container(
+  //         margin: const EdgeInsets.only(left: 10, right: 10, top: 15),
+  //         child: GridView.builder(
+  //             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+  //                 crossAxisCount: 3,
+  //                 crossAxisSpacing: 5,
+  //                 mainAxisSpacing: 5,
+  //                 childAspectRatio: 2 / 3
+  //             ),
+  //             itemCount: controller.books.length,
+  //             itemBuilder: (context, index) {
+  //               return Column(
+  //                 children: [
+  //                   Expanded(child: InkWell(
+  //                     child: _bookImageWidget(context, index),
+  //                     onLongPress: () {
+  //                       _handleDelete(context, index);
+  //                     },
+  //                     onTap: () => controller.getBookInfo(index),
+  //                   )),
+  //                   Center(
+  //                     child: Text("${controller.books[index].name}"),
+  //                   )
+  //                 ],
+  //               );
+  //             }
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
   Widget _bookImageWidget(context, index) {
-    if (controller.books[index].indexImg == null) {
-      return Container(
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(4)),
-          color: Colors.blue,
-        ),
-      );
-    }
     return CachedNetworkImage(
       imageUrl: "${controller.books[index].indexImg}",
       imageBuilder: (context, imageProvider) => Container(
@@ -101,7 +119,10 @@ class BookHomeScreen extends GetView<BookHomeController> {
       errorWidget: (context, url, error) {
         Log.e(error);
         return Container(
-          color: Colors.pink,
+          child: Text("${controller.books[index].name}"),
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(4)),
+          ),
         );
       },
     );

@@ -6,7 +6,9 @@ import 'package:book_app/util/system_utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:book_app/model/book/book.dart';
@@ -21,48 +23,111 @@ class HomeScreen extends GetView<HomeController> {
       appBar: AppBar(
         title: const Text("主页"),
         centerTitle: true,
+        elevation: 0,
+          actions: [
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(right: 10),
+                child: _managePop(),
+              ),
+            )
+          ]
       ),
       body: _body(context),
     );
   }
+
   Widget _body(context) {
     return GetBuilder<HomeController>(
-      id: 'bookList',
+      id: 'oldMan',
       builder: (controller) {
-        return Container(
-          margin: const EdgeInsets.only(left: 10, right: 10, top: 15),
-          child: ScrollConfiguration(
+        return ScrollConfiguration(
             behavior: NoShadowScrollBehavior(),
-            child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 5,
-                    mainAxisSpacing: 5,
-                    childAspectRatio: 1
-                ),
-                itemCount: controller.menu.length,
-                itemBuilder: (context, index) {
-                  return GestureDetector(
-                    child: Column(
-                      children: [
-                        SvgPicture.asset(controller.menu[index].assetPath, width: 80, height: 80,),
-                        Text(controller.menu[index].name, style: const TextStyle(fontSize: 16, color: Colors.grey),)
-                      ],
-                    ),
-                    onTap: () {
-                      if (controller.menu[index].route.isEmpty) {
-                        EasyLoading.showToast("敬请期待", duration: const Duration(milliseconds: 500));
-                        return;
-                      }
-                      Get.toNamed(controller.menu[index].route);
-                    },
-                  );
-                }
-            ),
-          ),
-        );
+            child: StaggeredGridView.count(
+              crossAxisCount: 4,
+              crossAxisSpacing: 4,
+              staggeredTiles: _staggeredTiles,
+              mainAxisSpacing: 4,
+              padding: const EdgeInsets.all(4),
+              children: controller.tiles,
+            ));
       },
     );
   }
+  Widget _managePop() {
+    return PopupMenuButton<String>(
+      itemBuilder: (context) => <PopupMenuItem<String>>[
+        controller.oldMan ? const PopupMenuItem<String>(
+          child: Text("正常"),
+          value: "1",
+        ) :const PopupMenuItem<String>(
+          child: Text("老年人版"),
+          value: "1",
+        )
+      ],
+      offset: const Offset(20, 30),
+      onSelected: (value) {
+        if (value == "1") {
+          controller.changeOldMan();
+        }
+      },
+    );
+  }
+}
 
+const List<StaggeredTile> _staggeredTiles = <StaggeredTile>[
+  StaggeredTile.count(2, 2),
+  StaggeredTile.count(2, 1),
+  // StaggeredTile.count(2, 1),
+  StaggeredTile.count(1, 2),
+  StaggeredTile.count(1, 1),
+  StaggeredTile.count(2, 2),
+  StaggeredTile.count(1, 2),
+  StaggeredTile.count(1, 1),
+  StaggeredTile.count(3, 1),
+  StaggeredTile.count(1, 1),
+  StaggeredTile.count(4, 1),
+];
+
+
+// ignore: camel_case_types
+class _childTile extends StatelessWidget {
+  const _childTile(this.backgroundColor, this.iconData, {this.toast, this.route});
+
+  final Color backgroundColor;
+  final IconData iconData;
+  final String? toast;
+  final String? route;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: backgroundColor,
+      child: InkWell(
+        onTap: () {
+          if (route != null) {
+            Get.toNamed(route!);
+          } else {
+            EasyLoading.showToast("敬请期待");
+          }
+
+        },
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Icon(
+              iconData,
+              color: Colors.white,
+              size: 30,
+            ),
+          ),
+        ),
+        onLongPress: () {
+          if (toast != null) {
+            EasyLoading.showToast(toast!);
+          }
+        },
+      ),
+    );
+  }
 }

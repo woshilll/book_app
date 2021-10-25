@@ -29,10 +29,10 @@ class SaveUtil {
     return _sharedPreferences.getStringList(key);
   }
 
-  static void setTrue(key) {
-    _sharedPreferences.setBool(key, true);
+  static void setTrue(key, {bool isTrue = true}) {
+    _sharedPreferences.setBool(key, isTrue);
   }
-  static bool? getTure(key) {
+  static bool? getTrue(key) {
     return _sharedPreferences.getBool(key);
   }
 }

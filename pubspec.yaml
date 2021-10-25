@@ -49,6 +49,7 @@ dependencies:
   webview_flutter: ^2.1.2
   # 重力感应
   sensors_plus: ^1.2.1
+  flutter_staggered_grid_view: ^0.4.1
 
 dev_dependencies:
   flutter_test:
@@ -75,9 +76,9 @@ flutter:
   uses-material-design: true
   assets:
     - lib/resource/
-    - lib/resource/svg/小说.svg
-    - lib/resource/svg/电影.svg
-    - lib/resource/svg/音乐.svg
+#    - lib/resource/svg/小说.svg
+#    - lib/resource/svg/电影.svg
+#    - lib/resource/svg/音乐.svg
     - lib/resource/image/back.png
     - lib/resource/image/front.png
   # To add assets to your application, add an assets section, like this:

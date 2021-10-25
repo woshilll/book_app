@@ -9,6 +9,11 @@ class SearchValueScreen extends GetView<SearchValueController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text("搜索结果"),
+        elevation: 0,
+      ),
       body: GetBuilder<SearchValueController>(
         id: "result",
         builder: (controller) {
@@ -16,14 +21,15 @@ class SearchValueScreen extends GetView<SearchValueController> {
             itemCount: controller.searchResults.length,
             itemBuilder: (context, index) {
               return Container(
-                margin: EdgeInsets.only(top: 15),
-                padding: EdgeInsets.only(left: 10, right: 10),
+                margin: const EdgeInsets.only(top: 15),
+                padding: const EdgeInsets.only(left: 10, right: 10),
                 child: GestureDetector(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       controller.buildRichText(controller.searchResults[index].label, 20, FontWeight.bold),
+                      const SizedBox(height: 10,),
                       controller.buildRichText(controller.searchResults[index].description, 15, FontWeight.normal),
                     ],
                   ),
@@ -36,7 +42,7 @@ class SearchValueScreen extends GetView<SearchValueController> {
             separatorBuilder: (context, index) {
               return Container(
                 height: 1,
-                margin: EdgeInsets.only(top: 15),
+                margin: const EdgeInsets.only(top: 15),
                 color: Colors.grey,
               );
             },
