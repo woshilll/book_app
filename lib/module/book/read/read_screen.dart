@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:book_app/log/log.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/util/no_shadow_scroll_behavior.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
@@ -12,35 +15,74 @@ class ReadScreen extends GetView<ReadController> {
   const ReadScreen({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      child: Scaffold(
-        body: _body(context),
-        drawer: _drawer(context),
+    controller.keyboardListen();
+    controller.context = context;
+    return Scaffold(
+      key: controller.scaffoldKey,
+      body: WillPopScope(
+        child: Stack(
+          children: [
+            _body(context),
+          ],
+        ),
+        onWillPop: () async {
+          controller.pop();
+          return false;
+        },
       ),
-      onWillPop: () async {
-        await controller.pop();
-        return false;
+      drawer: _drawer(context),
+      onDrawerChanged: (value) {
+        controller.calReadProgress();
+        if (value && !controller.drawerFlag) {
+          controller.drawerFlag = true;
+          Timer(const Duration(milliseconds: 300), () {
+            if (controller.scaffoldKey.currentState!.isDrawerOpen) {
+              if (controller.menuController.offset + 500 < (controller.readChapterIndex + 1) * 41) {
+                controller.menuController.jumpTo(controller.readChapterIndex * 41);
+              }
+            }
+            controller.drawerFlag = true;
+          });
+        } else {
+          controller.drawerFlag = false;
+        }
       },
+
     );
   }
 
   Widget _body(context) {
-    return GetBuilder<ReadController>(
-      id: "content",
-      builder: (controller) {
-        return PageView.builder(
-          controller: controller.contentPageController,
-          itemCount: controller.pages.length,
-          itemBuilder: (context, index) {
-            return _content(context, index);
-          },
-          onPageChanged: (index) async{
-            controller.pageIndex = index;
-            if (index + 2 >= controller.pages.length) {
-              await controller.pageChangeListen(index);
-            }
-          },
-        );
+    return GestureDetector(
+      child: GetBuilder<ReadController>(
+        id: "content",
+        builder: (controller) {
+          return PageView.builder(
+            controller: controller.contentPageController,
+            itemCount: controller.pages.length,
+            itemBuilder: (context, index) {
+              return _content(context, index);
+            },
+            onPageChanged: (index) async{
+              controller.pageIndex = index;
+              if (index + 10 >= controller.pages.length && !controller.loading) {
+                await controller.pageChangeListen(index);
+              }
+            },
+          );
+        },
+      ),
+      onTapUp: (e) {
+        if (controller.screenWidth <= 0) {
+          controller.screenWidth = MediaQuery.of(context).size.width;
+        }
+        if (e.globalPosition.dx < controller.screenWidth / 3) {
+          controller.prePage();
+        } else if (e.globalPosition.dx > (controller.screenWidth / 3 * 2)) {
+          controller.nextPage();
+        } else {
+          // 中间
+          _showBottom(context);
+        }
       },
     );
   }
@@ -98,7 +140,7 @@ class ReadScreen extends GetView<ReadController> {
                     child: GetBuilder<ReadController>(
                       id: 'content',
                       builder: (controller) {
-                        return Text("共${controller.chapters.length}章", style: const TextStyle(fontSize: 14),);
+                        return Text("共${controller.chapters.length + 1}章", style: const TextStyle(fontSize: 14),);
                       },
                     ),
                   ),
@@ -113,16 +155,17 @@ class ReadScreen extends GetView<ReadController> {
                                 id: 'content',
                                 builder: (controller) {
                                   return ListView.separated(
+                                    controller: controller.menuController,
                                     itemBuilder: (context, index) {
                                       return InkWell(
                                         child: Container(
                                           height: 40,
                                           padding: const EdgeInsets.only(left: 10),
                                           alignment: Alignment.centerLeft,
-                                          child: Text("${controller.chapters[index].name}",),
+                                          child: Text("${controller.chapters[index].name}", style: controller.readChapterIndex == index ? const TextStyle(color: Colors.lightBlue) : const TextStyle(),),
                                         ),
                                         onTap: () async{
-                                          await controller.jumpPage(index);
+                                          await controller.jumpChapter(index);
                                         },
                                       );
                                     },
@@ -149,4 +192,168 @@ class ReadScreen extends GetView<ReadController> {
     );
   }
 
+  _showBottom(context) {
+    // 计算进度
+    controller.calReadProgress();
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return Scaffold(
+            backgroundColor: Colors.transparent,
+            body: GestureDetector(
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: 0,
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      color: Colors.transparent,
+                    ),
+                  ),
+                  Positioned(
+                      bottom: 0,
+                      right: 0,
+                      left: 0,
+                      child: Opacity(
+                        opacity: 1,
+                        child: GestureDetector(
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color: Colors.black,
+                                borderRadius: BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4))
+                            ),
+                            child: Column(
+                              children: [
+                                Container(
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 1,
+                                        child: GestureDetector(
+                                          child: Container(
+                                            alignment: Alignment.center,
+                                            child: Text("上一章", style: TextStyle(color: Colors.white, fontSize: 16),),
+                                          ),
+                                          onTap: () async{
+                                            await controller.preChapter();
+                                          },
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: GetBuilder<ReadController>(
+                                          id: "chapterChange",
+                                          builder: (controller) {
+                                            return Slider(
+                                              label: "${controller.chapters[controller.readChapterIndex].name}",
+                                              divisions: controller.chapters.length,
+                                              activeColor: Colors.blue,
+                                              inactiveColor: Colors.grey,
+                                              min: 0,
+                                              max: controller.chapters.length - 1,
+                                              value: controller.readChapterIndex + 0,
+                                              onChanged: (value) {
+                                                controller.chapterChange(value);
+                                              },
+                                              onChangeStart: (value) {
+
+                                              },
+                                              onChangeEnd: (value) {
+                                                controller.jumpChapter(value.toInt());
+                                              },
+                                            );
+                                          },
+                                        )
+                                      ),
+                                      Expanded(
+                                        flex: 1,
+                                        child: GestureDetector(
+                                          child: Container(
+                                            alignment: Alignment.center,
+                                            child: Text("下一章", style: TextStyle(color: Colors.white, fontSize: 16),),
+                                          ),
+                                          onTap: () async{
+                                            await controller.nextChapter();
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  margin: EdgeInsets.only(top: 10, bottom: 10),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 1,
+                                        child: GestureDetector(
+                                          child: Container(
+                                            alignment: Alignment.center,
+                                            child: Column(
+                                              children: [
+                                                Icon(Icons.library_books, size: 24,),
+                                                Text("目录", style: TextStyle(color: Colors.white, fontSize: 14))
+                                              ],
+                                            ),
+                                          ),
+                                          onTap: () {
+                                            Navigator.of(context).pop();
+                                            controller.openDrawer();
+                                          },
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 1,
+                                        child: Container(
+                                          alignment: Alignment.center,
+                                          child: Column(
+                                            children: [
+                                              Icon(Icons.wb_sunny, size: 24,),
+                                              Text("亮度", style: TextStyle(color: Colors.white, fontSize: 14))
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 1,
+                                        child: Container(
+                                          alignment: Alignment.center,
+                                          child: Column(
+                                            children: [
+                                              Icon(Icons.settings, size: 24,),
+                                              Text("设置", style: TextStyle(color: Colors.white, fontSize: 14))
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                          onTap: () {
+                          },
+                        ),
+                      )
+                  )
+                ],
+              ),
+              onTap: () => Navigator.of(context).pop(),
+            ),
+          );
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        }
+      )
+    );
+
+  }
 }

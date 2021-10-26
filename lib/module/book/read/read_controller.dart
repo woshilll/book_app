@@ -6,6 +6,8 @@ import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/chapter/chapter.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'component/content_page.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
@@ -25,9 +27,20 @@ class ReadController extends GetxController {
   List<ContentPage> pages = [];
   /// 当前阅读页索引
   int pageIndex = 0;
+  /// 页面监听
   PageController contentPageController = PageController();
+  /// 画笔
   final TextPainter _painter = TextPainter(textDirection: TextDirection.ltr);
   TextStyle contentStyle = const TextStyle(color: Colors.green, fontSize: 20);
+  /// 是否正在加载
+  bool loading = false;
+  /// 屏幕宽度
+  double screenWidth = 0;
+  /// 阅读进度
+  int readChapterIndex = 0;
+  var scaffoldKey = GlobalKey<ScaffoldState>();
+  ScrollController menuController = ScrollController();
+  bool drawerFlag = false;
   @override
   void onInit() async{
     super.onInit();
@@ -45,9 +58,10 @@ class ReadController extends GetxController {
         cur = chapters[index];
       }
     }
-    cur.content = await getContent(cur.id, cur.url);
+    cur.content = await getContent(cur.id, cur.url, true);
     await initPage(cur);
   }
+  /// 将文本转文字页面
   initPage(Chapter chapter) async {
     calWordHeightAndWidth();
     String content = alphanumericToFullLength(chapter.content);
@@ -90,6 +104,7 @@ class ReadController extends GetxController {
     Timer(const Duration(milliseconds: 300), () {
       pageRecursion(i, maxLines, preOffset, offset, content, chapter);
       update(["content"]);
+      loading = false;
     });
   }
 
@@ -115,18 +130,20 @@ class ReadController extends GetxController {
         _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
     pageRecursion(index, maxLines, preOffset, offset, content, chapter);
   }
-  Future<String> getContent(id, url) async{
+  /// 获取章节内容
+  Future<String> getContent(id, url, showDialog) async{
     // 查找内容
     Chapter? temp = await _chapterDbProvider.getChapterById(id);
     var content = temp?.content;
     if (content == null) {
-      content = await ChapterApi.parseContent(url);
-      await _chapterDbProvider.updateContent(id, content);
+      content = await ChapterApi.parseContent(url, showDialog);
+      await _chapterDbProvider.updateContent(id, content.trim());
     }
     // 赋值
     return content;
   }
 
+  /// 字符转全角
   String alphanumericToFullLength(str) {
     var temp = str.codeUnits;
     final regex = RegExp(r'^[a-zA-Z0-9!,.@#$%^&*()@￥?]+$');
@@ -137,6 +154,7 @@ class ReadController extends GetxController {
     return string.join();
   }
 
+  /// 字符转半角
   String alphanumericToHalfLength(String str) {
     var runes = str.codeUnits;
     final regex = RegExp(r'^[Ａ-Ｚａ-ｚ０-９]+$');
@@ -151,6 +169,7 @@ class ReadController extends GetxController {
   double wordWith = 0;
   int maxLines = 0;
 
+  /// 计算词宽和词高
   calWordHeightAndWidth() {
     _painter.text = TextSpan(text: "哈", style: contentStyle);
     _painter.layout(maxWidth: MediaQuery.of(context).size.width);
@@ -161,6 +180,7 @@ class ReadController extends GetxController {
         MediaQuery.of(context).padding.top) ~/
         wordHeight;
   }
+  /// 计算当前章节一共多少页
   calThisChapterTotalPage(index) {
     var chapterId = pages[index].chapterId;
     return pages.lastIndexWhere((element) => element.chapterId == chapterId) - pages.indexWhere((element) =>  element.chapterId == chapterId) + 1;
@@ -168,17 +188,22 @@ class ReadController extends GetxController {
 
   /// 页面变化监听
   Future pageChangeListen(int index) async{
-    var chapterId = pages[index].chapterId;
+    if (loading) {
+      return;
+    }
+    loading = true;
+    var chapterId = pages[pages.length - 1].chapterId;
     index = chapters.indexWhere((element) => element.id == chapterId);
     if (index == chapters.length - 1) {
       // 没有了
       return;
     }
     Chapter chapter = chapters[index + 1];
-    chapter.content = await getContent(chapter.id, chapter.url);
+    chapter.content = await getContent(chapter.id, chapter.url, false);
     initPage(chapter);
   }
 
+  /// 页面返回监听
   pop() async{
     // 更新当前的章节和页数
     var chapterId = pages[pageIndex].chapterId;
@@ -187,18 +212,179 @@ class ReadController extends GetxController {
   }
 
   /// 跳转章节
-  jumpPage(index) async{
+  jumpChapter(index, {bool pop = true}) async{
     Chapter chapter = chapters[index];
     index = pages.indexWhere((element) => chapter.id == element.chapterId);
     if (index >= 0) {
       // 已存在
       contentPageController.jumpToPage(index);
     } else {
-      chapter.content = await getContent(chapter.id, chapter.url);
+      chapter.content = await getContent(chapter.id, chapter.url, true);
       pages.clear();
       await initPage(chapter);
       contentPageController.jumpToPage(0);
     }
-    Navigator.of(context).pop();
+    if (pop) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  /// 下一页
+  nextPage() async {
+    int index = pageIndex;
+    if (index < pages.length - 2) {
+      // 有下一页
+      contentPageController.jumpToPage(index + 1);
+    } else {
+      // 到底了， 加载 获取当前章节
+      var chapterId = pages[index].chapterId;
+      var chapterIndex = chapters.indexWhere((element) => element.id == chapterId);
+      if (chapterIndex >= 0 && chapterIndex != chapters.length - 1) {
+        // 找到下一章
+        Chapter next = chapters[chapterIndex + 1];
+        next.content = await getContent(next.id, next.url, false);
+        await initPage(next);
+        // 跳转
+        contentPageController.jumpToPage(index + 1);
+      } else {
+        EasyLoading.showToast("没有更多了");
+      }
+    }
+  }
+
+  prePage() async {
+    int index = pageIndex;
+    if (index > 0) {
+      // 有上一页
+      contentPageController.jumpToPage(index - 1);
+    } else {
+      // 无上一页
+      var chapterId = pages[index].chapterId;
+      var chapterIndex = chapters.indexWhere((element) => element.id == chapterId);
+      if (chapterIndex > 0) {
+        // 加载上一页
+        EasyLoading.show(maskType: EasyLoadingMaskType.clear);
+        Chapter pre = chapters[chapterIndex - 1];
+        pre.content = await getContent(pre.id, pre.url, false);
+        List<ContentPage> returnPages = await initPageWithReturn(pre);
+        pages.insertAll(0, returnPages);
+        update(["content"]);
+        contentPageController.jumpToPage(returnPages.length - 1);
+        EasyLoading.dismiss();
+      } else {
+        EasyLoading.showToast("没有更多了");
+      }
+    }
+  }
+
+  Future<List<ContentPage>> initPageWithReturn(Chapter chapter) async {
+    List<ContentPage> pages = [];
+    calWordHeightAndWidth();
+    String content = alphanumericToFullLength(chapter.content);
+    _painter.text = TextSpan(text: content, style: contentStyle);
+    // 一页最大行数 context获取的是主页的context， 带appBar所以高度会减少56
+    double screenHeight = MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top + 26;
+    // 第一页最大行数
+    int maxLines = screenHeight ~/ wordHeight;
+    _painter.maxLines = maxLines;
+    // 统计第一页字符偏移量
+    _painter.layout(maxWidth: MediaQuery.of(context).size.width);
+    double paintWidth = _painter.width;
+    double paintHeight = _painter.height;
+    int offset =
+        _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
+    // 得到第一页偏移量
+    int preOffset = 0;
+    int i = 1;
+    while (preOffset < content.length) {
+      if (offset >= content.length) {
+        String subContent = content.substring(preOffset);
+        pages.add(
+            ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, wordWith));
+        break;
+      }
+      String subContent = content.substring(preOffset, offset);
+      pages.add(
+          ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, wordWith));
+      i++;
+      preOffset = offset;
+      _painter.maxLines = maxLines * i;
+      _painter.layout(maxWidth: MediaQuery.of(context).size.width);
+      paintWidth = _painter.width;
+      paintHeight = _painter.height;
+      offset =
+          _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
+    }
+    return pages;
+  }
+
+  Widget keyboardListen() {
+    return KeyboardListener(
+      focusNode: FocusNode(),
+      child: Container(),
+      onKeyEvent: _keyEvent,
+    );
+  }
+
+  _keyEvent(KeyEvent event) async {
+    Log.i(event);
+    // if (event.physicalKey == PhysicalKeyboardKey.audioVolumeDown) {
+    //   // 音量-
+    //   await nextPage();
+    // } else if (event.physicalKey == PhysicalKeyboardKey.audioVolumeUp) {
+    //   // 音量＋
+    //   await prePage();
+    // }
+  }
+
+  // 计算进度
+  void calReadProgress() {
+    var chapterId = pages[pageIndex].chapterId;
+    readChapterIndex =  chapters.indexWhere((element) => chapterId == element.id);
+  }
+
+  void chapterChange(double value) {
+    readChapterIndex = value.toInt();
+    update(["chapterChange"]);
+  }
+
+  void openDrawer() {
+    scaffoldKey.currentState!.openDrawer();
+    drawerFlag = true;
+    Timer(const Duration(milliseconds: 300), () => menuController.jumpTo(readChapterIndex * 41));
+  }
+
+  /// 上一章
+  preChapter() async{
+    if (readChapterIndex <= 0) {
+      EasyLoading.showToast("没有更多了");
+      return;
+    }
+    Chapter pre = chapters[readChapterIndex - 1];
+    int index = pages.indexWhere((element) => element.chapterId == pre.id);
+    if (index >= 0) {
+      // 已缓存
+      contentPageController.jumpToPage(index);
+    } else {
+      await jumpChapter(readChapterIndex - 1, pop: false);
+    }
+    readChapterIndex -= 1;
+  }
+
+  /// 下一章
+  nextChapter() async{
+    if (readChapterIndex >= chapters.length - 1) {
+      EasyLoading.showToast("没有更多了");
+      return;
+    }
+    Chapter next = chapters[readChapterIndex + 1];
+    int index = pages.indexWhere((element) => element.chapterId == next.id);
+    if (index >= 0) {
+      // 已缓存
+      contentPageController.jumpToPage(index);
+    } else {
+      await jumpChapter(readChapterIndex + 1, pop: false);
+    }
+    readChapterIndex += 1;
   }
 }

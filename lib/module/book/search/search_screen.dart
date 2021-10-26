@@ -30,7 +30,7 @@ class SearchScreen extends GetView<SearchController> {
     return Row(
       children: [
         Container(
-          margin: EdgeInsets.only(left: 15),
+          margin: const EdgeInsets.only(left: 15),
           child: _selectSite(),
         ),
         Expanded(
@@ -101,7 +101,7 @@ class SearchScreen extends GetView<SearchController> {
   Widget _body() {
     return GestureDetector(
       child: Container(
-        margin: EdgeInsets.only(top: 10),
+        margin: const EdgeInsets.only(top: 10),
         height: double.infinity,
         width: double.infinity,
         color: Colors.transparent,
@@ -150,7 +150,7 @@ class SearchScreen extends GetView<SearchController> {
       },
     );
   }
-  
+
   Widget _selectSite() {
     return GetBuilder<SearchController>(
       id: "sites",
@@ -162,9 +162,9 @@ class SearchScreen extends GetView<SearchController> {
           hint: const Text("选择站点"),
           items: List.generate(controller.sites.length, (index) {
             return DropdownMenuItem(
-              child: Container(
+              child: SizedBox(
                 width: 60,
-                child: Text("${controller.sites[index].label}", overflow: TextOverflow.ellipsis,),
+                child: Text("${controller.sites[index].label}", overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.normal),),
               ),
               value: controller.sites[index].site,
             );
