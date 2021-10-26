@@ -6,6 +6,7 @@ import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/chapter/chapter.dart';
+import 'package:device_display_brightness/device_display_brightness.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'component/content_page.dart';
@@ -39,8 +40,15 @@ class ReadController extends GetxController {
   /// 阅读进度
   int readChapterIndex = 0;
   var scaffoldKey = GlobalKey<ScaffoldState>();
+  /// 目录控制器
   ScrollController menuController = ScrollController();
+  /// 目录展开标识
   bool drawerFlag = false;
+  /// 底部类型 1-正常 2-亮度 3-设置
+  String bottomType = "1";
+  /// 屏幕亮度
+  double brightness = 0;
+  double brightnessTemp = 0;
   @override
   void onInit() async{
     super.onInit();
@@ -60,6 +68,13 @@ class ReadController extends GetxController {
     }
     cur.content = await getContent(cur.id, cur.url, true);
     await initPage(cur);
+    double sysBrightness = await DeviceDisplayBrightness.getBrightness();
+    if (sysBrightness > 1) {
+      brightness = sysBrightness / 10;
+    } else {
+      brightness = sysBrightness;
+    }
+    brightnessTemp = brightness;
   }
   /// 将文本转文字页面
   initPage(Chapter chapter) async {
@@ -386,5 +401,26 @@ class ReadController extends GetxController {
       await jumpChapter(readChapterIndex + 1, pop: false);
     }
     readChapterIndex += 1;
+  }
+
+  void changeBottomType(String type) {
+    if (bottomType == type) {
+      bottomType = "1";
+    } else {
+      bottomType = type;
+    }
+    update(["bottomType"]);
+  }
+
+  setBrightness(double value) async{
+    brightness = value;
+    await DeviceDisplayBrightness.setBrightness(value);
+    update(["brightness"]);
+  }
+
+  @override
+  void onClose() async{
+    super.onClose();
+    await DeviceDisplayBrightness.setBrightness(brightnessTemp);
   }
 }

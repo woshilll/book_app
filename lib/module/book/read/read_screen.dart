@@ -3,10 +3,8 @@ import 'dart:async';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/util/no_shadow_scroll_behavior.dart';
-import 'package:flutter/gestures.dart';
+import 'package:device_display_brightness/device_display_brightness.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
 import 'component/custom_drawer.dart';
@@ -221,70 +219,20 @@ class ReadScreen extends GetView<ReadController> {
                         opacity: 1,
                         child: GestureDetector(
                           child: Container(
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                                 color: Colors.black,
                                 borderRadius: BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4))
                             ),
                             child: Column(
                               children: [
-                                Container(
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 1,
-                                        child: GestureDetector(
-                                          child: Container(
-                                            alignment: Alignment.center,
-                                            child: Text("上一章", style: TextStyle(color: Colors.white, fontSize: 16),),
-                                          ),
-                                          onTap: () async{
-                                            await controller.preChapter();
-                                          },
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 2,
-                                        child: GetBuilder<ReadController>(
-                                          id: "chapterChange",
-                                          builder: (controller) {
-                                            return Slider(
-                                              label: "${controller.chapters[controller.readChapterIndex].name}",
-                                              divisions: controller.chapters.length,
-                                              activeColor: Colors.blue,
-                                              inactiveColor: Colors.grey,
-                                              min: 0,
-                                              max: controller.chapters.length - 1,
-                                              value: controller.readChapterIndex + 0,
-                                              onChanged: (value) {
-                                                controller.chapterChange(value);
-                                              },
-                                              onChangeStart: (value) {
-
-                                              },
-                                              onChangeEnd: (value) {
-                                                controller.jumpChapter(value.toInt());
-                                              },
-                                            );
-                                          },
-                                        )
-                                      ),
-                                      Expanded(
-                                        flex: 1,
-                                        child: GestureDetector(
-                                          child: Container(
-                                            alignment: Alignment.center,
-                                            child: Text("下一章", style: TextStyle(color: Colors.white, fontSize: 16),),
-                                          ),
-                                          onTap: () async{
-                                            await controller.nextChapter();
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                GetBuilder<ReadController>(
+                                  id: 'bottomType',
+                                  builder: (controller) {
+                                    return _bottomType();
+                                  },
                                 ),
                                 Container(
-                                  margin: EdgeInsets.only(top: 10, bottom: 10),
+                                  margin: const EdgeInsets.only(top: 10, bottom: 10),
                                   child: Row(
                                     children: [
                                       Expanded(
@@ -293,7 +241,7 @@ class ReadScreen extends GetView<ReadController> {
                                           child: Container(
                                             alignment: Alignment.center,
                                             child: Column(
-                                              children: [
+                                              children: const [
                                                 Icon(Icons.library_books, size: 24,),
                                                 Text("目录", style: TextStyle(color: Colors.white, fontSize: 14))
                                               ],
@@ -307,14 +255,19 @@ class ReadScreen extends GetView<ReadController> {
                                       ),
                                       Expanded(
                                         flex: 1,
-                                        child: Container(
-                                          alignment: Alignment.center,
-                                          child: Column(
-                                            children: [
-                                              Icon(Icons.wb_sunny, size: 24,),
-                                              Text("亮度", style: TextStyle(color: Colors.white, fontSize: 14))
-                                            ],
+                                        child: GestureDetector(
+                                          child: Container(
+                                            alignment: Alignment.center,
+                                            child: Column(
+                                              children: const [
+                                                Icon(Icons.wb_sunny, size: 24,),
+                                                Text("亮度", style: TextStyle(color: Colors.white, fontSize: 14))
+                                              ],
+                                            ),
                                           ),
+                                          onTap: () {
+                                            controller.changeBottomType("2");
+                                          },
                                         ),
                                       ),
                                       Expanded(
@@ -322,7 +275,7 @@ class ReadScreen extends GetView<ReadController> {
                                         child: Container(
                                           alignment: Alignment.center,
                                           child: Column(
-                                            children: [
+                                            children: const [
                                               Icon(Icons.settings, size: 24,),
                                               Text("设置", style: TextStyle(color: Colors.white, fontSize: 14))
                                             ],
@@ -355,5 +308,161 @@ class ReadScreen extends GetView<ReadController> {
       )
     );
 
+  }
+  Widget _bottomType() {
+    if (controller.bottomType == "1") {
+      return Row(
+        children: [
+          Expanded(
+            flex: 1,
+            child: GestureDetector(
+              child: Container(
+                alignment: Alignment.center,
+                child: const Text("上一章", style: TextStyle(color: Colors.white, fontSize: 16),),
+              ),
+              onTap: () async{
+                await controller.preChapter();
+              },
+            ),
+          ),
+          Expanded(
+              flex: 2,
+              child: GetBuilder<ReadController>(
+                id: "chapterChange",
+                builder: (controller) {
+                  return Slider(
+                    label: "${controller.chapters[controller.readChapterIndex].name}",
+                    divisions: controller.chapters.length,
+                    activeColor: Colors.blue,
+                    inactiveColor: Colors.grey,
+                    min: 0,
+                    max: controller.chapters.length - 1,
+                    value: controller.readChapterIndex + 0,
+                    onChanged: (value) {
+                      controller.chapterChange(value);
+                    },
+                    onChangeStart: (value) {
+
+                    },
+                    onChangeEnd: (value) {
+                      controller.jumpChapter(value.toInt());
+                    },
+                  );
+                },
+              )
+          ),
+          Expanded(
+            flex: 1,
+            child: GestureDetector(
+              child: Container(
+                alignment: Alignment.center,
+                child: const Text("下一章", style: TextStyle(color: Colors.white, fontSize: 16),),
+              ),
+              onTap: () async{
+                await controller.nextChapter();
+              },
+            ),
+          ),
+        ],
+      );
+    } else if (controller.bottomType == "2") {
+      // 亮度调节
+      return Container(
+        child: Column(
+          children: [
+            // 亮度,
+            Container(
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: GestureDetector(
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.wb_sunny, size: 16, color: Colors.white,),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                      flex: 4,
+                      child: GetBuilder<ReadController>(
+                        id: "brightness",
+                        builder: (controller) {
+                          return Slider(
+                            label: "${controller.chapters[controller.readChapterIndex].name}",
+                            divisions: 10,
+                            activeColor: Colors.blue,
+                            inactiveColor: Colors.grey,
+                            min: 0,
+                            max: 1,
+                            value: controller.brightness,
+                            onChanged: (value) async{
+                              await controller.setBrightness(value);
+                            },
+                            onChangeStart: (value) {
+
+                            },
+                            onChangeEnd: (value) {
+                            },
+                          );
+                        },
+                      )
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: GestureDetector(
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.wb_sunny, size: 30, color: Colors.white,),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // 背景色
+            Container(
+              height: 30,
+              margin: const EdgeInsets.only(top: 10, left: 15, right: 15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.orange,
+                  ),
+                  CircleAvatar(
+                    backgroundColor: Colors.orange,
+                  ),
+                  CircleAvatar(
+                    backgroundColor: Colors.orange,
+                  ),
+                  CircleAvatar(
+                    backgroundColor: Colors.orange,
+                  ),
+                  CircleAvatar(
+                    backgroundColor: Colors.orange,
+                  ),
+                  CircleAvatar(
+                    backgroundColor: Colors.orange,
+                  ),
+                  Container(
+                    padding: EdgeInsets.only(left: 4, right: 4),
+                    alignment: Alignment.center,
+                    child: Text("自定义", style: TextStyle(fontSize: 14, color: Colors.white)),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                      border: Border.all(color: Colors.white)
+                    ),
+                  )
+                ],
+              ),
+            )
+          ],
+        ),
+      );
+    } else if (controller.bottomType == "3") {
+      return Container();
+    }
+    return Container();
   }
 }
