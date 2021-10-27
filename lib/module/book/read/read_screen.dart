@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:book_app/log/log.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
+import 'package:book_app/module/home/component/drag_overlay.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/no_shadow_scroll_behavior.dart';
+import 'package:book_app/util/tts_util.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get/get.dart';
 
 import 'component/custom_drawer.dart';
@@ -223,6 +226,59 @@ class ReadScreen extends GetView<ReadController> {
                     right: 0,
                     child: Container(
                       color: Colors.transparent,
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: MediaQuery.of(context).padding.top + 56,
+                      color: Colors.black,
+                      child: Container(
+                        margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            GestureDetector(
+                              child: Container(
+                                margin: EdgeInsets.only(left: 15),
+                                alignment: Alignment.centerLeft,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.arrow_back_ios, size: 25,),
+                                    Text("${controller.book.name}", style: TextStyle(color: Colors.white, fontSize: 16),)
+                                  ],
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              child: Container(
+                                alignment: Alignment.centerRight,
+                                margin: EdgeInsets.only(right: 15),
+                                child: Icon(Icons.headset, size: 25,),
+                              ),
+                              onTap: () async {
+                                TTSUtil.instance.flutterTts!.speak(controller.pages[controller.pageIndex].content);
+                                TTSUtil.instance.flutterTts!.setProgressHandler((text, start, end, word) {
+                                  Log.i(word);
+                                });
+                                TTSUtil.instance.flutterTts!.setCompletionHandler(() {
+                                  Log.i("结束");
+                                });
+                                // await TTSUtil.instance.flutterTts!.awaitSpeakCompletion(true);
+                                // DragOverlay.show(context, Container(
+                                //   width: 100,
+                                //   height: 20,
+                                //   color: Colors.red,
+                                // ));
+                              },
+                            )
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                   Positioned(

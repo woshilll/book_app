@@ -14,8 +14,8 @@ import 'package:get/get.dart';
 import 'package:book_app/model/book/book.dart';
 
 class HomeScreen extends GetView<HomeController> {
-  const HomeScreen({Key? key}) : super(key: key);
 
+  const HomeScreen({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     globalContext = context;

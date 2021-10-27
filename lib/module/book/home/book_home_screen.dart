@@ -1,10 +1,12 @@
 import 'package:book_app/log/log.dart';
 import 'package:book_app/module/book/home/book_home_controller.dart';
 import 'package:book_app/route/routes.dart';
+import 'package:book_app/util/no_shadow_scroll_behavior.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get/get.dart';
 import 'package:book_app/model/book/book.dart';
 
@@ -28,82 +30,64 @@ class BookHomeScreen extends GetView<BookHomeController> {
         ],
       ),
       body: _body(context),
-      floatingActionButton: SizedBox(
-        width: 60,
-        height: 60,
-        child: ElevatedButton(
-          child: const Text("搜书", style: TextStyle(fontSize: 14)),
-          style: ButtonStyle(
-            shape: MaterialStateProperty.all(const CircleBorder()),
-          ),
-          onPressed: () {
-            Get.toNamed(Routes.search)!.then((value) {
-              controller.getBookList();
-            });
-          },
+      floatingActionButton: ElevatedButton(
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          child: const Icon(Icons.search, size: 30,),
         ),
+        style: ButtonStyle(
+          shape: MaterialStateProperty.all(const CircleBorder()),
+        ),
+        onPressed: () {
+          Get.toNamed(Routes.search)!.then((value) {
+            controller.getBookList();
+          });
+        },
       ),
     );
   }
   Widget _body(context) {
-    return GetBuilder<BookHomeController>(
-      id: 'bookList',
-      builder: (controller) {
-        return StaggeredGridView.countBuilder(
-            crossAxisCount: 4,
-            crossAxisSpacing: 4,
-            mainAxisSpacing: 10,
-            itemCount: controller.books.length,
-            padding: const EdgeInsets.all(4),
-            itemBuilder: (context, index) {
-              return InkWell(
-                child: _bookImageWidget(context, index),
-                onLongPress: () {
-                  _handleDelete(context, index);
-                },
-                onTap: () => controller.getBookInfo(index)
-              );
-            },
-            staggeredTileBuilder: (index) =>
-                StaggeredTile.count(2, index == 0 ? 2.5 : 3));
-      },
+    return Stack(
+      children: [
+        GetBuilder<BookHomeController>(
+          id: 'bookList',
+          builder: (controller) {
+            return Container(
+              margin: const EdgeInsets.only(left: 10, right: 10, top: 15),
+              child: ScrollConfiguration(
+                behavior: NoShadowScrollBehavior(),
+                child: GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 5,
+                        mainAxisSpacing: 5,
+                        childAspectRatio: 2 / 3
+                    ),
+                    itemCount: controller.books.length,
+                    itemBuilder: (context, index) {
+                      return Column(
+                        children: [
+                          Expanded(child: InkWell(
+                            child: _bookImageWidget(context, index),
+                            onLongPress: () {
+                              _handleDelete(context, index);
+                            },
+                            onTap: () => controller.getBookInfo(index),
+                          )),
+                          Center(
+                            child: Text("${controller.books[index].name}", style: const TextStyle(fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis,),
+                          )
+                        ],
+                      );
+                    }
+                ),
+              ),
+            );
+          },
+        )
+      ],
     );
   }
-  // Widget _body(context) {
-  //   return GetBuilder<BookHomeController>(
-  //     id: 'bookList',
-  //     builder: (controller) {
-  //       return Container(
-  //         margin: const EdgeInsets.only(left: 10, right: 10, top: 15),
-  //         child: GridView.builder(
-  //             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-  //                 crossAxisCount: 3,
-  //                 crossAxisSpacing: 5,
-  //                 mainAxisSpacing: 5,
-  //                 childAspectRatio: 2 / 3
-  //             ),
-  //             itemCount: controller.books.length,
-  //             itemBuilder: (context, index) {
-  //               return Column(
-  //                 children: [
-  //                   Expanded(child: InkWell(
-  //                     child: _bookImageWidget(context, index),
-  //                     onLongPress: () {
-  //                       _handleDelete(context, index);
-  //                     },
-  //                     onTap: () => controller.getBookInfo(index),
-  //                   )),
-  //                   Center(
-  //                     child: Text("${controller.books[index].name}"),
-  //                   )
-  //                 ],
-  //               );
-  //             }
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
   Widget _bookImageWidget(context, index) {
     return CachedNetworkImage(
       imageUrl: "${controller.books[index].indexImg}",
@@ -117,11 +101,11 @@ class BookHomeScreen extends GetView<BookHomeController> {
         ),
       ),
       errorWidget: (context, url, error) {
-        Log.e(error);
         return Container(
           child: Text("${controller.books[index].name}"),
           decoration: const BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(4)),
+            color: Colors.grey
           ),
         );
       },
@@ -186,6 +170,8 @@ class BookHomeScreen extends GetView<BookHomeController> {
         ),
       ],
       offset: const Offset(20, 30),
+      onSelected: (value) async{
+      },
     );
   }
 }
