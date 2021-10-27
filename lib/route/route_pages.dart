@@ -1,5 +1,7 @@
 import 'package:book_app/module/book/home/book_home_binding.dart';
 import 'package:book_app/module/book/home/book_home_screen.dart';
+import 'package:book_app/module/book/readSetting/read_setting_binding.dart';
+import 'package:book_app/module/book/readSetting/read_setting_screen.dart';
 import 'package:book_app/module/book/read/read_binding.dart';
 import 'package:book_app/module/book/read/read_screen.dart';
 import 'package:book_app/module/book/search/search_binding.dart';
@@ -37,6 +39,11 @@ class RoutePages {
         name: Routes.read,
         page: () => const ReadScreen(),
         binding: ReadBinding()
+    ),
+    GetPage(
+        name: Routes.readSetting,
+        page: () => const ReadSettingScreen(),
+        binding: ReadSettingBinding()
     ),
     GetPage(
         name: Routes.search,

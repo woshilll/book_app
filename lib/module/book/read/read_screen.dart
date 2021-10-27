@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:book_app/log/log.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
+import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/no_shadow_scroll_behavior.dart';
-import 'package:device_display_brightness/device_display_brightness.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -20,6 +20,20 @@ class ReadScreen extends GetView<ReadController> {
       body: WillPopScope(
         child: Stack(
           children: [
+            Positioned(
+              top: 0,
+              right: 0,
+              left: 0,
+              bottom: 0,
+              child: GetBuilder<ReadController>(
+                id: "backgroundColor",
+                builder: (controller) {
+                  return Container(
+                    color: hexToColor(controller.readSettingConfig.backgroundColor),
+                  );
+                },
+              ),
+            ),
             _body(context),
           ],
         ),
@@ -367,102 +381,114 @@ class ReadScreen extends GetView<ReadController> {
       );
     } else if (controller.bottomType == "2") {
       // 亮度调节
-      return Container(
-        child: Column(
-          children: [
-            // 亮度,
-            Container(
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: GestureDetector(
-                      child: Container(
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.wb_sunny, size: 16, color: Colors.white,),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                      flex: 4,
-                      child: GetBuilder<ReadController>(
-                        id: "brightness",
-                        builder: (controller) {
-                          return Slider(
-                            label: "${controller.chapters[controller.readChapterIndex].name}",
-                            divisions: 10,
-                            activeColor: Colors.blue,
-                            inactiveColor: Colors.grey,
-                            min: 0,
-                            max: 1,
-                            value: controller.brightness,
-                            onChanged: (value) async{
-                              await controller.setBrightness(value);
-                            },
-                            onChangeStart: (value) {
-
-                            },
-                            onChangeEnd: (value) {
-                            },
-                          );
-                        },
-                      )
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: GestureDetector(
-                      child: Container(
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.wb_sunny, size: 30, color: Colors.white,),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // 背景色
-            Container(
-              height: 30,
-              margin: const EdgeInsets.only(top: 10, left: 15, right: 15),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.orange,
-                  ),
-                  CircleAvatar(
-                    backgroundColor: Colors.orange,
-                  ),
-                  CircleAvatar(
-                    backgroundColor: Colors.orange,
-                  ),
-                  CircleAvatar(
-                    backgroundColor: Colors.orange,
-                  ),
-                  CircleAvatar(
-                    backgroundColor: Colors.orange,
-                  ),
-                  CircleAvatar(
-                    backgroundColor: Colors.orange,
-                  ),
-                  Container(
-                    padding: EdgeInsets.only(left: 4, right: 4),
+      return Column(
+        children: [
+          // 亮度,
+          Row(
+            children: [
+              Expanded(
+                flex: 1,
+                child: GestureDetector(
+                  child: Container(
                     alignment: Alignment.center,
-                    child: Text("自定义", style: TextStyle(fontSize: 14, color: Colors.white)),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
-                      border: Border.all(color: Colors.white)
-                    ),
-                  )
-                ],
+                    child: const Icon(Icons.wb_sunny, size: 16, color: Colors.white,),
+                  ),
+                ),
               ),
-            )
-          ],
-        ),
+              Expanded(
+                  flex: 4,
+                  child: GetBuilder<ReadController>(
+                    id: "brightness",
+                    builder: (controller) {
+                      return Slider(
+                        label: "${controller.chapters[controller.readChapterIndex].name}",
+                        activeColor: Colors.blue,
+                        inactiveColor: Colors.grey,
+                        min: 0,
+                        max: 1,
+                        value: controller.brightness,
+                        onChanged: (value) async{
+                          await controller.setBrightness(value);
+                        },
+                        onChangeStart: (value) {
+
+                        },
+                        onChangeEnd: (value) {
+                        },
+                      );
+                    },
+                  )
+              ),
+              Expanded(
+                flex: 1,
+                child: GestureDetector(
+                  child: Container(
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.wb_sunny, size: 30, color: Colors.white,),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          // 背景色
+          Container(
+            height: 30,
+            margin: const EdgeInsets.only(top: 10, left: 15, right: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: _colors(),
+            ),
+          )
+        ],
       );
     } else if (controller.bottomType == "3") {
       return Container();
     }
     return Container();
+  }
+  List<Widget> _colors() {
+    List<Widget> list = List<Widget>.generate(controller.backgroundColors.length, (index) {
+      return GestureDetector(
+        child: CircleAvatar(
+          backgroundColor: hexToColor(controller.backgroundColors[index]),
+          child: Text(controller.backgroundColors[index] == controller.readSettingConfig.backgroundColor ? "√" : ""),
+        ),
+        onTap: () {
+          controller.setBackGroundColor(controller.backgroundColors[index]);
+        },
+      );
+    });
+    // Aa+ Aa-
+    list.add(
+        GestureDetector(
+          child: Container(
+            padding: const EdgeInsets.only(left: 4, right: 4),
+            alignment: Alignment.center,
+            child: const Text("重置", style: TextStyle(fontSize: 14, color: Colors.white)),
+            decoration: BoxDecoration(
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
+                border: Border.all(color: Colors.white)
+            ),
+          ),
+          onTap: () => controller.setBackGroundColor("#FFF2E2"),
+        )
+    );
+    list.add(
+      GestureDetector(
+        child: Container(
+          padding: const EdgeInsets.only(left: 4, right: 4),
+          alignment: Alignment.center,
+          child: const Text("自定义", style: TextStyle(fontSize: 14, color: Colors.white)),
+          decoration: BoxDecoration(
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
+              border: Border.all(color: Colors.white)
+          ),
+        ),
+        onTap: () async{
+          await controller.toSetting();
+        },
+      )
+    );
+    return list;
   }
 }

@@ -7,6 +7,7 @@ import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/model/result/result.dart';
 import 'package:book_app/route/routes.dart';
+import 'package:device_display_brightness/device_display_brightness.dart';
 import 'package:get/get.dart';
 
 class BookHomeController extends GetxController {
@@ -56,13 +57,15 @@ class BookHomeController extends GetxController {
       selected.chapters = [];
     }
     Get.toNamed(Routes.read, arguments: {"book": selected})!.then((value) async{
-      Log.i(value);
+
       // 重新更新页面数据
       Book? book = await _bookDbProvider.getBookById(selected.id);
       if (book != null) {
         books[index] = book;
         update(['bookList']);
       }
+      // 设置亮度
+      await DeviceDisplayBrightness.setBrightness(value["brightness"]);
     });
   }
 }

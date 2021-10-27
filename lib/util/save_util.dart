@@ -35,4 +35,11 @@ class SaveUtil {
   static bool? getTrue(key) {
     return _sharedPreferences.getBool(key);
   }
+
+  static void setString(key, str) {
+    _sharedPreferences.setString(key, str);
+  }
+  static String? getString(key) {
+    return _sharedPreferences.getString(key);
+  }
 }

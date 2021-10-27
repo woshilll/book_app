@@ -4,6 +4,7 @@ abstract class Routes {
   static const home = '/home';
   static const bookHome = '/book/home';
   static const read = '/book/read';
+  static const readSetting = '/book/read/setting';
   static const search = '/book/search';
   static const searchValue = '/book/search/value';
   static const searchValueView = '/book/search/value/view';

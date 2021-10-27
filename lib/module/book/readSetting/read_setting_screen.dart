@@ -1,0 +1,202 @@
+import 'dart:convert';
+
+import 'package:book_app/log/log.dart';
+import 'package:book_app/module/book/read/read_controller.dart';
+import 'package:book_app/module/book/readSetting/component/read_setting_config.dart';
+import 'package:book_app/module/book/readSetting/read_setting_controller.dart';
+import 'package:book_app/theme/color.dart';
+import 'package:book_app/util/constant.dart';
+import 'package:book_app/util/no_shadow_scroll_behavior.dart';
+import 'package:book_app/util/save_util.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:get/get.dart';
+import 'package:flutter/material.dart';
+
+class ReadSettingScreen extends GetView<ReadSettingController> {
+  const ReadSettingScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("自定义设置"),
+        centerTitle: true,
+        leading: GestureDetector(
+          child: const Icon(Icons.arrow_back_ios),
+          onTap: () => Get.back(),
+        ),
+      ),
+      body: _body(context),
+    );
+  }
+
+
+  Widget _body(context) {
+    return Stack(
+      children: [
+        Positioned(
+          top: 30,
+          left: 50,
+          right: 50,
+          child: GetBuilder<ReadSettingController>(
+            id: 'setting',
+            builder: (controller) {
+              return Card(
+                color: hexToColor(controller.config.backgroundColor),
+                elevation: 10,
+                child: Container(
+                  height: 500,
+                  alignment: Alignment.topLeft,
+                  padding: const EdgeInsets.all(10),
+                  child: ScrollConfiguration(
+                    behavior: NoShadowScrollBehavior(),
+                    child: SingleChildScrollView(
+                      child: Text.rich(
+                          TextSpan(
+                              children: const [
+                                TextSpan(text: "1.你可以设置背景色\n\n"),
+                                TextSpan(text: "2.你可以设置字体颜色\n\n"),
+                                TextSpan(text: "3.你可以设置字体大小\n\n"),
+                                TextSpan(text: "4.接下来是一段测试\n\n"),
+                                TextSpan(text: "得，好美，它如深山里的一泓泉水，带着清澈和甘甜，温润心灵；它如初春的那抹新绿，清新自然，点缀生命；它如花笺里的兰花，恬淡生香，芬芳怡人；它如清晨小草上的露珠，晶莹剔透，不染风尘。懂得，是蓝天与白云的相拥；是清风与花香的缠绵；是润物细无声的点点春雨；是清晨坐拥的满怀阳光。"),
+                              ],
+                              style: TextStyle(fontSize: controller.config.fontSize, color: hexToColor(controller.config.fontColor))
+                          )
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Card(
+            color: Colors.white,
+            child: SizedBox(
+              height: 150,
+              child: Column(
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        GestureDetector(
+                          child: const Text("阅读底色"),
+                          onTap: () => _colorPicker(context, true),
+                        ),
+                        GestureDetector(
+                          child: const Text("字体颜色"),
+                          onTap: () => _colorPicker(context, false),
+                        ),
+                        GestureDetector(
+                          child: const Text("Aa-"),
+                          onTap: () => controller.fontSizeSub(),
+                        ),
+                        GestureDetector(
+                          child: const Text("Aa+"),
+                          onTap: () => controller.fontSizeAdd(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(width: 20,),
+                        Expanded(
+                          child: InkWell(
+                            borderRadius: const BorderRadius.all(Radius.circular(8)),
+                            child: Container(
+                              height: 35,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.all(Radius.circular(8)),
+                                  border: Border.all(color: Colors.lightBlue)
+                              ),
+                              child: const Text("恢复默认设置", style: TextStyle(color: Colors.lightBlueAccent, fontSize: 15),),
+                            ),
+                            onTap: () => controller.setDefault(),
+                          ),
+                        ),
+                        const SizedBox(width: 20,),
+                        Expanded(
+                          child: InkWell(
+                            borderRadius: const BorderRadius.all(Radius.circular(8)),
+                            child: Container(
+                              height: 35,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.all(Radius.circular(8)),
+                                  border: Border.all(color: Colors.lightBlue)
+                              ),
+                              child: const Text("保存设置", style: TextStyle(color: Colors.lightBlueAccent, fontSize: 15)),
+                            ),
+                            onTap: () {
+                              String data = json.encode(controller.config);
+                              SaveUtil.setString(Constant.readSettingConfig, data);
+                              Get.back(result: {"config": controller.config});
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 20,),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        )
+      ],
+    );
+  }
+
+  _colorPicker(context, flag) {
+    String preHex;
+    if (flag) {
+      // 背景色
+      preHex = controller.config.backgroundColor;
+    } else {
+      // 字体颜色
+      preHex = controller.config.fontColor;
+    }
+    Color pre = hexToColor(preHex);
+    String selectColorHex = "";
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              pickerColor: pre,
+              onColorChanged: (color) {
+                selectColorHex = colorToHex(color, includeHashSign: true, enableAlpha: false);
+              },
+              showLabel: false,
+              enableAlpha: false,
+              pickerAreaHeightPercent: .8,
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              child: const Text("确定"),
+              onPressed: () {
+                if (selectColorHex.isNotEmpty) {
+                  controller.setColor(selectColorHex, flag);
+                }
+                Navigator.of(context).pop();
+              },
+            )
+          ],
+        );
+      },
+    );
+  }
+}

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:book_app/api/chapter_api.dart';
 import 'package:book_app/log/log.dart';
@@ -6,6 +7,11 @@ import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/chapter/chapter.dart';
+import 'package:book_app/module/book/readSetting/component/read_setting_config.dart';
+import 'package:book_app/route/routes.dart';
+import 'package:book_app/theme/color.dart';
+import 'package:book_app/util/constant.dart';
+import 'package:book_app/util/save_util.dart';
 import 'package:device_display_brightness/device_display_brightness.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -32,7 +38,6 @@ class ReadController extends GetxController {
   PageController contentPageController = PageController();
   /// 画笔
   final TextPainter _painter = TextPainter(textDirection: TextDirection.ltr);
-  TextStyle contentStyle = const TextStyle(color: Colors.green, fontSize: 20);
   /// 是否正在加载
   bool loading = false;
   /// 屏幕宽度
@@ -48,7 +53,14 @@ class ReadController extends GetxController {
   String bottomType = "1";
   /// 屏幕亮度
   double brightness = 0;
+  /// 最初屏幕亮度变量
   double brightnessTemp = 0;
+  /// 背景色
+  List<String> backgroundColors = ReadSettingConfig.getCommonBackgroundColors();
+  /// 默认背景色
+  ReadSettingConfig readSettingConfig = ReadSettingConfig.defaultConfig();
+  /// 字体样式
+  late TextStyle contentStyle;
   @override
   void onInit() async{
     super.onInit();
@@ -57,6 +69,13 @@ class ReadController extends GetxController {
     await initData();
   }
   initData() async{
+    /// 背景色
+    String? config = SaveUtil.getString(Constant.readSettingConfig);
+    if (config != null) {
+      readSettingConfig = ReadSettingConfig.fromJson(json.decode(config));
+    }
+    contentStyle = TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: readSettingConfig.fontSize);
+    /// 加载章节
     chapters = await _chapterDbProvider.getChapters(null, book.id);
     Chapter cur = chapters[0];
     int index = 0;
@@ -68,6 +87,8 @@ class ReadController extends GetxController {
     }
     cur.content = await getContent(cur.id, cur.url, true);
     await initPage(cur);
+
+    /// 亮度
     double sysBrightness = await DeviceDisplayBrightness.getBrightness();
     if (sysBrightness > 1) {
       brightness = sysBrightness / 10;
@@ -143,7 +164,7 @@ class ReadController extends GetxController {
     double paintHeight = _painter.height;
     offset =
         _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
-    pageRecursion(index, maxLines, preOffset, offset, content, chapter);
+    await pageRecursion(index, maxLines, preOffset, offset, content, chapter);
   }
   /// 获取章节内容
   Future<String> getContent(id, url, showDialog) async{
@@ -223,7 +244,7 @@ class ReadController extends GetxController {
     // 更新当前的章节和页数
     var chapterId = pages[pageIndex].chapterId;
     await _bookDbProvider.updateCurChapter(book.id, chapterId);
-    Get.back();
+    Get.back(result: {"brightness": brightnessTemp});
   }
 
   /// 跳转章节
@@ -418,9 +439,36 @@ class ReadController extends GetxController {
     update(["brightness"]);
   }
 
+  void setBackGroundColor(String backgroundColor) {
+    if (readSettingConfig.backgroundColor != backgroundColor) {
+      readSettingConfig.backgroundColor = backgroundColor;
+      update(["backgroundColor", "bottomType"]);
+    }
+  }
+
+  toSetting() async{
+    ReadSettingConfig temp = ReadSettingConfig(readSettingConfig.backgroundColor, readSettingConfig.fontSize, readSettingConfig.fontColor);
+    var value = await Get.toNamed(Routes.readSetting, arguments: {"config": temp});
+    if (value != null && value["config"] != null) {
+      ReadSettingConfig config = value["config"];
+      if (config.fontSize != readSettingConfig.fontSize || config.fontColor != readSettingConfig.fontColor) {
+        // 需要重新加载
+        await EasyLoading.show();
+        contentStyle = TextStyle(color: hexToColor(config.fontColor), fontSize: config.fontSize);
+        int chapterIndex = chapters.indexWhere((element) => pages[pageIndex].chapterId == element.id);
+        pages.clear();
+        await jumpChapter(chapterIndex, pop: false);
+        await EasyLoading.dismiss();
+      }
+      readSettingConfig = value["config"];
+      update(["backgroundColor", "content"]);
+    }
+  }
+
   @override
-  void onClose() async{
+  void onClose() {
     super.onClose();
-    await DeviceDisplayBrightness.setBrightness(brightnessTemp);
+    String data = json.encode(readSettingConfig);
+    SaveUtil.setString(Constant.readSettingConfig, data);
   }
 }
