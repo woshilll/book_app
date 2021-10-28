@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:audio_service/audio_service.dart';
 import 'package:book_app/api/chapter_api.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/mapper/book_db_provider.dart';
@@ -8,8 +9,10 @@ import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/module/book/readSetting/component/read_setting_config.dart';
+import 'package:book_app/module/home/home_controller.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/color.dart';
+import 'package:book_app/util/audio/text_player_handler.dart';
 import 'package:book_app/util/constant.dart';
 import 'package:book_app/util/save_util.dart';
 import 'package:device_display_brightness/device_display_brightness.dart';
@@ -61,12 +64,14 @@ class ReadController extends GetxController {
   ReadSettingConfig readSettingConfig = ReadSettingConfig.defaultConfig();
   /// 字体样式
   late TextStyle contentStyle;
+  late AudioHandler audioHandler;
   @override
   void onInit() async{
     super.onInit();
     var map = Get.arguments;
     book = map["book"];
     await initData();
+    initAudio();
   }
   initData() async{
     /// 背景色
@@ -466,9 +471,33 @@ class ReadController extends GetxController {
   }
 
   @override
-  void onClose() {
+  void onClose() async{
     super.onClose();
     String data = json.encode(readSettingConfig);
     SaveUtil.setString(Constant.readSettingConfig, data);
+    // await audioHandler.stop();
+    // await audioHandler.updateQueue([]);
   }
+
+  void initAudio() {
+    HomeController homeController = Get.find();
+    audioHandler = homeController.audioHandler;
+  }
+
+  play() async{
+    await audioHandler.updateQueue([]);
+    // 直接加载一整章的小说
+    int lastIndex = pages.lastIndexWhere((element) => element.chapterId == pages[pageIndex].chapterId);
+    for (int i = pageIndex; i <= lastIndex; i++) {
+      Log.i("加载  ${pages[i].chapterName}");
+      await audioHandler.addQueueItem(MediaItem(
+          id: pages[pageIndex].chapterId.toString(),
+          album: "content",
+          title: pages[pageIndex].chapterName.toString(),
+          extras: <String, String>{"content": pages[i].content, "type": "1"}
+      ));
+    }
+    await audioHandler.play();
+  }
+
 }

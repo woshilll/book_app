@@ -85,4 +85,13 @@ class ChapterDbProvider extends BaseDbProvider {
       [bookId]
     );
   }
+
+  Future<Chapter?> getNext(bookId, curChapterId) async{
+    Database db = await getDataBase();
+    List<Map<String, dynamic>> maps = await db.rawQuery("select * from $name where $columnBookId = $bookId and $columnId > $curChapterId limit 1");
+    if (maps.isEmpty) {
+      return null;
+    }
+    return Chapter.fromJson(maps[0]);
+  }
 }

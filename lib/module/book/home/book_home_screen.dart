@@ -5,8 +5,6 @@ import 'package:book_app/util/no_shadow_scroll_behavior.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get/get.dart';
 import 'package:book_app/model/book/book.dart';
 

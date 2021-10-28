@@ -56,6 +56,9 @@ dependencies:
   # 选色板
   flutter_colorpicker: ^0.6.0
   # 文字转语音
+  audio_service: ^0.18.1
+  just_audio: ^0.9.14
+  audio_session: ^0.1.6+1
   flutter_tts: ^3.2.2
 
 dev_dependencies:
