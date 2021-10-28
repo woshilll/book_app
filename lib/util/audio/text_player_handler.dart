@@ -64,6 +64,9 @@ class TextPlayerHandler extends BaseAudioHandler with QueueHandler {
     while (_running) {
       try {
         if (_playing) {
+          if (_index >= queue.value.length) {
+            _index = 0;
+          }
           mediaItem.add(queue.value[_index]);
           playbackState.add(playbackState.value.copyWith(
             updatePosition: Duration.zero,
@@ -88,7 +91,9 @@ class TextPlayerHandler extends BaseAudioHandler with QueueHandler {
       } on TtsInterruptedException {}
     }
     _index = 0;
-    mediaItem.add(queue.value[_index]);
+    if (_index < queue.value.length) {
+      mediaItem.add(queue.value[_index]);
+    }
     playbackState.add(playbackState.value.copyWith(
       updatePosition: Duration.zero,
     ));
@@ -141,6 +146,8 @@ class TextPlayerHandler extends BaseAudioHandler with QueueHandler {
 
   @override
   Future<void> stop() async {
+    // queue.value.clear();
+    // await _tts.stop();
     playbackState.add(playbackState.value.copyWith(
       controls: [],
       processingState: AudioProcessingState.idle,

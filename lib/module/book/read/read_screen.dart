@@ -86,14 +86,14 @@ class ReadScreen extends GetView<ReadController> {
           );
         },
       ),
-      onTapUp: (e) {
+      onTapUp: (e) async{
         if (controller.screenWidth <= 0) {
           controller.screenWidth = MediaQuery.of(context).size.width;
         }
         if (e.globalPosition.dx < controller.screenWidth / 3) {
-          controller.prePage();
+          await controller.prePage();
         } else if (e.globalPosition.dx > (controller.screenWidth / 3 * 2)) {
-          controller.nextPage();
+          await controller.nextPage();
         } else {
           // 中间
           _showBottom(context);

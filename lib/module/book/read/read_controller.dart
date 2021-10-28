@@ -128,6 +128,7 @@ class ReadController extends GetxController {
         pages.add(
             ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, wordWith));
         i++;
+        update(["content"]);
         return;
       }
       String subContent = content.substring(preOffset, offset);
@@ -275,7 +276,7 @@ class ReadController extends GetxController {
     int index = pageIndex;
     if (index < pages.length - 2) {
       // 有下一页
-      contentPageController.jumpToPage(index + 1);
+      contentPageController.animateToPage(index + 1, duration: const Duration(milliseconds: 300), curve: Curves.fastOutSlowIn);
     } else {
       // 到底了， 加载 获取当前章节
       var chapterId = pages[index].chapterId;
@@ -286,7 +287,7 @@ class ReadController extends GetxController {
         next.content = await getContent(next.id, next.url, false);
         await initPage(next);
         // 跳转
-        contentPageController.jumpToPage(index + 1);
+        contentPageController.animateToPage(index + 1, duration: const Duration(milliseconds: 300), curve: Curves.fastOutSlowIn);
       } else {
         EasyLoading.showToast("没有更多了");
       }
@@ -297,7 +298,7 @@ class ReadController extends GetxController {
     int index = pageIndex;
     if (index > 0) {
       // 有上一页
-      contentPageController.jumpToPage(index - 1);
+      contentPageController.animateToPage(index - 1, duration: const Duration(milliseconds: 300), curve: Curves.fastOutSlowIn);
     } else {
       // 无上一页
       var chapterId = pages[index].chapterId;
@@ -309,8 +310,8 @@ class ReadController extends GetxController {
         pre.content = await getContent(pre.id, pre.url, false);
         List<ContentPage> returnPages = await initPageWithReturn(pre);
         pages.insertAll(0, returnPages);
-        update(["content"]);
-        contentPageController.jumpToPage(returnPages.length - 1);
+        pageIndex = returnPages.length - 1;
+        contentPageController.animateToPage(pageIndex, duration: const Duration(milliseconds: 300), curve: Curves.fastOutSlowIn);
         EasyLoading.dismiss();
       } else {
         EasyLoading.showToast("没有更多了");
@@ -485,11 +486,13 @@ class ReadController extends GetxController {
   }
 
   play() async{
+    // Log.i(pageIndex);
+    HomeController homeController = Get.find();
+    await audioHandler.pause();
     await audioHandler.updateQueue([]);
     // 直接加载一整章的小说
     int lastIndex = pages.lastIndexWhere((element) => element.chapterId == pages[pageIndex].chapterId);
     for (int i = pageIndex; i <= lastIndex; i++) {
-      Log.i("加载  ${pages[i].chapterName}");
       await audioHandler.addQueueItem(MediaItem(
           id: pages[pageIndex].chapterId.toString(),
           album: "content",
@@ -498,6 +501,8 @@ class ReadController extends GetxController {
       ));
     }
     await audioHandler.play();
+    await audioHandler.setSpeed(10);
+    homeController.audioProcessingState = AudioProcessingState.error;
   }
 
 }

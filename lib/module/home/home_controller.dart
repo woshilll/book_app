@@ -26,8 +26,8 @@ class HomeController extends GetxController {
   /// 听小说
   late AudioHandler audioHandler;
   MediaItem? curMediaItem;
-  bool _mediaLoadFlag = false;
   CrossFadeState dragFade = CrossFadeState.showFirst;
+  AudioProcessingState audioProcessingState = AudioProcessingState.error;
   @override
   void onInit() {
     super.onInit();
@@ -124,62 +124,64 @@ class HomeController extends GetxController {
   audioListen() async{
     audioHandler.mediaItem.listen((event) {
       if (event != null) {
-        Log.i("监听到播放项变化  ${event.title}");
         curMediaItem = event;
       }
     });
+    audioHandler.queue.listen((event) {
+      Log.i("队列长度  ${event.length}");
+    });
     audioHandler.playbackState.listen((state) async{
       if (state.playing) {
-        DragOverlay.show(globalContext, Container(
-          margin: EdgeInsets.only(left: 15, right: 15),
-          child: GetBuilder<HomeController>(
-            id: 'drag',
-            builder: (controller) {
-              return AnimatedCrossFade(
-                firstChild: GestureDetector(
+        DragOverlay.show(globalContext, GetBuilder<HomeController>(
+          id: 'drag',
+          builder: (controller) {
+            return AnimatedCrossFade(
+              firstChild: GestureDetector(
+                child: Card(
+                  color: Colors.black,
                   child: Container(
-                    width: 50,
+                    width: 30,
                     height: 50,
-                    child: CircleAvatar(
-                      backgroundColor: Colors.pink,
-                    ),
+                    alignment: Alignment.centerRight,
+                    child: Icon(Icons.arrow_forward_ios, color: Colors.white, size: 25,),
                   ),
-                  onTap: () {
-                    dragFade = CrossFadeState.showSecond;
-                    update(["drag"]);
-                  },
+                  elevation: 5,
                 ),
-                secondChild: GestureDetector(
-                  child: Opacity(
-                    opacity: .7,
-                    child: Container(
-                      height: 50,
-                      width: 100,
-                      color: Colors.black,
-                      child: Text(curMediaItem!.title, style: TextStyle(color: Colors.white),),
-                    ),
+                onTap: () {
+                  dragFade = CrossFadeState.showSecond;
+                  update(["drag"]);
+                },
+              ),
+              secondChild: GestureDetector(
+                child: Opacity(
+                  opacity: .7,
+                  child: Container(
+                    margin: EdgeInsets.only(left: 10),
+                    height: 50,
+                    width: 100,
+                    color: Colors.black,
+                    child: Text(curMediaItem!.title, style: TextStyle(color: Colors.white),),
                   ),
-                  onTap: () {
-                    dragFade = CrossFadeState.showFirst;
-                    update(["drag"]);
-                  },
                 ),
-                crossFadeState: dragFade,
-                duration: const Duration(milliseconds: 600),
-              );
-            },
-          ),
+                onTap: () {
+                  dragFade = CrossFadeState.showFirst;
+                  update(["drag"]);
+                },
+              ),
+              crossFadeState: dragFade,
+              duration: const Duration(milliseconds: 600),
+            );
+          },
         ));
       }
-      if (state.processingState == AudioProcessingState.idle && !_mediaLoadFlag) {
+      if (state.processingState == AudioProcessingState.idle && audioProcessingState == AudioProcessingState.idle) {
         // 加载下一个章节
         if (curMediaItem != null) {
           Log.i("加载下个章节");
           var type = curMediaItem!.extras?["type"];
           if (type == "1") {
             // 是小说
-            _mediaLoadFlag = true;
-            int curChapterId = int.parse(curMediaItem!.id);
+            int curChapterId = int.parse(audioHandler.queue.value[state.queueIndex!].id);
             Chapter? curChapter = await _chapterDbProvider.getChapterById(curChapterId);
             // 找到下一章的chapter
             Chapter? nextChapter = await _chapterDbProvider.getNext(curChapter!.bookId, curChapterId);
@@ -193,7 +195,6 @@ class HomeController extends GetxController {
               ReadController readController = Get.find();
               nextPages = await readController.initPageWithReturn(nextChapter);
               for (var page in nextPages) {
-                Log.i("页面未退出，加载  ${page.chapterName}");
                 await audioHandler.addQueueItem(MediaItem(
                     id: page.chapterId.toString(),
                     album: "content",
@@ -224,9 +225,11 @@ class HomeController extends GetxController {
             }
             audioHandler.skipToNext();
             audioHandler.play();
-            _mediaLoadFlag = false;
           }
         }
+        audioProcessingState = AudioProcessingState.error;
+      } else {
+        audioProcessingState = state.processingState;
       }
     });
   }
