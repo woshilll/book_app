@@ -14,6 +14,7 @@ import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/audio/text_player_handler.dart';
 import 'package:book_app/util/constant.dart';
+import 'package:book_app/util/font_util.dart';
 import 'package:book_app/util/save_util.dart';
 import 'package:device_display_brightness/device_display_brightness.dart';
 import 'package:flutter/services.dart';
@@ -91,7 +92,7 @@ class ReadController extends GetxController {
       }
     }
     cur.content = await getContent(cur.id, cur.url, true);
-    await initPage(cur);
+    await initPage(cur, dialog: true);
 
     /// 亮度
     double sysBrightness = await DeviceDisplayBrightness.getBrightness();
@@ -100,54 +101,66 @@ class ReadController extends GetxController {
     } else {
       brightness = sysBrightness;
     }
+    if (brightness >= 1.0) {
+      brightness = 1;
+    }
     brightnessTemp = brightness;
   }
   /// 将文本转文字页面
-  initPage(Chapter chapter) async {
-    calWordHeightAndWidth();
-    String content = alphanumericToFullLength(chapter.content);
-    _painter.text = TextSpan(text: content, style: contentStyle);
-    // 一页最大行数 context获取的是主页的context， 带appBar所以高度会减少56
-    double screenHeight = MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top + 26;
-    // 第一页最大行数
-    int maxLines = screenHeight ~/ wordHeight;
-    _painter.maxLines = maxLines;
-    // 统计第一页字符偏移量
-    _painter.layout(maxWidth: MediaQuery.of(context).size.width);
-    double paintWidth = _painter.width;
-    double paintHeight = _painter.height;
-    int offset =
-        _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
-    // 得到第一页偏移量
-    int preOffset = 0;
-    int i = 1;
-    // 先加载几页，然后再一点点加载
-    for (int j = 0; j < 4; j++) {
-      if (offset >= content.length) {
-        String subContent = content.substring(preOffset, offset);
-        pages.add(
-            ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, wordWith));
-        i++;
-        update(["content"]);
-        return;
-      }
-      String subContent = content.substring(preOffset, offset);
-      pages.add(
-          ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, wordWith));
-      i++;
-      preOffset = offset;
-      _painter.maxLines = maxLines * i;
-      _painter.layout(maxWidth: MediaQuery.of(context).size.width);
-      paintWidth = _painter.width;
-      paintHeight = _painter.height;
-      offset =
-          _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
+  initPage(Chapter chapter, {bool dialog = false}) async {
+    loading = true;
+    if (dialog) {
+      await EasyLoading.show();
     }
-    Timer(const Duration(milliseconds: 300), () {
-      pageRecursion(i, maxLines, preOffset, offset, content, chapter);
-      update(["content"]);
-      loading = false;
-    });
+    List<ContentPage> list = await initPageWithReturn(chapter);
+    pages.addAll(list);
+    update(["content"]);
+    await EasyLoading.dismiss();
+    loading = false;
+    // calWordHeightAndWidth();
+    // String content = FontUtil.alphanumericToFullLength(chapter.content);
+    // _painter.text = TextSpan(text: content, style: contentStyle);
+    // // 一页最大行数 context获取的是主页的context， 带appBar所以高度会减少56
+    // // double screenHeight = MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top + 26;
+    // // 第一页最大行数
+    // // int maxLines = screenHeight ~/ wordHeight;
+    // _painter.maxLines = maxLines;
+    // // 统计第一页字符偏移量
+    // _painter.layout(maxWidth: MediaQuery.of(context).size.width);
+    // double paintWidth = _painter.width;
+    // double paintHeight = _painter.height;
+    // int offset =
+    //     _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
+    // // 得到第一页偏移量
+    // int preOffset = 0;
+    // int i = 1;
+    // // 先加载几页，然后再一点点加载
+    // for (int j = 0; j < 4; j++) {
+    //   if (offset >= content.length) {
+    //     String subContent = content.substring(preOffset, offset);
+    //     pages.add(
+    //         ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, wordWith));
+    //     i++;
+    //     update(["content"]);
+    //     return;
+    //   }
+    //   String subContent = content.substring(preOffset, offset);
+    //   pages.add(
+    //       ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, wordWith));
+    //   i++;
+    //   preOffset = offset;
+    //   _painter.maxLines = maxLines * i;
+    //   _painter.layout(maxWidth: MediaQuery.of(context).size.width);
+    //   paintWidth = _painter.width;
+    //   paintHeight = _painter.height;
+    //   offset =
+    //       _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
+    // }
+    // Timer(const Duration(milliseconds: 300), () async{
+    //   await pageRecursion(i, maxLines, preOffset, offset, content, chapter);
+    //   update(["content"]);
+    //   loading = false;
+    // });
   }
 
   Future pageRecursion(int index, int maxLines, int preOffset, int offset,
@@ -182,30 +195,10 @@ class ReadController extends GetxController {
       await _chapterDbProvider.updateContent(id, content.trim());
     }
     // 赋值
-    return content;
+    return content.replaceAll("\n\n", "\n");
   }
 
-  /// 字符转全角
-  String alphanumericToFullLength(str) {
-    var temp = str.codeUnits;
-    final regex = RegExp(r'^[a-zA-Z0-9!,.@#$%^&*()@￥?]+$');
-    final string = temp.map<String>((rune) {
-      final char = String.fromCharCode(rune);
-      return regex.hasMatch(char) ? String.fromCharCode(rune + 65248) : char;
-    });
-    return string.join();
-  }
 
-  /// 字符转半角
-  String alphanumericToHalfLength(String str) {
-    var runes = str.codeUnits;
-    final regex = RegExp(r'^[Ａ-Ｚａ-ｚ０-９]+$');
-    final string = runes.map<String>((rune) {
-      final char = String.fromCharCode(rune);
-      return regex.hasMatch(char) ? String.fromCharCode(rune - 65248) : char;
-    });
-    return string.join();
-  }
 
   double wordHeight = 0;
   double wordWith = 0;
@@ -219,8 +212,8 @@ class ReadController extends GetxController {
     wordHeight = cal.height;
     wordWith = cal.width;
     maxLines = (MediaQuery.of(context).size.height -
-        MediaQuery.of(context).padding.top) ~/
-        wordHeight;
+        MediaQuery.of(context).padding.top - 16) ~/
+        wordHeight - 1;
   }
   /// 计算当前章节一共多少页
   calThisChapterTotalPage(index) {
@@ -230,9 +223,6 @@ class ReadController extends GetxController {
 
   /// 页面变化监听
   Future pageChangeListen(int index) async{
-    if (loading) {
-      return;
-    }
     loading = true;
     var chapterId = pages[pages.length - 1].chapterId;
     index = chapters.indexWhere((element) => element.id == chapterId);
@@ -242,7 +232,7 @@ class ReadController extends GetxController {
     }
     Chapter chapter = chapters[index + 1];
     chapter.content = await getContent(chapter.id, chapter.url, false);
-    initPage(chapter);
+    await initPage(chapter);
   }
 
   /// 页面返回监听
@@ -274,9 +264,11 @@ class ReadController extends GetxController {
   /// 下一页
   nextPage() async {
     int index = pageIndex;
+    Log.i("当前页 $pageIndex");
     if (index < pages.length - 2) {
       // 有下一页
-      contentPageController.animateToPage(index + 1, duration: const Duration(milliseconds: 300), curve: Curves.fastOutSlowIn);
+      contentPageController.jumpToPage(index + 1);
+      Log.v("下一页 $pageIndex");
     } else {
       // 到底了， 加载 获取当前章节
       var chapterId = pages[index].chapterId;
@@ -287,7 +279,8 @@ class ReadController extends GetxController {
         next.content = await getContent(next.id, next.url, false);
         await initPage(next);
         // 跳转
-        contentPageController.animateToPage(index + 1, duration: const Duration(milliseconds: 300), curve: Curves.fastOutSlowIn);
+        contentPageController.jumpToPage(index + 1);
+        Log.v("下一页 $pageIndex");
       } else {
         EasyLoading.showToast("没有更多了");
       }
@@ -295,10 +288,12 @@ class ReadController extends GetxController {
   }
 
   prePage() async {
+    Log.i("当前页 $pageIndex");
     int index = pageIndex;
     if (index > 0) {
       // 有上一页
-      contentPageController.animateToPage(index - 1, duration: const Duration(milliseconds: 300), curve: Curves.fastOutSlowIn);
+      contentPageController.jumpToPage(index - 1);
+      Log.v("上一页 $pageIndex");
     } else {
       // 无上一页
       var chapterId = pages[index].chapterId;
@@ -311,7 +306,8 @@ class ReadController extends GetxController {
         List<ContentPage> returnPages = await initPageWithReturn(pre);
         pages.insertAll(0, returnPages);
         pageIndex = returnPages.length - 1;
-        contentPageController.animateToPage(pageIndex, duration: const Duration(milliseconds: 300), curve: Curves.fastOutSlowIn);
+        contentPageController.jumpToPage(pageIndex);
+        Log.v("上一页 $pageIndex");
         EasyLoading.dismiss();
       } else {
         EasyLoading.showToast("没有更多了");
@@ -320,14 +316,14 @@ class ReadController extends GetxController {
   }
 
   Future<List<ContentPage>> initPageWithReturn(Chapter chapter) async {
-    List<ContentPage> pages = [];
+    List<ContentPage> list = [];
     calWordHeightAndWidth();
-    String content = alphanumericToFullLength(chapter.content);
+    String content = FontUtil.alphanumericToFullLength(chapter.content);
     _painter.text = TextSpan(text: content, style: contentStyle);
     // 一页最大行数 context获取的是主页的context， 带appBar所以高度会减少56
-    double screenHeight = MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top + 26;
+    // double screenHeight = MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top + 26;
     // 第一页最大行数
-    int maxLines = screenHeight ~/ wordHeight;
+    // int maxLines = screenHeight ~/ wordHeight;
     _painter.maxLines = maxLines;
     // 统计第一页字符偏移量
     _painter.layout(maxWidth: MediaQuery.of(context).size.width);
@@ -338,15 +334,15 @@ class ReadController extends GetxController {
     // 得到第一页偏移量
     int preOffset = 0;
     int i = 1;
-    while (preOffset < content.length) {
-      if (offset >= content.length) {
+    while (preOffset < content.characters.length) {
+      if (offset >= content.characters.length - 1) {
         String subContent = content.substring(preOffset);
-        pages.add(
+        list.add(
             ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, wordWith));
         break;
       }
       String subContent = content.substring(preOffset, offset);
-      pages.add(
+      list.add(
           ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, wordWith));
       i++;
       preOffset = offset;
@@ -357,7 +353,7 @@ class ReadController extends GetxController {
       offset =
           _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
     }
-    return pages;
+    return list;
   }
 
   Widget keyboardListen() {
@@ -501,7 +497,6 @@ class ReadController extends GetxController {
       ));
     }
     await audioHandler.play();
-    await audioHandler.setSpeed(10);
     homeController.audioProcessingState = AudioProcessingState.error;
   }
 

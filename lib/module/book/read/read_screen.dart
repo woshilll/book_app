@@ -8,6 +8,7 @@ import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/audio/text_player_handler.dart';
 import 'package:book_app/util/no_shadow_scroll_behavior.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import 'component/custom_drawer.dart';
@@ -16,7 +17,6 @@ class ReadScreen extends GetView<ReadController> {
   const ReadScreen({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    controller.keyboardListen();
     controller.context = context;
     return Scaffold(
       key: controller.scaffoldKey,
@@ -91,9 +91,13 @@ class ReadScreen extends GetView<ReadController> {
           controller.screenWidth = MediaQuery.of(context).size.width;
         }
         if (e.globalPosition.dx < controller.screenWidth / 3) {
+          controller.loading = true;
           await controller.prePage();
+          controller.loading = false;
         } else if (e.globalPosition.dx > (controller.screenWidth / 3 * 2)) {
+          controller.loading = true;
           await controller.nextPage();
+          controller.loading = false;
         } else {
           // 中间
           _showBottom(context);
@@ -248,8 +252,17 @@ class ReadScreen extends GetView<ReadController> {
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    const Icon(Icons.arrow_back_ios, size: 25,),
-                                    Text("${controller.book.name}", style: const TextStyle(color: Colors.white, fontSize: 16),)
+                                    GestureDetector(
+                                      child: const Icon(Icons.arrow_back_ios, size: 25,),
+                                      onTap: () {
+                                        Navigator.of(context).pop();
+                                        controller.pop();
+                                      },
+                                    ),
+                                    Container(
+                                      margin: EdgeInsets.only(left: 15),
+                                      child: Text("${controller.book.name}", style: const TextStyle(color: Colors.white, fontSize: 16),),
+                                    )
                                   ],
                                 ),
                               ),
@@ -330,14 +343,19 @@ class ReadScreen extends GetView<ReadController> {
                                       ),
                                       Expanded(
                                         flex: 1,
-                                        child: Container(
-                                          alignment: Alignment.center,
-                                          child: Column(
-                                            children: const [
-                                              Icon(Icons.settings, size: 24,),
-                                              Text("设置", style: TextStyle(color: Colors.white, fontSize: 14))
-                                            ],
+                                        child: GestureDetector(
+                                          child: Container(
+                                            alignment: Alignment.center,
+                                            child: Column(
+                                              children: const [
+                                                Icon(Icons.settings, size: 24,),
+                                                Text("设置", style: TextStyle(color: Colors.white, fontSize: 14))
+                                              ],
+                                            ),
                                           ),
+                                          onTap: () {
+                                            controller.changeBottomType("3");
+                                          },
                                         ),
                                       ),
                                     ],
@@ -486,7 +504,38 @@ class ReadScreen extends GetView<ReadController> {
         ],
       );
     } else if (controller.bottomType == "3") {
-      return Container();
+      return Container(
+        height: 50,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Container(
+              padding: EdgeInsets.only(top: 3, bottom: 5, left: 10, right: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.white)
+              ),
+              child: Text("字体设置", style: TextStyle(fontSize: 16, color: Colors.white),),
+            ),
+            Container(
+              padding: EdgeInsets.only(top: 3, bottom: 5, left: 10, right: 10),
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.white)
+              ),
+              child: Text("语音设置", style: TextStyle(fontSize: 16, color: Colors.white),),
+            ),
+            Container(
+              padding: EdgeInsets.only(top: 3, bottom: 5, left: 10, right: 10),
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.white)
+              ),
+              child: Text("页面设置", style: TextStyle(fontSize: 16, color: Colors.white),),
+            ),
+          ],
+        ),
+      );
     }
     return Container();
   }

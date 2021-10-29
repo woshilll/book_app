@@ -18,12 +18,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DependencyInjection.init();
   runApp(const App());
-  // if (Platform.isAndroid) {
-  //     // 以下两行 设置android状态栏为透明的沉浸。写在组件渲染之后，是为了在渲染后进行set赋值，覆盖状态栏，写在渲染之前MaterialApp组件会覆盖掉这个值。
-  //     SystemUiOverlayStyle systemUiOverlayStyle =
-  //         const SystemUiOverlayStyle(statusBarColor: Colors.transparent);
-  //     SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
-  // }
+  if (Platform.isAndroid) {
+      // 以下两行 设置android状态栏为透明的沉浸。写在组件渲染之后，是为了在渲染后进行set赋值，覆盖状态栏，写在渲染之前MaterialApp组件会覆盖掉这个值。
+      SystemUiOverlayStyle systemUiOverlayStyle =
+          const SystemUiOverlayStyle(statusBarColor: Colors.transparent, systemNavigationBarColor: Colors.transparent, systemNavigationBarDividerColor: Colors.transparent);
+      SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
+  }
 }
 
 class App extends StatelessWidget {
@@ -33,11 +33,11 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String initRoute = Routes.splash;
-    var splashTrue = SaveUtil.getTrue(Constant.splashTrue);
-    if (splashTrue != null && splashTrue) {
-      // 去首页
-      initRoute = Routes.home;
-    }
+    // var splashTrue = SaveUtil.getTrue(Constant.splashTrue);
+    // if (splashTrue != null && splashTrue) {
+    //   // 去首页
+    //   initRoute = Routes.home;
+    // }
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       enableLog: true,

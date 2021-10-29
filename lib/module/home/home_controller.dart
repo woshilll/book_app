@@ -28,6 +28,7 @@ class HomeController extends GetxController {
   MediaItem? curMediaItem;
   CrossFadeState dragFade = CrossFadeState.showFirst;
   AudioProcessingState audioProcessingState = AudioProcessingState.error;
+  PlaybackState? _playbackState;
   @override
   void onInit() {
     super.onInit();
@@ -131,7 +132,9 @@ class HomeController extends GetxController {
       Log.i("队列长度  ${event.length}");
     });
     audioHandler.playbackState.listen((state) async{
-      if (state.playing) {
+      _playbackState = state;
+      update(["drag"]);
+      if (state.playing && DragOverlay.view == null) {
         DragOverlay.show(globalContext, GetBuilder<HomeController>(
           id: 'drag',
           builder: (controller) {
@@ -154,13 +157,70 @@ class HomeController extends GetxController {
               ),
               secondChild: GestureDetector(
                 child: Opacity(
-                  opacity: .7,
+                  opacity: 1,
                   child: Container(
-                    margin: EdgeInsets.only(left: 10),
+                    margin: const EdgeInsets.only(left: 10, right: 10),
                     height: 50,
-                    width: 100,
+                    width: MediaQuery.of(globalContext).size.width * 0.7,
                     color: Colors.black,
-                    child: Text(curMediaItem!.title, style: TextStyle(color: Colors.white),),
+                    child: Row(
+                      children: [
+                        Row(
+                          children: [
+                            GestureDetector(
+                              child: Container(
+                                margin: EdgeInsets.only(left: 5),
+                                child: Icon(Icons.skip_previous, color: Colors.white, size: 25),
+                              ),
+                              onTap: () async{
+                                if (_playbackState!.queueIndex != null && _playbackState!.queueIndex! > 0) {
+                                  await audioHandler.skipToPrevious();
+                                }
+                              },
+                            ),
+                            GestureDetector(
+                              child: Icon(_playbackState!.playing ? Icons.pause : Icons.play_arrow, color: Colors.white, size: 25),
+                              onTap: () async {
+                                if (_playbackState!.playing) {
+                                  await audioHandler.pause();
+                                } else {
+                                  await audioHandler.play();
+                                }
+                                update(["drag"]);
+                              },
+                            ),
+                            GestureDetector(
+                              child: Icon(Icons.skip_next, color: Colors.white, size: 25),
+                              onTap: () async{
+                                if (_playbackState!.queueIndex != null && _playbackState!.queueIndex! < audioHandler.queue.value.length - 1) {
+                                  await audioHandler.skipToNext();
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                        Expanded(
+                          child: Container(
+                            alignment: Alignment.center,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Text("${curMediaItem!.title}", style: TextStyle(fontSize: 14, color: Colors.white),),
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          child: Container(
+                            margin: EdgeInsets.only(right: 5),
+                            child: Icon(Icons.clear, color: Colors.white, size: 25),
+                          ),
+                          onTap: () async{
+                            audioHandler.queue.value.clear();
+                            await audioHandler.stop();
+                            DragOverlay.remove();
+                          },
+                        )
+                      ],
+                  ),
                   ),
                 ),
                 onTap: () {
@@ -181,6 +241,9 @@ class HomeController extends GetxController {
           var type = curMediaItem!.extras?["type"];
           if (type == "1") {
             // 是小说
+            if (state.queueIndex! >= audioHandler.queue.value.length) {
+              return;
+            }
             int curChapterId = int.parse(audioHandler.queue.value[state.queueIndex!].id);
             Chapter? curChapter = await _chapterDbProvider.getChapterById(curChapterId);
             // 找到下一章的chapter

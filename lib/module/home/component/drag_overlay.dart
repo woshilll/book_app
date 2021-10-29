@@ -2,7 +2,7 @@ import 'package:book_app/log/log.dart';
 import 'package:flutter/material.dart';
 
 class DragOverlay {
-  static late Widget view;
+  static Widget? view;
   static OverlayEntry? _holder;
 
   static void remove() {
@@ -10,11 +10,12 @@ class DragOverlay {
       _holder?.remove();
       _holder = null;
     }
+    view = null;
   }
 
   static void show(BuildContext context, Widget view) {
-    DragOverlay.view = view;
     remove();
+    DragOverlay.view = view;
     OverlayEntry overlayEntry = OverlayEntry(builder: (context){
       return Positioned(
         top: MediaQuery.of(context).size.height *0.7,
@@ -27,8 +28,8 @@ class DragOverlay {
 
   static _buildDraggable(context){
     return Draggable(
-      child: DragOverlay.view,
-      feedback: DragOverlay.view,
+      child: DragOverlay.view!,
+      feedback: DragOverlay.view!,
       onDragStarted: (){
 
       },

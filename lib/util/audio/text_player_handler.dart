@@ -146,8 +146,7 @@ class TextPlayerHandler extends BaseAudioHandler with QueueHandler {
 
   @override
   Future<void> stop() async {
-    // queue.value.clear();
-    // await _tts.stop();
+    await pause();
     playbackState.add(playbackState.value.copyWith(
       controls: [],
       processingState: AudioProcessingState.idle,
@@ -159,6 +158,11 @@ class TextPlayerHandler extends BaseAudioHandler with QueueHandler {
     await _completer?.future;
     // Shut down this task
     await super.stop();
+  }
+
+  @override
+  Future<void> setSpeed(double speed) async{
+    await _tts._flutterTts.setSpeechRate(speed);
   }
 
   void _signal() {
