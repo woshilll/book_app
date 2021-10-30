@@ -18,7 +18,7 @@ class SplashScreen extends GetView<SplashController> {
       body: Stack(
         children: [
           Container(
-            color: Colors.black,
+            color: Theme.of(context).backgroundColor,
           ),
           Positioned(
             left: 0,
@@ -32,9 +32,9 @@ class SplashScreen extends GetView<SplashController> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DefaultTextStyle(
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 40.0,
-                        color: Colors.white
+                        color: Theme.of(context).textTheme.bodyText1!.color!
                     ),
                     child: AnimatedTextKit(
                       animatedTexts: [
@@ -67,10 +67,10 @@ class SplashScreen extends GetView<SplashController> {
       child: InkWell(
         child: Container(
           padding: const EdgeInsets.fromLTRB(13, 3, 13, 3),
-          child: const Text("跳过", style: TextStyle(color: Colors.white),),
+          child: Text("跳过", style: Theme.of(context).textTheme.bodyText1,),
           decoration: BoxDecoration(
               borderRadius: const BorderRadius.all(Radius.circular(10)),
-              border: Border.all(color: Colors.white)),
+              border: Border.all(color: Theme.of(context).textTheme.bodyText1!.color!)),
         ),
         onTap: () => controller.toHome(),
       ),

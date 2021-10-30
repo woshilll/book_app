@@ -69,6 +69,8 @@ class ReadController extends GetxController {
   bool rotateScreen = false;
   /// x轴移动距离
   double xMove = 0;
+  /// 是否为暗色模式
+  bool isDark = Get.isDarkMode;
   @override
   void onInit() async{
     super.onInit();
@@ -79,9 +81,9 @@ class ReadController extends GetxController {
   }
   initData() async{
     /// 背景色
-    String? config = SaveUtil.getString(Constant.readSettingConfig);
-    if (config != null) {
-      readSettingConfig = ReadSettingConfig.fromJson(json.decode(config));
+    readSettingConfig = _getReadSettingConfig();
+    if (isDark) {
+      readSettingConfig = ReadSettingConfig.defaultDarkConfig(readSettingConfig.fontSize, readSettingConfig.fontHeight);
     }
     contentStyle = TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: readSettingConfig.fontSize, height: readSettingConfig.fontHeight);
     /// 加载章节
@@ -112,6 +114,14 @@ class ReadController extends GetxController {
       brightness = 1;
     }
     brightnessTemp = brightness;
+  }
+
+  ReadSettingConfig _getReadSettingConfig() {
+    String? config = SaveUtil.getString(Constant.readSettingConfig);
+    if (config != null) {
+      return ReadSettingConfig.fromJson(json.decode(config));
+    }
+    return ReadSettingConfig.defaultConfig();
   }
   /// 将文本转文字页面
   initPage(Chapter chapter, {bool dialog = false, bool withUpdate = true}) async {
@@ -469,6 +479,9 @@ class ReadController extends GetxController {
   }
 
   void setBackGroundColor(String backgroundColor) {
+    if (isDark) {
+      return;
+    }
     if (readSettingConfig.backgroundColor != backgroundColor) {
       readSettingConfig.backgroundColor = backgroundColor;
       update(["backgroundColor", "bottomType"]);
@@ -476,6 +489,9 @@ class ReadController extends GetxController {
   }
 
   toSetting() async{
+    if (isDark) {
+      return;
+    }
     ReadSettingConfig temp = ReadSettingConfig(readSettingConfig.backgroundColor, readSettingConfig.fontSize, readSettingConfig.fontColor, readSettingConfig.fontHeight);
     var value = await Get.toNamed(Routes.readSetting, arguments: {"config": temp});
     if (value != null && value["config"] != null) {
@@ -503,6 +519,11 @@ class ReadController extends GetxController {
   @override
   void onClose() async{
     super.onClose();
+    if (isDark) {
+      var config = _getReadSettingConfig();
+      readSettingConfig.backgroundColor = config.backgroundColor;
+      readSettingConfig.fontColor = config.fontColor;
+    }
     String data = json.encode(readSettingConfig);
     SaveUtil.setString(Constant.readSettingConfig, data);
     // await audioHandler.stop();
@@ -601,6 +622,24 @@ class ReadController extends GetxController {
       await _reload(readSettingConfig);
     }
 
+  }
+
+  Future changeDark() async{
+    if (isDark) {
+      var config = _getReadSettingConfig();
+      readSettingConfig.backgroundColor = config.backgroundColor;
+      readSettingConfig.fontColor = config.fontColor;
+      update(["backgroundColor"]);
+      await _reload(readSettingConfig);
+      isDark = false;
+      update(["content", "bottomType"]);
+    } else {
+      readSettingConfig = ReadSettingConfig.defaultDarkConfig(readSettingConfig.fontSize, readSettingConfig.fontHeight);
+      update(["backgroundColor"]);
+      await _reload(readSettingConfig);
+      isDark = true;
+      update(["content", "bottomType"]);
+    }
   }
 }
 

@@ -52,6 +52,8 @@ class App extends StatelessWidget {
       translations: LangService(),
       theme: ThemeConfig.lightTheme,
       builder: EasyLoading.init(),
+      darkTheme: ThemeConfig.darkTheme,
+      themeMode: ThemeMode.dark,
     );
   }
 }

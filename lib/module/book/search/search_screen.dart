@@ -13,104 +13,109 @@ class SearchScreen extends GetView<SearchController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leadingWidth: 0,
-        titleSpacing: 0,
-        toolbarHeight: 44,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: _bar(),
-      ),
-      body: _body(),
-    );
-  }
-
-  Widget _bar() {
-    return Row(
+    return Stack(
       children: [
-        Container(
-          margin: const EdgeInsets.only(left: 15),
-          child: _selectSite(),
+        Positioned(
+          top: MediaQuery.of(context).padding.top,
+          child: _bar(context),
         ),
-        Expanded(
-          flex: 2,
-          child: Container(
-            margin: const EdgeInsets.only(left: 5, right: 10),
-            height: 35,
-            alignment: Alignment.centerLeft,
-            child: TextField(
-              maxLines: 1,
-              focusNode: controller.searchNode,
-              controller: controller.searchTextController,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                  hintText: "小说",
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  prefixIcon: const Icon(Icons.search, size: 28,),
-                  fillColor: Colors.grey[300],
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderSide: const BorderSide(
-                      color: Colors.transparent
-                    ),
-                    borderRadius: BorderRadius.circular(16)
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(
-                          color: Colors.transparent
-                      ),
-                      borderRadius: BorderRadius.circular(16)
-                  ),
-                  disabledBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(
-                          color: Colors.transparent
-                      ),
-                      borderRadius: BorderRadius.circular(16)
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(
-                          color: Colors.transparent
-                      ),
-                      borderRadius: BorderRadius.circular(16)
-                  ),
-                  contentPadding: EdgeInsets.zero,
-                  isDense: true
-              ),
-              onSubmitted: (str) {
-                controller.search(str, null);
-              },
-
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-        ),
-        TextButton(
-          child: const Text("取消", style: TextStyle(fontSize: 15),),
-          onPressed: () {
-            controller.searchNode.unfocus();
-            Timer(const Duration(milliseconds: 100), () => Get.back());
-          },
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 56,
+          child: _body(context),
         )
       ],
     );
   }
 
-  Widget _body() {
+  Widget _bar(context) {
+    return SizedBox(
+      height: 56,
+      width: MediaQuery.of(context).size.width,
+      child: Row(
+        children: [
+          Container(
+            margin: const EdgeInsets.only(left: 15),
+            child: _selectSite(context),
+          ),
+          Expanded(
+            flex: 2,
+            child: Container(
+              margin: const EdgeInsets.only(left: 5, right: 10),
+              height: 35,
+              alignment: Alignment.centerLeft,
+              child: TextField(
+                maxLines: 1,
+                focusNode: controller.searchNode,
+                controller: controller.searchTextController,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                    hintText: "小说",
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    prefixIcon: const Icon(Icons.search, size: 28,),
+                    fillColor: Colors.grey[300],
+                    filled: true,
+                    border: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                            color: Colors.transparent
+                        ),
+                        borderRadius: BorderRadius.circular(16)
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                            color: Colors.transparent
+                        ),
+                        borderRadius: BorderRadius.circular(16)
+                    ),
+                    disabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                            color: Colors.transparent
+                        ),
+                        borderRadius: BorderRadius.circular(16)
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                            color: Colors.transparent
+                        ),
+                        borderRadius: BorderRadius.circular(16)
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true
+                ),
+                onSubmitted: (str) {
+                  controller.search(str, null);
+                },
+
+              ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+          TextButton(
+            child: const Text("取消", style: TextStyle(fontSize: 15),),
+            onPressed: () {
+              controller.searchNode.unfocus();
+              Timer(const Duration(milliseconds: 100), () => Get.back());
+            },
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _body(context) {
     return GestureDetector(
       child: Container(
         margin: const EdgeInsets.only(top: 10),
-        height: double.infinity,
-        width: double.infinity,
+        height: 500,
+        width: MediaQuery.of(context).size.width,
         color: Colors.transparent,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               margin: const EdgeInsets.only(left: 15),
-              child: const Text("搜索历史", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
+              child: Text("搜索历史", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyText1!.color),),
             ),
             const SizedBox(
               height: 20,
@@ -151,7 +156,7 @@ class SearchScreen extends GetView<SearchController> {
     );
   }
 
-  Widget _selectSite() {
+  Widget _selectSite(context) {
     return GetBuilder<SearchController>(
       id: "sites",
       builder: (controller) {
@@ -164,7 +169,7 @@ class SearchScreen extends GetView<SearchController> {
             return DropdownMenuItem(
               child: SizedBox(
                 width: 60,
-                child: Text("${controller.sites[index].label}", overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.normal),),
+                child: Text("${controller.sites[index].label}", overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16, fontWeight: FontWeight.normal, color: Theme.of(context).textTheme.bodyText1!.color),),
               ),
               value: controller.sites[index].site,
             );

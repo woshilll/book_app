@@ -60,6 +60,7 @@ class ThemeConfig {
         ),
         iconTheme: IconThemeData(
           color: secondaryText,
+          size: 25
         ),
       ),
       iconTheme: IconThemeData(
@@ -118,7 +119,7 @@ class ThemeConfig {
           fontWeight: FontWeight.bold,
         ),
         headline3: baseTextTheme.headline3!.copyWith(
-          color: secondaryText,
+          color: primaryText,
           fontSize: 20,
           fontWeight: FontWeight.w600,
         ),
@@ -138,11 +139,11 @@ class ThemeConfig {
           fontWeight: FontWeight.w700,
         ),
         bodyText1: baseTextTheme.bodyText1!.copyWith(
-          color: secondaryText,
-          fontSize: 15,
+          color: primaryText,
+          fontSize: 16,
         ),
         bodyText2: baseTextTheme.bodyText2!.copyWith(
-          color: primaryText,
+          color: secondaryText,
           fontSize: 12,
           fontWeight: FontWeight.w400,
         ),
@@ -162,7 +163,7 @@ class ThemeConfig {
           fontWeight: FontWeight.w500,
         ),
         subtitle1: baseTextTheme.subtitle1!.copyWith(
-          color: primaryText,
+          color: Colors.black54,
           fontSize: 16.0,
           fontWeight: FontWeight.w700,
         ),
@@ -178,7 +179,7 @@ class ThemeConfig {
   static ThemeData get lightTheme => createTheme(
     brightness: Brightness.light,
     background: ColorConstants.lightScaffoldBackgroundColor,
-    cardBackground: hexToColor("#409EFF"),
+    cardBackground: ColorConstants.secondaryAppColor,
     primaryText: Colors.black,
     secondaryText: Colors.white,
     accentColor: ColorConstants.secondaryAppColor,

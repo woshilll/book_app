@@ -2,6 +2,7 @@ import 'package:book_app/api/book_api.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/model/search/search_history.dart';
 import 'package:book_app/model/search/search_result.dart';
+import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -53,7 +54,7 @@ class SearchValueController extends GetxController {
       }
       return TextSpan(
         text: lines[i].content,
-        style: TextStyle(fontSize: fontSize, fontWeight: fontWeight)
+        style: TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: Theme.of(globalContext).textTheme.bodyText1!.color)
       );
     })));
   }

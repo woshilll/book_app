@@ -6,6 +6,7 @@ import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/module/home/component/drag_overlay.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/audio/text_player_handler.dart';
+import 'package:book_app/util/limit_util.dart';
 import 'package:book_app/util/no_shadow_scroll_behavior.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,6 +16,7 @@ import 'component/custom_drawer.dart';
 
 class ReadScreen extends GetView<ReadController> {
   const ReadScreen({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     controller.context = context;
@@ -32,7 +34,8 @@ class ReadScreen extends GetView<ReadController> {
                 id: "backgroundColor",
                 builder: (controller) {
                   return Container(
-                    color: hexToColor(controller.readSettingConfig.backgroundColor),
+                    color: hexToColor(
+                        controller.readSettingConfig.backgroundColor),
                   );
                 },
               ),
@@ -52,8 +55,10 @@ class ReadScreen extends GetView<ReadController> {
           controller.drawerFlag = true;
           Timer(const Duration(milliseconds: 300), () {
             if (controller.scaffoldKey.currentState!.isDrawerOpen) {
-              if (controller.menuController.offset + 500 < (controller.readChapterIndex + 1) * 41) {
-                controller.menuController.jumpTo(controller.readChapterIndex * 41);
+              if (controller.menuController.offset + 500 <
+                  (controller.readChapterIndex + 1) * 41) {
+                controller.menuController
+                    .jumpTo(controller.readChapterIndex * 41);
               }
             }
             controller.drawerFlag = true;
@@ -62,7 +67,6 @@ class ReadScreen extends GetView<ReadController> {
           controller.drawerFlag = false;
         }
       },
-
     );
   }
 
@@ -78,9 +82,10 @@ class ReadScreen extends GetView<ReadController> {
               itemBuilder: (context, index) {
                 return _content(context, index);
               },
-              onPageChanged: (index) async{
+              onPageChanged: (index) async {
                 controller.pageIndex = index;
-                if (index + 10 >= controller.pages.length && !controller.loading) {
+                if (index + 10 >= controller.pages.length &&
+                    !controller.loading) {
                   await controller.pageChangeListen(index);
                 }
               },
@@ -88,7 +93,7 @@ class ReadScreen extends GetView<ReadController> {
             onPointerDown: (e) {
               controller.xMove = e.position.dx;
             },
-            onPointerUp: (e) async{
+            onPointerUp: (e) async {
               double move = e.position.dx - controller.xMove;
               // 滑动了五十距离, 且当前为0
               if (move > 50 && controller.pageIndex == 0) {
@@ -98,7 +103,7 @@ class ReadScreen extends GetView<ReadController> {
           );
         },
       ),
-      onTapUp: (e) async{
+      onTapUp: (e) async {
         controller.screenWidth = MediaQuery.of(context).size.width;
         if (e.globalPosition.dx < controller.screenWidth / 3) {
           await controller.prePage();
@@ -121,20 +126,31 @@ class ReadScreen extends GetView<ReadController> {
             top: MediaQuery.of(context).padding.top,
             child: Container(
               width: MediaQuery.of(context).size.width,
-              padding: EdgeInsets.only(left: ((MediaQuery.of(context).size.width % controller.pages[index].wordWith) + controller.pages[index].wordWith) / 2),
+              padding: EdgeInsets.only(
+                  left: ((MediaQuery.of(context).size.width %
+                              controller.pages[index].wordWith) +
+                          controller.pages[index].wordWith) /
+                      2),
               child: Column(
                 children: [
                   if (controller.pages[index].index == 1)
                     Container(
                       height: 80,
                       alignment: Alignment.centerLeft,
-                      child: Text("${controller.pages[index].chapterName}\n", style: TextStyle(color: controller.pages[index].style.color, fontSize: 25, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis,),
+                      child: Text(
+                        "${controller.pages[index].chapterName}\n",
+                        style: TextStyle(
+                            color: controller.pages[index].style.color,
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   Text.rich(
                     TextSpan(
                         text: controller.pages[index].content,
-                        style: controller.pages[index].style
-                    ),
+                        style: controller.pages[index].style),
                   )
                 ],
               ),
@@ -174,11 +190,15 @@ class ReadScreen extends GetView<ReadController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    margin: const EdgeInsets.only(top: 10, bottom: 10, left: 15),
+                    margin:
+                        const EdgeInsets.only(top: 10, bottom: 10, left: 15),
                     child: GetBuilder<ReadController>(
                       id: 'content',
                       builder: (controller) {
-                        return Text("共${controller.chapters.length + 1}章", style: const TextStyle(fontSize: 14),);
+                        return Text(
+                          "共${controller.chapters.length + 1}章",
+                          style: const TextStyle(fontSize: 14),
+                        );
                       },
                     ),
                   ),
@@ -198,11 +218,20 @@ class ReadScreen extends GetView<ReadController> {
                                       return InkWell(
                                         child: Container(
                                           height: 40,
-                                          padding: const EdgeInsets.only(left: 10),
+                                          padding:
+                                              const EdgeInsets.only(left: 10),
                                           alignment: Alignment.centerLeft,
-                                          child: Text("${controller.chapters[index].name}", style: controller.readChapterIndex == index ? const TextStyle(color: Colors.lightBlue) : const TextStyle(),),
+                                          child: Text(
+                                            "${controller.chapters[index].name}",
+                                            style:
+                                                controller.readChapterIndex ==
+                                                        index
+                                                    ? const TextStyle(
+                                                        color: Colors.lightBlue)
+                                                    : const TextStyle(),
+                                          ),
                                         ),
-                                        onTap: () async{
+                                        onTap: () async {
                                           await controller.jumpChapter(index);
                                         },
                                       );
@@ -210,7 +239,8 @@ class ReadScreen extends GetView<ReadController> {
                                     itemCount: controller.chapters.length,
                                     cacheExtent: 200,
                                     separatorBuilder: (context, index) {
-                                      return Divider(height: 1.0, color: Colors.grey[300]);
+                                      return Divider(
+                                          height: 1.0, color: Colors.grey[300]);
                                     },
                                   );
                                 },
@@ -226,15 +256,13 @@ class ReadScreen extends GetView<ReadController> {
               widthPercent: 0.7,
             ),
           ),
-        )
-    );
+        ));
   }
 
   _showBottom(context) {
     // 计算进度
     controller.calReadProgress();
-    Navigator.of(context).push(
-      PageRouteBuilder(
+    Navigator.of(context).push(PageRouteBuilder(
         opaque: false,
         pageBuilder: (context, animation, secondaryAnimation) {
           return Scaffold(
@@ -259,7 +287,8 @@ class ReadScreen extends GetView<ReadController> {
                       height: MediaQuery.of(context).padding.top + 56,
                       color: Colors.black,
                       child: Container(
-                        margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+                        margin: EdgeInsets.only(
+                            top: MediaQuery.of(context).padding.top),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -272,7 +301,11 @@ class ReadScreen extends GetView<ReadController> {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     GestureDetector(
-                                      child: const Icon(Icons.arrow_back_ios, size: 25,),
+                                      child: const Icon(
+                                        Icons.arrow_back_ios,
+                                        size: 25,
+                                        color: Colors.white,
+                                      ),
                                       onTap: () {
                                         Navigator.of(context).pop();
                                         controller.pop();
@@ -280,7 +313,11 @@ class ReadScreen extends GetView<ReadController> {
                                     ),
                                     Container(
                                       margin: EdgeInsets.only(left: 15),
-                                      child: Text("${controller.book.name}", style: const TextStyle(color: Colors.white, fontSize: 16),),
+                                      child: Text(
+                                        "${controller.book.name}",
+                                        style: const TextStyle(
+                                            color: Colors.white, fontSize: 16),
+                                      ),
                                     )
                                   ],
                                 ),
@@ -290,7 +327,11 @@ class ReadScreen extends GetView<ReadController> {
                               child: Container(
                                 alignment: Alignment.centerRight,
                                 margin: EdgeInsets.only(right: 15),
-                                child: const Icon(Icons.headset, size: 25,),
+                                child: const Icon(
+                                  Icons.headset,
+                                  size: 25,
+                                  color: Colors.white,
+                                ),
                               ),
                               onTap: () async {
                                 await controller.play();
@@ -312,8 +353,9 @@ class ReadScreen extends GetView<ReadController> {
                             padding: const EdgeInsets.only(bottom: 16),
                             decoration: const BoxDecoration(
                                 color: Colors.black,
-                                borderRadius: BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4))
-                            ),
+                                borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(4),
+                                    topRight: Radius.circular(4))),
                             child: Column(
                               children: [
                                 GetBuilder<ReadController>(
@@ -323,7 +365,8 @@ class ReadScreen extends GetView<ReadController> {
                                   },
                                 ),
                                 Container(
-                                  margin: const EdgeInsets.only(top: 10, bottom: 10),
+                                  margin: const EdgeInsets.only(
+                                      top: 10, bottom: 10),
                                   child: Row(
                                     children: [
                                       Expanded(
@@ -333,8 +376,13 @@ class ReadScreen extends GetView<ReadController> {
                                             alignment: Alignment.center,
                                             child: Column(
                                               children: const [
-                                                Icon(Icons.library_books, size: 24,),
-                                                Text("目录", style: TextStyle(color: Colors.white, fontSize: 14))
+                                                Icon(Icons.library_books,
+                                                    size: 24,
+                                                    color: Colors.white),
+                                                Text("目录",
+                                                    style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 14))
                                               ],
                                             ),
                                           ),
@@ -351,8 +399,13 @@ class ReadScreen extends GetView<ReadController> {
                                             alignment: Alignment.center,
                                             child: Column(
                                               children: const [
-                                                Icon(Icons.wb_sunny, size: 24,),
-                                                Text("亮度", style: TextStyle(color: Colors.white, fontSize: 14))
+                                                Icon(Icons.wb_sunny,
+                                                    size: 24,
+                                                    color: Colors.white),
+                                                Text("亮度",
+                                                    style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 14))
                                               ],
                                             ),
                                           ),
@@ -368,8 +421,13 @@ class ReadScreen extends GetView<ReadController> {
                                             alignment: Alignment.center,
                                             child: Column(
                                               children: const [
-                                                Icon(Icons.settings, size: 24,),
-                                                Text("设置", style: TextStyle(color: Colors.white, fontSize: 14))
+                                                Icon(Icons.settings,
+                                                    size: 24,
+                                                    color: Colors.white),
+                                                Text("设置",
+                                                    style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 14))
                                               ],
                                             ),
                                           ),
@@ -384,11 +442,28 @@ class ReadScreen extends GetView<ReadController> {
                               ],
                             ),
                           ),
-                          onTap: () {
-                          },
+                          onTap: () {},
                         ),
-                      )
-                  )
+                      )),
+                  GetBuilder<ReadController>(
+                      id: 'bottomType',
+                      builder: (controller) {
+                        if (controller.bottomType == "1") {
+                          return Positioned(
+                            right: 15,
+                            bottom: 150,
+                            child: GestureDetector(
+                              child: CircleAvatar(
+                                minRadius: 25,
+                                backgroundColor: Colors.black.withOpacity(.5),
+                                child: Icon(controller.isDark ? Icons.wb_sunny : Icons.nights_stay, size: 25, color: Colors.yellowAccent,),
+                              ),
+                              onTap: () => LimitUtil.throttle(controller.changeDark, durationTime: 1000),
+                            ),
+                          );
+                        }
+                        return Container();
+                      })
                 ],
               ),
               onTap: () => Navigator.of(context).pop(),
@@ -400,11 +475,9 @@ class ReadScreen extends GetView<ReadController> {
             opacity: animation,
             child: child,
           );
-        }
-      )
-    );
-
+        }));
   }
+
   Widget _bottomType() {
     if (controller.bottomType == "1") {
       return Row(
@@ -414,9 +487,12 @@ class ReadScreen extends GetView<ReadController> {
             child: GestureDetector(
               child: Container(
                 alignment: Alignment.center,
-                child: const Text("上一章", style: TextStyle(color: Colors.white, fontSize: 16),),
+                child: const Text(
+                  "上一章",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
               ),
-              onTap: () async{
+              onTap: () async {
                 await controller.preChapter();
               },
             ),
@@ -427,7 +503,8 @@ class ReadScreen extends GetView<ReadController> {
                 id: "chapterChange",
                 builder: (controller) {
                   return Slider(
-                    label: "${controller.chapters[controller.readChapterIndex].name}",
+                    label:
+                        "${controller.chapters[controller.readChapterIndex].name}",
                     divisions: controller.chapters.length,
                     activeColor: Colors.blue,
                     inactiveColor: Colors.grey,
@@ -437,24 +514,24 @@ class ReadScreen extends GetView<ReadController> {
                     onChanged: (value) {
                       controller.chapterChange(value);
                     },
-                    onChangeStart: (value) {
-
-                    },
+                    onChangeStart: (value) {},
                     onChangeEnd: (value) {
                       controller.jumpChapter(value.toInt());
                     },
                   );
                 },
-              )
-          ),
+              )),
           Expanded(
             flex: 1,
             child: GestureDetector(
               child: Container(
                 alignment: Alignment.center,
-                child: const Text("下一章", style: TextStyle(color: Colors.white, fontSize: 16),),
+                child: const Text(
+                  "下一章",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
               ),
-              onTap: () async{
+              onTap: () async {
                 await controller.nextChapter();
               },
             ),
@@ -473,7 +550,11 @@ class ReadScreen extends GetView<ReadController> {
                 child: GestureDetector(
                   child: Container(
                     alignment: Alignment.center,
-                    child: const Icon(Icons.wb_sunny, size: 16, color: Colors.white,),
+                    child: const Icon(
+                      Icons.wb_sunny,
+                      size: 16,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -483,30 +564,31 @@ class ReadScreen extends GetView<ReadController> {
                     id: "brightness",
                     builder: (controller) {
                       return Slider(
-                        label: "${controller.chapters[controller.readChapterIndex].name}",
+                        label:
+                            "${controller.chapters[controller.readChapterIndex].name}",
                         activeColor: Colors.blue,
                         inactiveColor: Colors.grey,
                         min: 0,
                         max: 1,
                         value: controller.brightness,
-                        onChanged: (value) async{
+                        onChanged: (value) async {
                           await controller.setBrightness(value);
                         },
-                        onChangeStart: (value) {
-
-                        },
-                        onChangeEnd: (value) {
-                        },
+                        onChangeStart: (value) {},
+                        onChangeEnd: (value) {},
                       );
                     },
-                  )
-              ),
+                  )),
               Expanded(
                 flex: 1,
                 child: GestureDetector(
                   child: Container(
                     alignment: Alignment.center,
-                    child: const Icon(Icons.wb_sunny, size: 30, color: Colors.white,),
+                    child: const Icon(
+                      Icons.wb_sunny,
+                      size: 30,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -524,7 +606,7 @@ class ReadScreen extends GetView<ReadController> {
         ],
       );
     } else if (controller.bottomType == "3") {
-      return Container(
+      return SizedBox(
         height: 50,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -532,39 +614,63 @@ class ReadScreen extends GetView<ReadController> {
             GestureDetector(
               child: Row(
                 children: const [
-                  Icon(Icons.menu, color: Colors.white, size: 25,),
-                  Text("-", style: TextStyle(color: Colors.white, fontSize: 30, height: 1),)
+                  Icon(
+                    Icons.menu,
+                    color: Colors.white,
+                    size: 25,
+                  ),
+                  Text(
+                    "-",
+                    style:
+                        TextStyle(color: Colors.white, fontSize: 30, height: 1),
+                  )
                 ],
               ),
-              onTap: () async{
+              onTap: () async {
                 await controller.fontHeightSub();
               },
             ),
             GestureDetector(
               child: Row(
                 children: const [
-                  Icon(Icons.menu, color: Colors.white, size: 25,),
-                  Text("+", style: TextStyle(color: Colors.white, fontSize: 16, height: 1),)
+                  Icon(
+                    Icons.menu,
+                    color: Colors.white,
+                    size: 25,
+                  ),
+                  Text(
+                    "+",
+                    style:
+                        TextStyle(color: Colors.white, fontSize: 16, height: 1),
+                  )
                 ],
               ),
-              onTap: () async{
+              onTap: () async {
                 await controller.fontHeightAdd();
               },
             ),
-            Text("Auto", style: TextStyle(fontSize: 16, color: Colors.white)),
+            const Text("Auto",
+                style: TextStyle(fontSize: 16, color: Colors.white)),
             GestureDetector(
-              child: Image.asset("lib/resource/image/screen_h.png", width: 25, color: Colors.white,),
-              onTap: () async{
+              child: Image.asset(
+                "lib/resource/image/screen_h.png",
+                width: 25,
+                color: Colors.white,
+              ),
+              onTap: () async {
                 await controller.rotateScreenChange();
               },
             ),
             Container(
-              padding: EdgeInsets.only(top: 3, bottom: 5, left: 10, right: 10),
+              padding:
+                  const EdgeInsets.only(top: 3, bottom: 5, left: 10, right: 10),
               decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.white)
+                  border: Border.all(color: Colors.white)),
+              child: const Text(
+                "更多设置",
+                style: TextStyle(fontSize: 16, color: Colors.white),
               ),
-              child: Text("更多设置", style: TextStyle(fontSize: 16, color: Colors.white),),
             ),
           ],
         ),
@@ -572,12 +678,17 @@ class ReadScreen extends GetView<ReadController> {
     }
     return Container();
   }
+
   List<Widget> _colors() {
-    List<Widget> list = List<Widget>.generate(controller.backgroundColors.length, (index) {
+    List<Widget> list =
+        List<Widget>.generate(controller.backgroundColors.length, (index) {
       return GestureDetector(
         child: CircleAvatar(
           backgroundColor: hexToColor(controller.backgroundColors[index]),
-          child: Text(controller.backgroundColors[index] == controller.readSettingConfig.backgroundColor ? "√" : ""),
+          child: Text(controller.backgroundColors[index] ==
+                  controller.readSettingConfig.backgroundColor
+              ? "√"
+              : ""),
         ),
         onTap: () {
           controller.setBackGroundColor(controller.backgroundColors[index]);
@@ -585,36 +696,32 @@ class ReadScreen extends GetView<ReadController> {
       );
     });
     // Aa+ Aa-
-    list.add(
-        GestureDetector(
-          child: Container(
-            padding: const EdgeInsets.only(left: 4, right: 4),
-            alignment: Alignment.center,
-            child: const Text("重置", style: TextStyle(fontSize: 14, color: Colors.white)),
-            decoration: BoxDecoration(
-                borderRadius: const BorderRadius.all(Radius.circular(8)),
-                border: Border.all(color: Colors.white)
-            ),
-          ),
-          onTap: () => controller.setBackGroundColor("#FFF2E2"),
-        )
-    );
-    list.add(
-      GestureDetector(
-        child: Container(
-          padding: const EdgeInsets.only(left: 4, right: 4),
-          alignment: Alignment.center,
-          child: const Text("自定义", style: TextStyle(fontSize: 14, color: Colors.white)),
-          decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(Radius.circular(8)),
-              border: Border.all(color: Colors.white)
-          ),
-        ),
-        onTap: () async{
-          await controller.toSetting();
-        },
-      )
-    );
+    list.add(GestureDetector(
+      child: Container(
+        padding: const EdgeInsets.only(left: 4, right: 4),
+        alignment: Alignment.center,
+        child: const Text("重置",
+            style: TextStyle(fontSize: 14, color: Colors.white)),
+        decoration: BoxDecoration(
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
+            border: Border.all(color: Colors.white)),
+      ),
+      onTap: () => controller.setBackGroundColor("#FFF2E2"),
+    ));
+    list.add(GestureDetector(
+      child: Container(
+        padding: const EdgeInsets.only(left: 4, right: 4),
+        alignment: Alignment.center,
+        child: const Text("自定义",
+            style: TextStyle(fontSize: 14, color: Colors.white)),
+        decoration: BoxDecoration(
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
+            border: Border.all(color: Colors.white)),
+      ),
+      onTap: () async {
+        await controller.toSetting();
+      },
+    ));
     return list;
   }
 }

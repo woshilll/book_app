@@ -86,19 +86,19 @@ class ReadSettingScreen extends GetView<ReadSettingController> {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         GestureDetector(
-                          child: const Text("阅读底色"),
+                          child: const Text("阅读底色", style: TextStyle(color: Colors.black),),
                           onTap: () => _colorPicker(context, true),
                         ),
                         GestureDetector(
-                          child: const Text("字体颜色"),
+                          child: const Text("字体颜色", style: TextStyle(color: Colors.black)),
                           onTap: () => _colorPicker(context, false),
                         ),
                         GestureDetector(
-                          child: const Text("Aa-"),
+                          child: const Text("Aa-", style: TextStyle(color: Colors.black)),
                           onTap: () => controller.fontSizeSub(),
                         ),
                         GestureDetector(
-                          child: const Text("Aa+"),
+                          child: const Text("Aa+", style: TextStyle(color: Colors.black)),
                           onTap: () => controller.fontSizeAdd(),
                         ),
                       ],
@@ -118,9 +118,9 @@ class ReadSettingScreen extends GetView<ReadSettingController> {
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                   borderRadius: const BorderRadius.all(Radius.circular(8)),
-                                  border: Border.all(color: Colors.lightBlue)
+                                  border: Border.all(color: Theme.of(context).primaryColor)
                               ),
-                              child: const Text("恢复默认设置", style: TextStyle(color: Colors.lightBlueAccent, fontSize: 15),),
+                              child: Text("恢复默认设置", style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 15),),
                             ),
                             onTap: () => controller.setDefault(),
                           ),
@@ -134,9 +134,9 @@ class ReadSettingScreen extends GetView<ReadSettingController> {
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                   borderRadius: const BorderRadius.all(Radius.circular(8)),
-                                  border: Border.all(color: Colors.lightBlue)
+                                  border: Border.all(color: Theme.of(context).primaryColor)
                               ),
-                              child: const Text("保存设置", style: TextStyle(color: Colors.lightBlueAccent, fontSize: 15)),
+                              child: Text("保存设置", style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 15)),
                             ),
                             onTap: () {
                               String data = json.encode(controller.config);

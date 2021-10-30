@@ -53,31 +53,33 @@ class HomeController extends GetxController {
   }
 
   void normal() {
+    bool dark = Get.isDarkMode;
     tiles = [
-      item(Colors.green, Icons.my_library_books, toast: "小说", route: Routes.bookHome,),
-      item(Colors.lightBlue, Icons.send),
-      item(Colors.amber, Icons.library_music, toast: "音乐"),
-      item(Colors.brown, Icons.map),
-      item(Colors.deepOrange, Icons.video_library, toast: "电影",),
-      item(Colors.indigo, Icons.airline_seat_flat),
-      item(Colors.red, Icons.bluetooth),
-      item(Colors.pink, Icons.battery_alert),
-      item(Colors.purple, Icons.settings, toast: "设置", route: Routes.settingHome),
-      item(Colors.blue, Icons.radio),
+      item(dark ? Colors.grey : Colors.green, Icons.my_library_books, toast: "小说", route: Routes.bookHome,),
+      item(dark ? Colors.grey : Colors.lightBlue, Icons.send),
+      item(dark ? Colors.grey : Colors.amber, Icons.library_music, toast: "音乐"),
+      item(dark ? Colors.grey : Colors.brown, Icons.map),
+      item(dark ? Colors.grey : Colors.deepOrange, Icons.video_library, toast: "电影",),
+      item(dark ? Colors.grey : Colors.indigo, Icons.airline_seat_flat),
+      item(dark ? Colors.grey : Colors.red, Icons.bluetooth),
+      item(dark ? Colors.grey : Colors.pink, Icons.battery_alert),
+      item(dark ? Colors.grey : Colors.purple, Icons.settings, toast: "设置", route: Routes.settingHome),
+      item(dark ? Colors.grey : Colors.blue, Icons.radio),
     ];
   }
   void oldManVersion() {
+    bool dark = Get.isDarkMode;
     tiles = [
-      item(Colors.green, Icons.my_library_books, toast: "小说", route: Routes.bookHome,),
-      item(Colors.lightBlue, Icons.send),
-      item(Colors.amber, Icons.library_music, toast: "音乐"),
-      item(Colors.brown, Icons.map),
-      item(Colors.deepOrange, Icons.video_library, toast: "电影",),
-      item(Colors.indigo, Icons.airline_seat_flat),
-      item(Colors.red, Icons.bluetooth),
-      item(Colors.pink, Icons.battery_alert),
-      item(Colors.purple, Icons.desktop_windows),
-      item(Colors.blue, Icons.radio),
+      item(dark ? Colors.grey : Colors.green, Icons.my_library_books, toast: "小说", route: Routes.bookHome,),
+      item(dark ? Colors.grey : Colors.lightBlue, Icons.send),
+      item(dark ? Colors.grey : Colors.amber, Icons.library_music, toast: "音乐"),
+      item(dark ? Colors.grey : Colors.brown, Icons.map),
+      item(dark ? Colors.grey : Colors.deepOrange, Icons.video_library, toast: "电影",),
+      item(dark ? Colors.grey : Colors.indigo, Icons.airline_seat_flat),
+      item(dark ? Colors.grey : Colors.red, Icons.bluetooth),
+      item(dark ? Colors.grey : Colors.pink, Icons.battery_alert),
+      item(dark ? Colors.grey : Colors.purple, Icons.desktop_windows),
+      item(dark ? Colors.grey : Colors.blue, Icons.radio),
     ];
   }
 
@@ -129,7 +131,6 @@ class HomeController extends GetxController {
       }
     });
     audioHandler.queue.listen((event) {
-      Log.i("队列长度  ${event.length}");
     });
     audioHandler.playbackState.listen((state) async{
       _playbackState = state;
@@ -141,12 +142,12 @@ class HomeController extends GetxController {
             return AnimatedCrossFade(
               firstChild: GestureDetector(
                 child: Card(
-                  color: Colors.black,
+                  color: Theme.of(globalContext).textTheme.bodyText1!.color,
                   child: Container(
                     width: 30,
                     height: 50,
                     alignment: Alignment.centerRight,
-                    child: Icon(Icons.arrow_forward_ios, color: Colors.white, size: 25,),
+                    child: Icon(Icons.arrow_forward_ios, color: Theme.of(globalContext).textTheme.bodyText2!.color, size: 25,),
                   ),
                   elevation: 5,
                 ),
@@ -162,7 +163,7 @@ class HomeController extends GetxController {
                     margin: const EdgeInsets.only(left: 10, right: 10),
                     height: 50,
                     width: MediaQuery.of(globalContext).size.width * 0.7,
-                    color: Colors.black,
+                    color: Theme.of(globalContext).textTheme.bodyText1!.color,
                     child: Row(
                       children: [
                         Row(
@@ -170,7 +171,7 @@ class HomeController extends GetxController {
                             GestureDetector(
                               child: Container(
                                 margin: EdgeInsets.only(left: 5),
-                                child: Icon(Icons.skip_previous, color: Colors.white, size: 25),
+                                child: Icon(Icons.skip_previous, color: Theme.of(globalContext).textTheme.bodyText2!.color, size: 25),
                               ),
                               onTap: () async{
                                 if (_playbackState!.queueIndex != null && _playbackState!.queueIndex! > 0) {
@@ -179,7 +180,7 @@ class HomeController extends GetxController {
                               },
                             ),
                             GestureDetector(
-                              child: Icon(_playbackState!.playing ? Icons.pause : Icons.play_arrow, color: Colors.white, size: 25),
+                              child: Icon(_playbackState!.playing ? Icons.pause : Icons.play_arrow, color: Theme.of(globalContext).textTheme.bodyText2!.color, size: 25),
                               onTap: () async {
                                 if (_playbackState!.playing) {
                                   await audioHandler.pause();
@@ -190,7 +191,7 @@ class HomeController extends GetxController {
                               },
                             ),
                             GestureDetector(
-                              child: Icon(Icons.skip_next, color: Colors.white, size: 25),
+                              child: Icon(Icons.skip_next, color: Theme.of(globalContext).textTheme.bodyText2!.color, size: 25),
                               onTap: () async{
                                 if (_playbackState!.queueIndex != null && _playbackState!.queueIndex! < audioHandler.queue.value.length - 1) {
                                   await audioHandler.skipToNext();
@@ -204,14 +205,14 @@ class HomeController extends GetxController {
                             alignment: Alignment.center,
                             child: SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
-                              child: Text("${curMediaItem!.title}", style: TextStyle(fontSize: 14, color: Colors.white),),
+                              child: Text("${curMediaItem!.title}", style: TextStyle(fontSize: 14, color: Theme.of(globalContext).textTheme.bodyText2!.color),),
                             ),
                           ),
                         ),
                         GestureDetector(
                           child: Container(
                             margin: EdgeInsets.only(right: 5),
-                            child: Icon(Icons.clear, color: Colors.white, size: 25),
+                            child: Icon(Icons.clear, color: Theme.of(globalContext).textTheme.bodyText2!.color, size: 25),
                           ),
                           onTap: () async{
                             audioHandler.queue.value.clear();

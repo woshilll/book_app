@@ -4,6 +4,7 @@ import 'package:book_app/route/routes.dart';
 import 'package:book_app/util/no_shadow_scroll_behavior.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:book_app/model/book/book.dart';
@@ -35,6 +36,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
         ),
         style: ButtonStyle(
           shape: MaterialStateProperty.all(const CircleBorder()),
+          backgroundColor: MaterialStateProperty.all(Theme.of(context).primaryColor)
         ),
         onPressed: () {
           Get.toNamed(Routes.search)!.then((value) {
@@ -50,35 +52,56 @@ class BookHomeScreen extends GetView<BookHomeController> {
         GetBuilder<BookHomeController>(
           id: 'bookList',
           builder: (controller) {
-            return Container(
-              margin: const EdgeInsets.only(left: 10, right: 10, top: 15),
-              child: ScrollConfiguration(
-                behavior: NoShadowScrollBehavior(),
-                child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 5,
-                        mainAxisSpacing: 5,
-                        childAspectRatio: 2 / 3
-                    ),
-                    itemCount: controller.books.length,
-                    itemBuilder: (context, index) {
-                      return Column(
-                        children: [
-                          Expanded(child: InkWell(
-                            child: _bookImageWidget(context, index),
-                            onLongPress: () {
-                              _handleDelete(context, index);
-                            },
-                            onTap: () => controller.getBookInfo(index),
-                          )),
-                          Center(
-                            child: Text("${controller.books[index].name}", style: const TextStyle(fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis,),
-                          )
-                        ],
-                      );
-                    }
+            if (controller.books.length > 0) {
+              return Container(
+                margin: const EdgeInsets.only(left: 10, right: 10, top: 15),
+                child: ScrollConfiguration(
+                  behavior: NoShadowScrollBehavior(),
+                  child: GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 5,
+                          mainAxisSpacing: 5,
+                          childAspectRatio: 2 / 3
+                      ),
+                      itemCount: controller.books.length,
+                      itemBuilder: (context, index) {
+                        return Column(
+                          children: [
+                            Expanded(child: InkWell(
+                              child: _bookImageWidget(context, index),
+                              onLongPress: () {
+                                _handleDelete(context, index);
+                              },
+                              onTap: () => controller.getBookInfo(index),
+                            )),
+                            Center(
+                              child: Text("${controller.books[index].name}", style: TextStyle(fontSize: 16, color: Theme.of(context).textTheme.bodyText1!.color!), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            )
+                          ],
+                        );
+                      }
+                  ),
                 ),
+              );
+            }
+            return Container(
+              alignment: Alignment.center,
+              child: Text.rich(
+                TextSpan(
+                  text: "书架里还没有书,快去",
+                  children: [
+                    TextSpan(
+                      text: "搜索",
+                      recognizer: TapGestureRecognizer()..onTap = () {
+                        Log.i("搜索");
+                      }
+                    ),
+                    TextSpan(
+                        text: "吧"
+                    ),
+                  ]
+                )
               ),
             );
           },

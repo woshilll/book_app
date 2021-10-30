@@ -9,23 +9,21 @@ class SettingHomeScreen extends GetView<SettingHomeController>{
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    Log.i(MediaQuery.of(context).padding.top);
-    return MediaQuery.removeViewPadding(
-      removeTop: true,
-        removeBottom: true,
-        removeLeft: true,
-        removeRight: true,
-        context: context,
-        child: Stack(
-          children: [
-            Positioned(
-              left: 10,
-              child: Icon(Icons.menu),
-            )
-          ],
-        )
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("设置"),
+        centerTitle: true,
+      ),
+      body: _body(),
     );
   }
 
+  Widget _body() {
+    return Column(
+      children: [
+        Container(
+        )
+      ],
+    );
+  }
 }
