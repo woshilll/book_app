@@ -71,9 +71,9 @@ class BookDbProvider extends BaseDbProvider {
   }
 
   /// 更新阅读章节
-  updateCurChapter(id, chapterId) async{
+  updateCurChapter(id, chapterId, page) async{
     Database db = await getDataBase();
-    db.rawUpdate("update $name set $columnCurChapter = ? where $columnId = ?", [chapterId, id]);
+    db.rawUpdate("update $name set $columnCurChapter = ?, $columnCurPage = ? where $columnId = ?", [chapterId, page, id]);
   }
 
   // Future<void> update(Book book) async {

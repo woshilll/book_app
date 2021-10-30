@@ -71,33 +71,41 @@ class ReadScreen extends GetView<ReadController> {
       child: GetBuilder<ReadController>(
         id: "content",
         builder: (controller) {
-          return PageView.builder(
-            controller: controller.contentPageController,
-            itemCount: controller.pages.length,
-            itemBuilder: (context, index) {
-              return _content(context, index);
+          return Listener(
+            child: PageView.builder(
+              controller: controller.contentPageController,
+              itemCount: controller.pages.length,
+              itemBuilder: (context, index) {
+                return _content(context, index);
+              },
+              onPageChanged: (index) async{
+                controller.pageIndex = index;
+                if (index + 10 >= controller.pages.length && !controller.loading) {
+                  await controller.pageChangeListen(index);
+                }
+              },
+            ),
+            onPointerDown: (e) {
+              controller.xMove = e.position.dx;
             },
-            onPageChanged: (index) async{
-              controller.pageIndex = index;
-              if (index + 10 >= controller.pages.length && !controller.loading) {
-                await controller.pageChangeListen(index);
+            onPointerUp: (e) async{
+              double move = e.position.dx - controller.xMove;
+              // 滑动了五十距离, 且当前为0
+              if (move > 50 && controller.pageIndex == 0) {
+                await controller.prePage();
               }
             },
           );
         },
       ),
       onTapUp: (e) async{
-        if (controller.screenWidth <= 0) {
-          controller.screenWidth = MediaQuery.of(context).size.width;
-        }
+        controller.screenWidth = MediaQuery.of(context).size.width;
         if (e.globalPosition.dx < controller.screenWidth / 3) {
-          controller.loading = true;
           await controller.prePage();
-          controller.loading = false;
         } else if (e.globalPosition.dx > (controller.screenWidth / 3 * 2)) {
-          controller.loading = true;
-          await controller.nextPage();
-          controller.loading = false;
+          if (!controller.loading) {
+            await controller.nextPage();
+          }
         } else {
           // 中间
           _showBottom(context);
@@ -113,15 +121,26 @@ class ReadScreen extends GetView<ReadController> {
             top: MediaQuery.of(context).padding.top,
             child: Container(
               width: MediaQuery.of(context).size.width,
-              padding: EdgeInsets.only(left: (MediaQuery.of(context).size.width % controller.pages[index].wordWith) / 2),
-              child: Text.rich(
-                TextSpan(
-                    text: controller.pages[index].content,
-                    style: controller.pages[index].style),
+              padding: EdgeInsets.only(left: ((MediaQuery.of(context).size.width % controller.pages[index].wordWith) + controller.pages[index].wordWith) / 2),
+              child: Column(
+                children: [
+                  if (controller.pages[index].index == 1)
+                    Container(
+                      height: 80,
+                      alignment: Alignment.centerLeft,
+                      child: Text("${controller.pages[index].chapterName}\n", style: TextStyle(color: controller.pages[index].style.color, fontSize: 25, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis,),
+                    ),
+                  Text.rich(
+                    TextSpan(
+                        text: controller.pages[index].content,
+                        style: controller.pages[index].style
+                    ),
+                  )
+                ],
               ),
             )),
         Positioned(
-          bottom: 0,
+          bottom: 16,
           child: Container(
             margin: const EdgeInsets.only(left: 10),
             child: Text(
@@ -131,7 +150,7 @@ class ReadScreen extends GetView<ReadController> {
           ),
         ),
         Positioned(
-          bottom: 0,
+          bottom: 16,
           right: 10,
           child: Text(
             "${controller.pages[index].index}/${controller.calThisChapterTotalPage(index)}",
@@ -290,6 +309,7 @@ class ReadScreen extends GetView<ReadController> {
                         opacity: 1,
                         child: GestureDetector(
                           child: Container(
+                            padding: const EdgeInsets.only(bottom: 16),
                             decoration: const BoxDecoration(
                                 color: Colors.black,
                                 borderRadius: BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4))
@@ -509,13 +529,34 @@ class ReadScreen extends GetView<ReadController> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Container(
-              padding: EdgeInsets.only(top: 3, bottom: 5, left: 10, right: 10),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white)
+            GestureDetector(
+              child: Row(
+                children: const [
+                  Icon(Icons.menu, color: Colors.white, size: 25,),
+                  Text("-", style: TextStyle(color: Colors.white, fontSize: 30, height: 1),)
+                ],
               ),
-              child: Text("字体设置", style: TextStyle(fontSize: 16, color: Colors.white),),
+              onTap: () async{
+                await controller.fontHeightSub();
+              },
+            ),
+            GestureDetector(
+              child: Row(
+                children: const [
+                  Icon(Icons.menu, color: Colors.white, size: 25,),
+                  Text("+", style: TextStyle(color: Colors.white, fontSize: 16, height: 1),)
+                ],
+              ),
+              onTap: () async{
+                await controller.fontHeightAdd();
+              },
+            ),
+            Text("Auto", style: TextStyle(fontSize: 16, color: Colors.white)),
+            GestureDetector(
+              child: Image.asset("lib/resource/image/screen_h.png", width: 25, color: Colors.white,),
+              onTap: () async{
+                await controller.rotateScreenChange();
+              },
             ),
             Container(
               padding: EdgeInsets.only(top: 3, bottom: 5, left: 10, right: 10),
@@ -523,15 +564,7 @@ class ReadScreen extends GetView<ReadController> {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.white)
               ),
-              child: Text("语音设置", style: TextStyle(fontSize: 16, color: Colors.white),),
-            ),
-            Container(
-              padding: EdgeInsets.only(top: 3, bottom: 5, left: 10, right: 10),
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.white)
-              ),
-              child: Text("页面设置", style: TextStyle(fontSize: 16, color: Colors.white),),
+              child: Text("更多设置", style: TextStyle(fontSize: 16, color: Colors.white),),
             ),
           ],
         ),

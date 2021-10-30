@@ -12,7 +12,6 @@ import 'package:book_app/module/book/readSetting/component/read_setting_config.d
 import 'package:book_app/module/home/home_controller.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/color.dart';
-import 'package:book_app/util/audio/text_player_handler.dart';
 import 'package:book_app/util/constant.dart';
 import 'package:book_app/util/font_util.dart';
 import 'package:book_app/util/save_util.dart';
@@ -66,6 +65,10 @@ class ReadController extends GetxController {
   /// 字体样式
   late TextStyle contentStyle;
   late AudioHandler audioHandler;
+  /// 是否旋转屏幕
+  bool rotateScreen = false;
+  /// x轴移动距离
+  double xMove = 0;
   @override
   void onInit() async{
     super.onInit();
@@ -80,7 +83,7 @@ class ReadController extends GetxController {
     if (config != null) {
       readSettingConfig = ReadSettingConfig.fromJson(json.decode(config));
     }
-    contentStyle = TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: readSettingConfig.fontSize);
+    contentStyle = TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: readSettingConfig.fontSize, height: readSettingConfig.fontHeight);
     /// 加载章节
     chapters = await _chapterDbProvider.getChapters(null, book.id);
     Chapter cur = chapters[0];
@@ -92,8 +95,12 @@ class ReadController extends GetxController {
       }
     }
     cur.content = await getContent(cur.id, cur.url, true);
-    await initPage(cur, dialog: true);
-
+    await initPage(cur, dialog: true, withUpdate: false);
+    update(["content"]);
+    if (book.curPage != null) {
+      contentPageController.jumpToPage(book.curPage! - 1);
+      pageIndex = book.curPage! - 1;
+    }
     /// 亮度
     double sysBrightness = await DeviceDisplayBrightness.getBrightness();
     if (sysBrightness > 1) {
@@ -107,14 +114,26 @@ class ReadController extends GetxController {
     brightnessTemp = brightness;
   }
   /// 将文本转文字页面
-  initPage(Chapter chapter, {bool dialog = false}) async {
+  initPage(Chapter chapter, {bool dialog = false, bool withUpdate = true}) async {
+    if (loading) {
+      return;
+    }
     loading = true;
     if (dialog) {
       await EasyLoading.show();
     }
     List<ContentPage> list = await initPageWithReturn(chapter);
-    pages.addAll(list);
-    update(["content"]);
+    if (list.isNotEmpty && pages.isNotEmpty) {
+      int exist = pages.indexWhere((element) => element.chapterId == list[0].chapterId);
+      if (exist == -1) {
+        pages.addAll(list);
+      }
+    } else {
+      pages.addAll(list);
+    }
+    if (withUpdate) {
+      update(["content"]);
+    }
     await EasyLoading.dismiss();
     loading = false;
     // calWordHeightAndWidth();
@@ -190,12 +209,14 @@ class ReadController extends GetxController {
     // 查找内容
     Chapter? temp = await _chapterDbProvider.getChapterById(id);
     var content = temp?.content;
-    if (content == null) {
+    if (content == null || content.isEmpty) {
       content = await ChapterApi.parseContent(url, showDialog);
-      await _chapterDbProvider.updateContent(id, content.trim());
+      // 格式化文本
+      content = _formatContent(content);
+      await _chapterDbProvider.updateContent(id, content);
     }
     // 赋值
-    return content.replaceAll("\n\n", "\n");
+    return content;
   }
 
 
@@ -205,15 +226,12 @@ class ReadController extends GetxController {
   int maxLines = 0;
 
   /// 计算词宽和词高
-  calWordHeightAndWidth() {
+  _calWordHeightAndWidth() {
     _painter.text = TextSpan(text: "哈", style: contentStyle);
     _painter.layout(maxWidth: MediaQuery.of(context).size.width);
     var cal = _painter.computeLineMetrics()[0];
     wordHeight = cal.height;
     wordWith = cal.width;
-    maxLines = (MediaQuery.of(context).size.height -
-        MediaQuery.of(context).padding.top - 16) ~/
-        wordHeight - 1;
   }
   /// 计算当前章节一共多少页
   calThisChapterTotalPage(index) {
@@ -223,7 +241,6 @@ class ReadController extends GetxController {
 
   /// 页面变化监听
   Future pageChangeListen(int index) async{
-    loading = true;
     var chapterId = pages[pages.length - 1].chapterId;
     index = chapters.indexWhere((element) => element.id == chapterId);
     if (index == chapters.length - 1) {
@@ -239,8 +256,14 @@ class ReadController extends GetxController {
   pop() async{
     // 更新当前的章节和页数
     var chapterId = pages[pageIndex].chapterId;
-    await _bookDbProvider.updateCurChapter(book.id, chapterId);
+    var curPageIndex = pages[pageIndex].index;
+    await _bookDbProvider.updateCurChapter(book.id, chapterId, curPageIndex);
     Get.back(result: {"brightness": brightnessTemp});
+    if (rotateScreen) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
+    }
   }
 
   /// 跳转章节
@@ -263,12 +286,15 @@ class ReadController extends GetxController {
 
   /// 下一页
   nextPage() async {
+    if (loading) {
+      return;
+    }
     int index = pageIndex;
     Log.i("当前页 $pageIndex");
     if (index < pages.length - 2) {
       // 有下一页
       contentPageController.jumpToPage(index + 1);
-      Log.v("下一页 $pageIndex");
+      pageIndex = index + 1;
     } else {
       // 到底了， 加载 获取当前章节
       var chapterId = pages[index].chapterId;
@@ -280,20 +306,22 @@ class ReadController extends GetxController {
         await initPage(next);
         // 跳转
         contentPageController.jumpToPage(index + 1);
-        Log.v("下一页 $pageIndex");
-      } else {
-        EasyLoading.showToast("没有更多了");
+        pageIndex = index + 1;
       }
     }
+    Log.i("下一页 $pageIndex");
   }
 
   prePage() async {
+    if (loading) {
+      return;
+    }
     Log.i("当前页 $pageIndex");
     int index = pageIndex;
     if (index > 0) {
       // 有上一页
       contentPageController.jumpToPage(index - 1);
-      Log.v("上一页 $pageIndex");
+      pageIndex = index - 1;
     } else {
       // 无上一页
       var chapterId = pages[index].chapterId;
@@ -305,49 +333,48 @@ class ReadController extends GetxController {
         pre.content = await getContent(pre.id, pre.url, false);
         List<ContentPage> returnPages = await initPageWithReturn(pre);
         pages.insertAll(0, returnPages);
+        update(["content"]);
         pageIndex = returnPages.length - 1;
         contentPageController.jumpToPage(pageIndex);
-        Log.v("上一页 $pageIndex");
         EasyLoading.dismiss();
-      } else {
-        EasyLoading.showToast("没有更多了");
       }
     }
+    Log.v("上一页 $pageIndex");
   }
 
   Future<List<ContentPage>> initPageWithReturn(Chapter chapter) async {
     List<ContentPage> list = [];
-    calWordHeightAndWidth();
+    _calWordHeightAndWidth();
+    _calMaxLines(firstPage: true);
     String content = FontUtil.alphanumericToFullLength(chapter.content);
     _painter.text = TextSpan(text: content, style: contentStyle);
-    // 一页最大行数 context获取的是主页的context， 带appBar所以高度会减少56
-    // double screenHeight = MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top + 26;
-    // 第一页最大行数
-    // int maxLines = screenHeight ~/ wordHeight;
     _painter.maxLines = maxLines;
     // 统计第一页字符偏移量
-    _painter.layout(maxWidth: MediaQuery.of(context).size.width);
+    _painter.layout(maxWidth: _contentWidth());
     double paintWidth = _painter.width;
     double paintHeight = _painter.height;
     int offset =
         _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
     // 得到第一页偏移量
-    int preOffset = 0;
     int i = 1;
-    while (preOffset < content.characters.length) {
-      if (offset >= content.characters.length - 1) {
-        String subContent = content.substring(preOffset);
+    while (offset < content.characters.length) {
+      if (offset == content.characters.length - 1) {
+        String subContent = content.substring(offset);
         list.add(
             ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, wordWith));
         break;
       }
-      String subContent = content.substring(preOffset, offset);
+      String subContent = content.substring(0, offset);
       list.add(
           ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, wordWith));
       i++;
-      preOffset = offset;
-      _painter.maxLines = maxLines * i;
-      _painter.layout(maxWidth: MediaQuery.of(context).size.width);
+      if (i == 2) {
+        _calMaxLines();
+      }
+      content = content.substring(offset);
+      _painter.text = TextSpan(text: content, style: contentStyle);
+      _painter.maxLines = maxLines;
+      _painter.layout(maxWidth: _contentWidth());
       paintWidth = _painter.width;
       paintHeight = _painter.height;
       offset =
@@ -449,22 +476,28 @@ class ReadController extends GetxController {
   }
 
   toSetting() async{
-    ReadSettingConfig temp = ReadSettingConfig(readSettingConfig.backgroundColor, readSettingConfig.fontSize, readSettingConfig.fontColor);
+    ReadSettingConfig temp = ReadSettingConfig(readSettingConfig.backgroundColor, readSettingConfig.fontSize, readSettingConfig.fontColor, readSettingConfig.fontHeight);
     var value = await Get.toNamed(Routes.readSetting, arguments: {"config": temp});
     if (value != null && value["config"] != null) {
       ReadSettingConfig config = value["config"];
       if (config.fontSize != readSettingConfig.fontSize || config.fontColor != readSettingConfig.fontColor) {
         // 需要重新加载
-        await EasyLoading.show();
-        contentStyle = TextStyle(color: hexToColor(config.fontColor), fontSize: config.fontSize);
-        int chapterIndex = chapters.indexWhere((element) => pages[pageIndex].chapterId == element.id);
-        pages.clear();
-        await jumpChapter(chapterIndex, pop: false);
-        await EasyLoading.dismiss();
+        await _reload(config);
       }
+      double fontHeight = readSettingConfig.fontHeight;
       readSettingConfig = value["config"];
+      readSettingConfig.fontHeight = fontHeight;
       update(["backgroundColor", "content"]);
     }
+  }
+
+  _reload(ReadSettingConfig config) async{
+    await EasyLoading.show();
+    contentStyle = TextStyle(color: hexToColor(config.fontColor), fontSize: config.fontSize, height: config.fontHeight);
+    int chapterIndex = chapters.indexWhere((element) => pages[pageIndex].chapterId == element.id);
+    pages.clear();
+    await jumpChapter(chapterIndex, pop: false);
+    await EasyLoading.dismiss();
   }
 
   @override
@@ -499,5 +532,78 @@ class ReadController extends GetxController {
     await audioHandler.play();
     homeController.audioProcessingState = AudioProcessingState.error;
   }
+  double _contentWidth() {
+  return MediaQuery.of(context).size.width - wordWith;
+  }
 
+  String _formatContent(String content) {
+    if (content.isEmpty) {
+      return content;
+    }
+    content = content.replaceAll(" ", "").replaceAll("“", "\"").replaceAll("”", "\"");
+    List<String> list = [];
+    List<int> codes = content.codeUnits;
+    for (int i = 0; i < codes.length; i++) {
+      final char = String.fromCharCode(codes[i]);
+      if (char != "\n") {
+        list.add(char);
+      } else {
+        if (list.isNotEmpty) {
+          if (list[list.length - 1].contains(" ")) {
+            continue;
+          }
+        }
+        list.add("\n  ");
+      }
+    }
+    return list.join();
+  }
+
+  void _calMaxLines({bool firstPage = false}) {
+    double extend = 0;
+    if (firstPage) {
+      extend = 80;
+    }
+    maxLines = (MediaQuery.of(context).size.height -
+        MediaQuery.of(context).padding.top - 16 - extend) ~/
+        wordHeight;
+  }
+
+  /// 行高减0.1
+  fontHeightSub() async{
+    if (readSettingConfig.fontHeight > 1) {
+      readSettingConfig.fontHeight = readSettingConfig.fontHeight - 0.1;
+      await _reload(readSettingConfig);
+      update(["content"]);
+    }
+  }
+  /// 行高加0.1
+  fontHeightAdd() async{
+    if (readSettingConfig.fontHeight < 3) {
+      readSettingConfig.fontHeight = readSettingConfig.fontHeight + 0.1;
+      await _reload(readSettingConfig);
+      update(["content"]);
+    }
+  }
+
+  rotateScreenChange() async{
+    if (!rotateScreen) {
+      rotateScreen = true;
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft, //全屏时旋转方向，左边
+      ]);
+      await _reload(readSettingConfig);
+    } else {
+      rotateScreen = false;
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
+      await _reload(readSettingConfig);
+    }
+
+  }
 }
+
+
+
+

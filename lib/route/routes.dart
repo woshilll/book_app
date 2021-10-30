@@ -8,4 +8,7 @@ abstract class Routes {
   static const search = '/book/search';
   static const searchValue = '/book/search/value';
   static const searchValueView = '/book/search/value/view';
+
+  /// 设置
+  static const settingHome = '/setting/home';
 }

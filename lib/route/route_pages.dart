@@ -12,6 +12,8 @@ import 'package:book_app/module/book/searchValue/search_value_binding.dart';
 import 'package:book_app/module/book/searchValue/search_value_screen.dart';
 import 'package:book_app/module/home/home_binding.dart';
 import 'package:book_app/module/home/home_screen.dart';
+import 'package:book_app/module/setting/home/setting_home_binding.dart';
+import 'package:book_app/module/setting/home/setting_home_screen.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/splash/splash_binding.dart';
 import 'package:book_app/splash/splash_screen.dart';
@@ -59,6 +61,20 @@ class RoutePages {
         name: Routes.searchValueView,
         page: () => const SearchValueViewScreen(),
         binding: SearchValueViewBinding()
+    ),
+
+
+
+
+
+
+
+
+
+    GetPage(
+        name: Routes.settingHome,
+        page: () => const SettingHomeScreen(),
+        binding: SettingHomeBinding()
     )
   ];
 }

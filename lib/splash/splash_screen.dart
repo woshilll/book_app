@@ -42,7 +42,7 @@ class SplashScreen extends GetView<SplashController> {
                         RotateAnimatedText('现在!', duration: const Duration(milliseconds: 1000)),
                         RotateAnimatedText('立刻!', duration: const Duration(milliseconds: 1000)),
                         RotateAnimatedText('加入我们!', duration: const Duration(milliseconds: 1000)),
-                        TypewriterAnimatedText('牛牛科技有限公司欢迎你的加入!', textStyle: TextStyle(fontSize: (MediaQuery.of(context).size.width - 20) / 15), speed: const Duration(milliseconds: 300)),
+                        TypewriterAnimatedText('青年戒色吧欢迎你的加入!', textStyle: TextStyle(fontSize: (MediaQuery.of(context).size.width - 20) / 12), speed: const Duration(milliseconds: 300)),
                       ],
                       repeatForever: true,
                       pause: const Duration(milliseconds: 100),

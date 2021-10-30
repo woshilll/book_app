@@ -62,7 +62,7 @@ class HomeController extends GetxController {
       item(Colors.indigo, Icons.airline_seat_flat),
       item(Colors.red, Icons.bluetooth),
       item(Colors.pink, Icons.battery_alert),
-      item(Colors.purple, Icons.desktop_windows),
+      item(Colors.purple, Icons.settings, toast: "设置", route: Routes.settingHome),
       item(Colors.blue, Icons.radio),
     ];
   }
