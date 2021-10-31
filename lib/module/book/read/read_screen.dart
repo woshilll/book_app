@@ -4,6 +4,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/module/home/component/drag_overlay.dart';
+import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/audio/text_player_handler.dart';
 import 'package:book_app/util/limit_util.dart';
@@ -91,6 +92,7 @@ class ReadScreen extends GetView<ReadController> {
               },
             ),
             onPointerDown: (e) {
+              controller.autoPageCancel();
               controller.xMove = e.position.dx;
             },
             onPointerUp: (e) async {
@@ -649,8 +651,13 @@ class ReadScreen extends GetView<ReadController> {
                 await controller.fontHeightAdd();
               },
             ),
-            const Text("Auto",
-                style: TextStyle(fontSize: 16, color: Colors.white)),
+            GetBuilder<ReadController>(
+              id: 'autoPage',
+              builder: (controller) {
+                return Text("Auto",
+                    style: TextStyle(fontSize: 16, color: (controller.autoPage == null || !controller.autoPage!.isActive) ? Colors.white : Theme.of(controller.context).primaryColor));
+              },
+            ),
             GestureDetector(
               child: Image.asset(
                 "lib/resource/image/screen_h.png",
@@ -661,16 +668,21 @@ class ReadScreen extends GetView<ReadController> {
                 await controller.rotateScreenChange();
               },
             ),
-            Container(
-              padding:
-                  const EdgeInsets.only(top: 3, bottom: 5, left: 10, right: 10),
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.white)),
-              child: const Text(
-                "更多设置",
-                style: TextStyle(fontSize: 16, color: Colors.white),
+            GestureDetector(
+              child: Container(
+                padding:
+                const EdgeInsets.only(top: 3, bottom: 5, left: 10, right: 10),
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.white)),
+                child: const Text(
+                  "更多设置",
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
               ),
+              onTap: () async{
+                await controller.toMoreSetting();
+              },
             ),
           ],
         ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ColorConstants {
-  static Color lightScaffoldBackgroundColor = hexToColor('#F9F9F9');
+  static Color lightScaffoldBackgroundColor = const Color.fromRGBO(220, 220, 220, 1);
   static Color darkScaffoldBackgroundColor = hexToColor('#2F2E2E');
   static Color secondaryAppColor = Colors.lightBlueAccent;
   static Color secondaryDarkAppColor = Colors.grey;

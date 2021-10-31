@@ -215,7 +215,7 @@ class HomeController extends GetxController {
                             child: Icon(Icons.clear, color: Theme.of(globalContext).textTheme.bodyText2!.color, size: 25),
                           ),
                           onTap: () async{
-                            audioHandler.queue.value.clear();
+                            // audioHandler.queue.value.clear();
                             await audioHandler.stop();
                             DragOverlay.remove();
                           },
@@ -235,7 +235,7 @@ class HomeController extends GetxController {
           },
         ));
       }
-      if (state.processingState == AudioProcessingState.idle && audioProcessingState == AudioProcessingState.idle) {
+      if (state.processingState == AudioProcessingState.idle && audioProcessingState == AudioProcessingState.idle && state.playing) {
         // 加载下一个章节
         if (curMediaItem != null) {
           Log.i("加载下个章节");
@@ -255,13 +255,14 @@ class HomeController extends GetxController {
               return;
             }
             List<ContentPage> nextPages;
+            String? bookName = audioHandler.queue.value[state.queueIndex!].album;
             try {
               ReadController readController = Get.find();
               nextPages = await readController.initPageWithReturn(nextChapter);
               for (var page in nextPages) {
                 await audioHandler.addQueueItem(MediaItem(
                     id: page.chapterId.toString(),
-                    album: "content",
+                    album: bookName,
                     title: page.chapterName.toString(),
                     extras: <String, String>{"content": page.content, "type": "1"}
                 ));
@@ -271,7 +272,7 @@ class HomeController extends GetxController {
               if (nextChapter.content != null) {
                 await audioHandler.addQueueItem(MediaItem(
                     id: nextChapter.id.toString(),
-                    album: "content",
+                    album: bookName,
                     title: nextChapter.name!,
                     extras: <String, String>{"content": nextChapter.content!, "type": "1"}
                 ));
@@ -280,7 +281,7 @@ class HomeController extends GetxController {
                 String content = await ChapterApi.parseContent(nextChapter.url, false);
                 await audioHandler.addQueueItem(MediaItem(
                     id: nextChapter.id.toString(),
-                    album: "content",
+                    album: bookName,
                     title: nextChapter.name!,
                     extras: <String, String>{"content": content, "type": "1"}
                 ));

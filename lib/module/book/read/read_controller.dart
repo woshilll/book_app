@@ -71,6 +71,8 @@ class ReadController extends GetxController {
   double xMove = 0;
   /// 是否为暗色模式
   bool isDark = Get.isDarkMode;
+  /// 自动翻页
+  Timer? autoPage;
   @override
   void onInit() async{
     super.onInit();
@@ -526,6 +528,7 @@ class ReadController extends GetxController {
     }
     String data = json.encode(readSettingConfig);
     SaveUtil.setString(Constant.readSettingConfig, data);
+    autoPage?.cancel();
     // await audioHandler.stop();
     // await audioHandler.updateQueue([]);
   }
@@ -545,7 +548,7 @@ class ReadController extends GetxController {
     for (int i = pageIndex; i <= lastIndex; i++) {
       await audioHandler.addQueueItem(MediaItem(
           id: pages[pageIndex].chapterId.toString(),
-          album: "content",
+          album: book.name,
           title: pages[pageIndex].chapterName.toString(),
           extras: <String, String>{"content": pages[i].content, "type": "1"}
       ));
@@ -640,6 +643,27 @@ class ReadController extends GetxController {
       isDark = true;
       update(["content", "bottomType"]);
     }
+  }
+
+  toMoreSetting() {
+    autoPage?.cancel();
+    Get.toNamed(Routes.readMoreSetting)!.then((value) {
+      if (value != null && value["autoPage"]) {
+        // 设置自动翻页
+        if (autoPage != null) {
+          autoPage!.cancel();
+        }
+        autoPage = Timer.periodic(Duration(seconds: value["autoPageRate"]), (timer) async {
+          await nextPage();
+        });
+        update(["autoPage"]);
+      }
+    });
+  }
+
+  void autoPageCancel() {
+    autoPage?.cancel();
+    update(["autoPage"]);
   }
 }
 

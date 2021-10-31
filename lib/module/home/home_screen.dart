@@ -21,9 +21,9 @@ class HomeScreen extends GetView<HomeController> {
     globalContext = context;
     return Scaffold(
       appBar: AppBar(
-        title: const Text("主页"),
-        centerTitle: true,
-        elevation: 0,
+          title: const Text("主页"),
+          centerTitle: true,
+          elevation: 0,
           actions: [
             Center(
               child: Container(

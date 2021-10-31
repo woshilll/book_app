@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:book_app/app_binding.dart';
+import 'package:book_app/app_controller.dart';
 import 'package:book_app/di.dart';
 import 'package:book_app/lang/lang_service.dart';
 import 'package:book_app/route/route_pages.dart';
@@ -38,22 +40,31 @@ class App extends StatelessWidget {
     //   // 去首页
     //   initRoute = Routes.home;
     // }
-    return GetMaterialApp(
-      debugShowCheckedModeBanner: false,
-      enableLog: true,
-      initialRoute: initRoute,
-      defaultTransition: Transition.fade,
-      getPages: RoutePages.routes,
-      initialBinding: AppBinding(),
-      smartManagement: SmartManagement.keepFactory,
-      title: '小小说',
-      locale: LangService.locale,
-      fallbackLocale: LangService.fallbackLocale,
-      translations: LangService(),
-      theme: ThemeConfig.lightTheme,
-      builder: EasyLoading.init(),
-      darkTheme: ThemeConfig.darkTheme,
-      themeMode: ThemeMode.dark,
+    Get.put(AppController());
+    return GetBuilder<AppController>(
+      id: "fullScreen",
+      builder: (controller) {
+        return ColorFiltered(
+          colorFilter: ColorFilter.mode(controller.screenColor, controller.screenColorModel),
+          child: GetMaterialApp(
+            debugShowCheckedModeBanner: false,
+            enableLog: true,
+            initialRoute: initRoute,
+            defaultTransition: Transition.fade,
+            getPages: RoutePages.routes,
+            initialBinding: AppBinding(),
+            smartManagement: SmartManagement.keepFactory,
+            title: '小小说',
+            locale: LangService.locale,
+            fallbackLocale: LangService.fallbackLocale,
+            translations: LangService(),
+            theme: ThemeConfig.lightTheme,
+            builder: EasyLoading.init(),
+            darkTheme: ThemeConfig.darkTheme,
+            themeMode: ThemeMode.light,
+          ),
+        );
+      },
     );
   }
 }

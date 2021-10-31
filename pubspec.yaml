@@ -62,6 +62,8 @@ dependencies:
   flutter_tts: 3.2.2
   # 跳动字
   animated_text_kit: ^4.2.1
+  flutter_switch: ^0.3.2
+  numberpicker: ^2.1.1
 
 dev_dependencies:
   flutter_test:

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:book_app/log/log.dart';
+import 'package:book_app/module/home/component/drag_overlay.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 class TextPlayerHandler extends BaseAudioHandler with QueueHandler {
@@ -146,6 +147,10 @@ class TextPlayerHandler extends BaseAudioHandler with QueueHandler {
 
   @override
   Future<void> stop() async {
+    queue.value.clear();
+    if (DragOverlay.view != null) {
+      DragOverlay.remove();
+    }
     await pause();
     playbackState.add(playbackState.value.copyWith(
       controls: [],
