@@ -217,14 +217,14 @@ class ReadController extends GetxController {
     await pageRecursion(index, maxLines, preOffset, offset, content, chapter);
   }
   /// 获取章节内容
-  Future<String> getContent(id, url, showDialog) async{
+  Future<String?> getContent(id, url, showDialog) async{
     // 查找内容
     Chapter? temp = await _chapterDbProvider.getChapterById(id);
     var content = temp?.content;
-    if (content == null || content.isEmpty) {
+    if ((content == null || content.isEmpty) && book.type == 1) {
       content = await ChapterApi.parseContent(url, showDialog);
       // 格式化文本
-      content = _formatContent(content);
+      content = FontUtil.formatContent(content);
       await _chapterDbProvider.updateContent(id, content);
     }
     // 赋值
@@ -267,9 +267,11 @@ class ReadController extends GetxController {
   /// 页面返回监听
   pop() async{
     // 更新当前的章节和页数
-    var chapterId = pages[pageIndex].chapterId;
-    var curPageIndex = pages[pageIndex].index;
-    await _bookDbProvider.updateCurChapter(book.id, chapterId, curPageIndex);
+    if (pages.isNotEmpty) {
+      var chapterId = pages[pageIndex].chapterId;
+      var curPageIndex = pages[pageIndex].index;
+      await _bookDbProvider.updateCurChapter(book.id, chapterId, curPageIndex);
+    }
     Get.back(result: {"brightness": brightnessTemp});
     if (rotateScreen) {
       SystemChrome.setPreferredOrientations([
@@ -369,7 +371,7 @@ class ReadController extends GetxController {
         _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
     // 得到第一页偏移量
     int i = 1;
-    while (offset < content.characters.length) {
+    do {
       if (offset == content.characters.length - 1) {
         String subContent = content.substring(offset);
         list.add(
@@ -391,7 +393,7 @@ class ReadController extends GetxController {
       paintHeight = _painter.height;
       offset =
           _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
-    }
+    } while (offset < content.characters.length);
     return list;
   }
 
@@ -557,31 +559,9 @@ class ReadController extends GetxController {
     homeController.audioProcessingState = AudioProcessingState.error;
   }
   double _contentWidth() {
-  return MediaQuery.of(context).size.width - wordWith;
+  return MediaQuery.of(context).size.width - wordWith - (MediaQuery.of(context).padding.left * 2);
   }
 
-  String _formatContent(String content) {
-    if (content.isEmpty) {
-      return content;
-    }
-    content = content.replaceAll(" ", "").replaceAll("“", "\"").replaceAll("”", "\"");
-    List<String> list = [];
-    List<int> codes = content.codeUnits;
-    for (int i = 0; i < codes.length; i++) {
-      final char = String.fromCharCode(codes[i]);
-      if (char != "\n") {
-        list.add(char);
-      } else {
-        if (list.isNotEmpty) {
-          if (list[list.length - 1].contains(" ")) {
-            continue;
-          }
-        }
-        list.add("\n  ");
-      }
-    }
-    return list.join();
-  }
 
   void _calMaxLines({bool firstPage = false}) {
     double extend = 0;

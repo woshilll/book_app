@@ -25,6 +25,7 @@ class CustomDrawer extends StatelessWidget {
         child: Material(
           elevation: elevation,
           child: child,
+          color: Colors.black,
         ),
       ),
     );

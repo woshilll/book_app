@@ -39,9 +39,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
           backgroundColor: MaterialStateProperty.all(Theme.of(context).primaryColor)
         ),
         onPressed: () {
-          Get.toNamed(Routes.search)!.then((value) {
-            controller.getBookList();
-          });
+          controller.toSearch();
         },
       ),
     );
@@ -52,7 +50,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
         GetBuilder<BookHomeController>(
           id: 'bookList',
           builder: (controller) {
-            if (controller.books.length > 0) {
+            if (controller.books.isNotEmpty) {
               return Container(
                 margin: const EdgeInsets.only(left: 10, right: 10, top: 15),
                 child: ScrollConfiguration(
@@ -86,7 +84,8 @@ class BookHomeScreen extends GetView<BookHomeController> {
               );
             }
             return Container(
-              alignment: Alignment.center,
+              alignment: Alignment.topCenter,
+              margin: const EdgeInsets.only(top: 10),
               child: Text.rich(
                 TextSpan(
                   text: "书架里还没有书,快去",
@@ -94,13 +93,15 @@ class BookHomeScreen extends GetView<BookHomeController> {
                     TextSpan(
                       text: "搜索",
                       recognizer: TapGestureRecognizer()..onTap = () {
-                        Log.i("搜索");
-                      }
+                        controller.toSearch();
+                      },
+                        style: TextStyle(color: Theme.of(context).primaryColor)
                     ),
-                    TextSpan(
+                    const TextSpan(
                         text: "吧"
                     ),
-                  ]
+                  ],
+                  style: TextStyle(fontSize: 18, color: Theme.of(context).textTheme.bodyText1!.color)
                 )
               ),
             );
@@ -123,7 +124,8 @@ class BookHomeScreen extends GetView<BookHomeController> {
       ),
       errorWidget: (context, url, error) {
         return Container(
-          child: Text("${controller.books[index].name}"),
+          alignment: Alignment.center,
+          child: Text("本地书籍\n\n${controller.books[index].name}", textAlign: TextAlign.center,),
           decoration: const BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(4)),
             color: Colors.grey
@@ -192,6 +194,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
       ],
       offset: const Offset(20, 30),
       onSelected: (value) async{
+        await controller.manageChoose(value);
       },
     );
   }

@@ -1,6 +1,7 @@
 import 'package:book_app/log/log.dart';
 import 'package:book_app/module/setting/home/setting_home_controller.dart';
 import 'package:book_app/util/list_item.dart';
+import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_switch/flutter_switch.dart';
@@ -11,6 +12,7 @@ class SettingHomeScreen extends GetView<SettingHomeController>{
 
   @override
   Widget build(BuildContext context) {
+    controller.context = context;
     return Scaffold(
       appBar: AppBar(
         title: Text("设置"),
@@ -24,6 +26,8 @@ class SettingHomeScreen extends GetView<SettingHomeController>{
     return GetBuilder<SettingHomeController>(
       id: 'setting',
       builder: (controller) {
+        controller.backgroundColor = Theme.of(context).textTheme.bodyText2!.color;
+        controller.textColor = Theme.of(context).textTheme.bodyText1!.color;
         return Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
@@ -31,20 +35,15 @@ class SettingHomeScreen extends GetView<SettingHomeController>{
             ListItem(
               "暗色模式",
               FlutterSwitch(
-                  value: Get.isDarkMode,
+                  value: controller.isDarkModel,
                   height: 25,
                   width: 50,
                   onToggle: (value) async{
                       await controller.setDarkMode(value);
                   }
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.only(left: 15, right: 15),
-              child: Divider(
-                height: 1,
-                color: Colors.grey[300],
-              ),
+                controller.backgroundColor,
+                controller.textColor
             ),
           ],
         );

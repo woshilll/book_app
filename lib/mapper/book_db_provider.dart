@@ -22,6 +22,7 @@ class BookDbProvider extends BaseDbProvider {
   /// 当前阅读的章节里的页数
   final String columnCurPage = "curPage";
   final String columnUrl = "url";
+  final String columnType = "type";
   @override
   createTableString() {
     return '''
@@ -34,7 +35,8 @@ class BookDbProvider extends BaseDbProvider {
         $columnIndex text, 
         $columnCurChapter integer, 
         $columnCurPage integer,
-        $columnUrl text not null
+        $columnUrl text not null,
+        $columnType integer not null
       )
     ''';
   }

@@ -9,6 +9,10 @@ class SearchValueViewScreen extends GetView<SearchValueViewController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("小说"),
+        centerTitle: true,
+      ),
       body: GetBuilder<SearchValueViewController>(
         id: "view",
         builder: (controller) {
@@ -24,9 +28,10 @@ class SearchValueViewScreen extends GetView<SearchValueViewController> {
         width: 60,
         height: 60,
         child: ElevatedButton(
-          child: const Text("加入书架", style: TextStyle(fontSize: 14)),
+          child: const Icon(Icons.add, size: 25, color: Colors.white,),
           style: ButtonStyle(
             shape: MaterialStateProperty.all(const CircleBorder()),
+            backgroundColor: MaterialStateProperty.all(Theme.of(context).primaryColor)
           ),
           onPressed: () {
             controller.addBook();

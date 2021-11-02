@@ -27,4 +27,27 @@ class FontUtil {
     });
     return string.join();
   }
+
+  static String formatContent(String content) {
+    if (content.isEmpty) {
+      return content;
+    }
+    content = content.replaceAll(" ", "").replaceAll("\u3000", "").replaceAll("“", "\"").replaceAll("”", "\"");
+    List<String> list = [];
+    List<int> codes = content.codeUnits;
+    for (int i = 0; i < codes.length; i++) {
+      final char = String.fromCharCode(codes[i]);
+      if (char != "\n") {
+        list.add(char);
+      } else {
+        if (list.isNotEmpty) {
+          if (list[list.length - 1].contains(" ")) {
+            continue;
+          }
+        }
+        list.add("\n  ");
+      }
+    }
+    return list.join();
+  }
 }

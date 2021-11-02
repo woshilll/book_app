@@ -44,9 +44,9 @@ abstract class BaseDbProvider {
     await db.delete(tableName(), where: "id = ?", whereArgs: [id]);
   }
 
-  Future<void> commonInsert(Base base) async {
+  Future<int> commonInsert(Base base) async {
     Database db = await getDataBase();
-    await db.insert(tableName(), base.toJson());
+    return await db.insert(tableName(), base.toJson());
   }
 
   Future<void> commonUpdate(Base base) async {

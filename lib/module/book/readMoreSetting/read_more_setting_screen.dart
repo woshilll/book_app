@@ -47,6 +47,8 @@ class ReadMoreSettingScreen extends GetView<ReadMoreSettingController> {
                     controller.setAutoPage(value);
                   }
               ),
+                Theme.of(globalContext).textTheme.bodyText2!.color,
+                Theme.of(globalContext).textTheme.bodyText1!.color
             ),
             Container(
               padding: const EdgeInsets.only(left: 15, right: 15),
@@ -71,6 +73,8 @@ class ReadMoreSettingScreen extends GetView<ReadMoreSettingController> {
                   controller.setAutoPageRate(value);
                 },
               ),
+                Theme.of(globalContext).textTheme.bodyText2!.color,
+                Theme.of(globalContext).textTheme.bodyText1!.color
             ),
             Container(
               padding: const EdgeInsets.only(left: 15, right: 15),
@@ -86,7 +90,10 @@ class ReadMoreSettingScreen extends GetView<ReadMoreSettingController> {
                 onToggle: (value) {
                   controller.setGoodEyes(value);
                 }
-            ))
+            ),
+                Theme.of(globalContext).textTheme.bodyText2!.color,
+                Theme.of(globalContext).textTheme.bodyText1!.color
+            )
           ],
         );
       },

@@ -13,10 +13,11 @@ class Book extends Base{
   int? curChapter;
   int? curPage;
   String? url;
+  int? type;
   List<Chapter>? chapters;
 
   Book({this.id, this.name, this.description, this.author, this.indexImg,
-    this.curChapter, this.curPage, this.url, this.chapters});
+    this.curChapter, this.curPage, this.url, this.type = 1, this.chapters});
 
   factory Book.fromJson(Map<String, dynamic> json) => _$BookFromJson(json);
 
@@ -30,10 +31,11 @@ class Book extends Base{
     'curChapter': curChapter,
     'curPage': curPage,
     'url': url,
+    'type': type,
   };
 
   @override
   String toString() {
-    return 'Book{id: $id, name: $name, description: $description, author: $author, indexImg: $indexImg, curChapter: $curChapter, curPage: $curPage, url: $url, chapters: $chapters}';
+    return 'Book{id: $id, name: $name, description: $description, author: $author, indexImg: $indexImg, curChapter: $curChapter, curPage: $curPage, url: $url, type: $type}';
   }
 }
