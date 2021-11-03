@@ -8,8 +8,7 @@ class LimitUtil {
   static debounce(Function doSomething, {durationTime = deFaultDurationTime}) {
     timer?.cancel();
     timer = Timer(Duration(milliseconds: durationTime), () {
-      doSomething.call();
-      timer = null;
+      doSomething;
     });
   }
 

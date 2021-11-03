@@ -2,12 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:battery_plus/battery_plus.dart';
 import 'package:book_app/api/chapter_api.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/chapter/chapter.dart';
+import 'package:book_app/model/read_page_type.dart';
+import 'package:book_app/module/book/read/component/drawer.dart';
 import 'package:book_app/module/book/readSetting/component/read_setting_config.dart';
 import 'package:book_app/module/home/home_controller.dart';
 import 'package:book_app/route/routes.dart';
@@ -50,8 +53,6 @@ class ReadController extends GetxController {
   var scaffoldKey = GlobalKey<ScaffoldState>();
   /// 目录控制器
   ScrollController menuController = ScrollController();
-  /// 目录展开标识
-  bool drawerFlag = false;
   /// 底部类型 1-正常 2-亮度 3-设置
   String bottomType = "1";
   /// 屏幕亮度
@@ -73,13 +74,27 @@ class ReadController extends GetxController {
   bool isDark = Get.isDarkMode;
   /// 自动翻页
   Timer? autoPage;
+  /// 是否展示顶部状态栏
+  bool showStatusBar = false;
+  /// 电池
+  final Battery _battery = Battery();
+  /// 电池容量
+  int batteryLevel = 0;
+  /// 电池状态
+  BatteryState batteryState = BatteryState.unknown;
+  /// 阅读方式
+  ReadPageType readPageType = ReadPageType.smooth;
   @override
   void onInit() async{
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     super.onInit();
+    batteryLevel = await _battery.batteryLevel;
     var map = Get.arguments;
     book = map["book"];
     await initData();
     initAudio();
+    _batteryListen();
+    await _batteryCap();
   }
   initData() async{
     /// 背景色
@@ -148,73 +163,6 @@ class ReadController extends GetxController {
     }
     await EasyLoading.dismiss();
     loading = false;
-    // calWordHeightAndWidth();
-    // String content = FontUtil.alphanumericToFullLength(chapter.content);
-    // _painter.text = TextSpan(text: content, style: contentStyle);
-    // // 一页最大行数 context获取的是主页的context， 带appBar所以高度会减少56
-    // // double screenHeight = MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top + 26;
-    // // 第一页最大行数
-    // // int maxLines = screenHeight ~/ wordHeight;
-    // _painter.maxLines = maxLines;
-    // // 统计第一页字符偏移量
-    // _painter.layout(maxWidth: MediaQuery.of(context).size.width);
-    // double paintWidth = _painter.width;
-    // double paintHeight = _painter.height;
-    // int offset =
-    //     _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
-    // // 得到第一页偏移量
-    // int preOffset = 0;
-    // int i = 1;
-    // // 先加载几页，然后再一点点加载
-    // for (int j = 0; j < 4; j++) {
-    //   if (offset >= content.length) {
-    //     String subContent = content.substring(preOffset, offset);
-    //     pages.add(
-    //         ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, wordWith));
-    //     i++;
-    //     update(["content"]);
-    //     return;
-    //   }
-    //   String subContent = content.substring(preOffset, offset);
-    //   pages.add(
-    //       ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, wordWith));
-    //   i++;
-    //   preOffset = offset;
-    //   _painter.maxLines = maxLines * i;
-    //   _painter.layout(maxWidth: MediaQuery.of(context).size.width);
-    //   paintWidth = _painter.width;
-    //   paintHeight = _painter.height;
-    //   offset =
-    //       _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
-    // }
-    // Timer(const Duration(milliseconds: 300), () async{
-    //   await pageRecursion(i, maxLines, preOffset, offset, content, chapter);
-    //   update(["content"]);
-    //   loading = false;
-    // });
-  }
-
-  Future pageRecursion(int index, int maxLines, int preOffset, int offset,
-      String content, Chapter chapter) async {
-    String subContent;
-    if (offset >= content.length) {
-      subContent = content.substring(preOffset);
-      pages.add(
-          ContentPage(subContent, contentStyle, index, chapter.id, chapter.name, wordWith));
-      index++;
-      return;
-    }
-    subContent = content.substring(preOffset, offset);
-    pages.add(ContentPage(subContent,contentStyle, index, chapter.id, chapter.name, wordWith));
-    index++;
-    preOffset = offset;
-    _painter.maxLines = maxLines * index;
-    _painter.layout(maxWidth: MediaQuery.of(context).size.width);
-    double paintWidth = _painter.width;
-    double paintHeight = _painter.height;
-    offset =
-        _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
-    await pageRecursion(index, maxLines, preOffset, offset, content, chapter);
   }
   /// 获取章节内容
   Future<String?> getContent(id, url, showDialog) async{
@@ -427,10 +375,13 @@ class ReadController extends GetxController {
     update(["chapterChange"]);
   }
 
-  void openDrawer() {
-    scaffoldKey.currentState!.openDrawer();
-    drawerFlag = true;
-    Timer(const Duration(milliseconds: 300), () => menuController.jumpTo(readChapterIndex * 41));
+  void openDrawer() async{
+    Timer(const Duration(milliseconds: 300), () {
+      scaffoldKey.currentState!.openDrawer();
+      Timer(const Duration(milliseconds: 100), () {
+        menuController.jumpTo(readChapterIndex * 41);
+      });
+    });
   }
 
   /// 上一章
@@ -523,6 +474,7 @@ class ReadController extends GetxController {
   @override
   void onClose() async{
     super.onClose();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     if (isDark) {
       var config = _getReadSettingConfig();
       readSettingConfig.backgroundColor = config.backgroundColor;
@@ -531,6 +483,7 @@ class ReadController extends GetxController {
     String data = json.encode(readSettingConfig);
     SaveUtil.setString(Constant.readSettingConfig, data);
     autoPage?.cancel();
+    _batteryTimer?.cancel();
     // await audioHandler.stop();
     // await audioHandler.updateQueue([]);
   }
@@ -590,6 +543,7 @@ class ReadController extends GetxController {
     }
   }
 
+  /// 屏幕旋转
   rotateScreenChange() async{
     if (!rotateScreen) {
       rotateScreen = true;
@@ -607,6 +561,7 @@ class ReadController extends GetxController {
 
   }
 
+  /// 暗色主题
   Future changeDark() async{
     if (isDark) {
       var config = _getReadSettingConfig();
@@ -625,6 +580,7 @@ class ReadController extends GetxController {
     }
   }
 
+  /// 前往更多设置
   toMoreSetting() {
     autoPage?.cancel();
     Get.toNamed(Routes.readMoreSetting)!.then((value) {
@@ -641,9 +597,33 @@ class ReadController extends GetxController {
     });
   }
 
+  /// 自动翻页取消
   void autoPageCancel() {
     autoPage?.cancel();
     update(["autoPage"]);
+  }
+
+  /// 电池监听
+  void _batteryListen() {
+    _battery.onBatteryStateChanged.listen((BatteryState state) {
+      batteryState = state;
+      update(["battery"]);
+    });
+  }
+
+  Timer? _batteryTimer;
+  /// 获取电池容量
+  _batteryCap() async{
+    var second = DateTime.now().second;
+    second = 60 - second;
+    const Duration _oneMinute = Duration(minutes: 1);
+    Timer(Duration(seconds: second), () {
+      update(["battery"]);
+      _batteryTimer = Timer.periodic(_oneMinute, (timer) async {
+        batteryLevel = await _battery.batteryLevel;
+        update(["battery"]);
+      });
+    });
   }
 }
 

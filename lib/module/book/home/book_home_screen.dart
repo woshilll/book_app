@@ -111,6 +111,17 @@ class BookHomeScreen extends GetView<BookHomeController> {
     );
   }
   Widget _bookImageWidget(context, index) {
+    String? img = controller.books[index].indexImg;
+    if (img == null || img.isEmpty) {
+      return Container(
+        alignment: Alignment.center,
+        child: Text("本地书籍\n\n${controller.books[index].name}", textAlign: TextAlign.center,),
+        decoration: const BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(4)),
+            color: Colors.grey
+        ),
+      );
+    }
     return CachedNetworkImage(
       imageUrl: "${controller.books[index].indexImg}",
       imageBuilder: (context, imageProvider) => Container(
