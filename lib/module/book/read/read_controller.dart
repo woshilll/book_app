@@ -84,6 +84,8 @@ class ReadController extends GetxController {
   BatteryState batteryState = BatteryState.unknown;
   /// 阅读方式
   ReadPageType readPageType = ReadPageType.smooth;
+  /// 点击翻页淡入淡出
+  bool pointShow = true;
   @override
   void onInit() async{
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -117,8 +119,10 @@ class ReadController extends GetxController {
     await initPage(cur, dialog: true, withUpdate: false);
     update(["content"]);
     if (book.curPage != null) {
-      contentPageController.jumpToPage(book.curPage! - 1);
       pageIndex = book.curPage! - 1;
+      if (readPageType == ReadPageType.smooth) {
+        contentPageController.jumpToPage(pageIndex);
+      }
     }
     /// 亮度
     double sysBrightness = await DeviceDisplayBrightness.getBrightness();
@@ -235,11 +239,13 @@ class ReadController extends GetxController {
     if (index >= 0) {
       // 已存在
       contentPageController.jumpToPage(index);
+      pageIndex = index;
     } else {
       chapter.content = await getContent(chapter.id, chapter.url, true);
       pages.clear();
       await initPage(chapter);
       contentPageController.jumpToPage(0);
+      pageIndex = 0;
     }
     if (pop) {
       Navigator.of(context).pop();
@@ -252,44 +258,59 @@ class ReadController extends GetxController {
       return;
     }
     int index = pageIndex;
-    Log.i("当前页 $pageIndex");
     if (index < pages.length - 2) {
+      _pageStartStyle();
       // 有下一页
-      contentPageController.jumpToPage(index + 1);
-      pageIndex = index + 1;
+      _nextPageStyle(index);
     } else {
       // 到底了， 加载 获取当前章节
       var chapterId = pages[index].chapterId;
       var chapterIndex = chapters.indexWhere((element) => element.id == chapterId);
       if (chapterIndex >= 0 && chapterIndex != chapters.length - 1) {
         // 找到下一章
+        _pageStartStyle();
         Chapter next = chapters[chapterIndex + 1];
         next.content = await getContent(next.id, next.url, false);
         await initPage(next);
         // 跳转
-        contentPageController.jumpToPage(index + 1);
-        pageIndex = index + 1;
+        _nextPageStyle(index);
       }
     }
-    Log.i("下一页 $pageIndex");
+  }
+  _pageStartStyle() {
+    if (readPageType == ReadPageType.point) {
+      pointShow = false;
+      update(["point"]);
+    }
+  }
+  _nextPageStyle(index) {
+    if (readPageType == ReadPageType.smooth) {
+      contentPageController.jumpToPage(index + 1);
+      pageIndex = index + 1;
+    } else if (readPageType == ReadPageType.point) {
+      pageIndex = index + 1;
+      pointShow = true;
+      update(["point"]);
+    }
   }
 
   prePage() async {
     if (loading) {
       return;
     }
-    Log.i("当前页 $pageIndex");
     int index = pageIndex;
     if (index > 0) {
       // 有上一页
-      contentPageController.jumpToPage(index - 1);
+      _pageStartStyle();
       pageIndex = index - 1;
+      _prePageStyle();
     } else {
       // 无上一页
       var chapterId = pages[index].chapterId;
       var chapterIndex = chapters.indexWhere((element) => element.id == chapterId);
       if (chapterIndex > 0) {
         // 加载上一页
+        _pageStartStyle();
         EasyLoading.show(maskType: EasyLoadingMaskType.clear);
         Chapter pre = chapters[chapterIndex - 1];
         pre.content = await getContent(pre.id, pre.url, false);
@@ -297,11 +318,20 @@ class ReadController extends GetxController {
         pages.insertAll(0, returnPages);
         update(["content"]);
         pageIndex = returnPages.length - 1;
-        contentPageController.jumpToPage(pageIndex);
+        _prePageStyle();
         EasyLoading.dismiss();
       }
     }
-    Log.v("上一页 $pageIndex");
+  }
+
+  _prePageStyle() {
+    if (readPageType == ReadPageType.smooth) {
+      contentPageController.jumpToPage(pageIndex);
+
+    } else if (readPageType == ReadPageType.point) {
+      pointShow = true;
+      update(["point"]);
+    }
   }
 
   Future<List<ContentPage>> initPageWithReturn(Chapter chapter) async {
@@ -354,7 +384,6 @@ class ReadController extends GetxController {
   }
 
   _keyEvent(KeyEvent event) async {
-    Log.i(event);
     // if (event.physicalKey == PhysicalKeyboardKey.audioVolumeDown) {
     //   // 音量-
     //   await nextPage();
@@ -378,7 +407,7 @@ class ReadController extends GetxController {
   void openDrawer() async{
     Timer(const Duration(milliseconds: 300), () {
       scaffoldKey.currentState!.openDrawer();
-      Timer(const Duration(milliseconds: 100), () {
+      Timer(const Duration(milliseconds: 300), () {
         menuController.jumpTo(readChapterIndex * 41);
       });
     });
@@ -463,7 +492,7 @@ class ReadController extends GetxController {
   }
 
   _reload(ReadSettingConfig config) async{
-    await EasyLoading.show();
+    await EasyLoading.show(maskType: EasyLoadingMaskType.clear);
     contentStyle = TextStyle(color: hexToColor(config.fontColor), fontSize: config.fontSize, height: config.fontHeight);
     int chapterIndex = chapters.indexWhere((element) => pages[pageIndex].chapterId == element.id);
     pages.clear();
@@ -494,7 +523,6 @@ class ReadController extends GetxController {
   }
 
   play() async{
-    // Log.i(pageIndex);
     HomeController homeController = Get.find();
     await audioHandler.pause();
     await audioHandler.updateQueue([]);
@@ -624,6 +652,11 @@ class ReadController extends GetxController {
         update(["battery"]);
       });
     });
+  }
+
+  void setPageType(ReadPageType pageType) {
+    readPageType = pageType;
+    update(["content"]);
   }
 }
 

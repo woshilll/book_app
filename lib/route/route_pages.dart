@@ -51,7 +51,7 @@ class RoutePages {
     ),
     GetPage(
         name: Routes.readMoreSetting,
-        page: () => const ReadMoreSettingScreen(),
+        page: () => ReadMoreSettingScreen(),
         binding: ReadMoreSettingBinding()
     ),
     GetPage(

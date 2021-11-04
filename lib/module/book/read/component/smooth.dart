@@ -1,7 +1,7 @@
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
+/// 平滑
 Widget smooth() {
   ReadController controller = Get.find();
   return Listener(
@@ -9,7 +9,7 @@ Widget smooth() {
       controller: controller.contentPageController,
       itemCount: controller.pages.length,
       itemBuilder: (context, index) {
-        return _content(context, index, controller);
+        return content(context, index, controller);
       },
       onPageChanged: (index) async {
         controller.pageIndex = index;
@@ -35,7 +35,7 @@ Widget smooth() {
     },
   );
 }
-Widget _content(context, index, controller) {
+Widget content(context, index, controller) {
   return Stack(
     children: [
       Positioned(

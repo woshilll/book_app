@@ -2,6 +2,7 @@ import 'package:book_app/log/log.dart';
 import 'package:book_app/module/book/home/book_home_controller.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/util/no_shadow_scroll_behavior.dart';
+import 'package:book_app/util/system_utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
@@ -14,6 +15,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
 
   @override
   Widget build(BuildContext context) {
+    globalContext = context;
     return Scaffold(
       appBar: AppBar(
         title: const Text("书架"),

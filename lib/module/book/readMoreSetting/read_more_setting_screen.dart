@@ -1,4 +1,7 @@
 import 'package:book_app/log/log.dart';
+import 'package:book_app/model/read_page_type.dart';
+import 'package:book_app/module/book/read/read_controller.dart';
+import 'package:book_app/module/book/readMoreSetting/component/page_style_bottom.dart';
 import 'package:book_app/module/book/readMoreSetting/read_more_setting_controller.dart';
 import 'package:book_app/util/list_item.dart';
 import 'package:book_app/util/system_utils.dart';
@@ -8,8 +11,8 @@ import 'package:get/get.dart';
 import 'package:numberpicker/numberpicker.dart';
 
 class ReadMoreSettingScreen extends GetView<ReadMoreSettingController> {
-  const ReadMoreSettingScreen({Key? key}) : super(key: key);
-
+  ReadMoreSettingScreen({Key? key}) : super(key: key);
+  final ReadController _readController = Get.find();
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -93,11 +96,46 @@ class ReadMoreSettingScreen extends GetView<ReadMoreSettingController> {
             ),
                 Theme.of(globalContext).textTheme.bodyText2!.color,
                 Theme.of(globalContext).textTheme.bodyText1!.color
-            )
+            ),
+            Container(
+              padding: const EdgeInsets.only(left: 15, right: 15),
+              child: Divider(
+                height: 1,
+                color: Colors.grey[300],
+              ),
+            ),
+            ListItem("翻页样式",
+                GestureDetector(
+                  child: Row(
+                    children: [
+                      Text(_pageStyleStr(_readController.readPageType), style: TextStyle(color: Theme.of(globalContext).textTheme.bodyText1!.color, height: 1, fontSize: 14),),
+                      Icon(Icons.keyboard_arrow_right, color: Theme.of(globalContext).textTheme.bodyText1!.color, size: 25,)
+                    ],
+                  ),
+                  onTap: () {
+                    pageStyleBottom(context, controller);
+                  },
+                )
+              ,
+                Theme.of(globalContext).textTheme.bodyText2!.color,
+                Theme.of(globalContext).textTheme.bodyText1!.color
+            ),
           ],
         );
       },
     );
   }
 
+  String _pageStyleStr(ReadPageType pageType) {
+    switch(pageType) {
+      case ReadPageType.point:
+        return "点击";
+      case ReadPageType.smooth:
+        return "滑动";
+      case ReadPageType.cover:
+        return "覆盖";
+      case ReadPageType.emulation:
+        return "仿真";
+    }
+  }
 }

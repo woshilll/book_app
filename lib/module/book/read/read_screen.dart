@@ -4,6 +4,7 @@ import 'package:book_app/model/read_page_type.dart';
 import 'package:book_app/module/book/read/component/battery.dart';
 import 'package:book_app/module/book/read/component/bottom.dart';
 import 'package:book_app/module/book/read/component/drawer.dart';
+import 'package:book_app/module/book/read/component/point.dart';
 import 'package:book_app/module/book/read/component/smooth.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/theme/color.dart';
@@ -61,6 +62,8 @@ class ReadScreen extends GetView<ReadController> {
               switch (controller.readPageType) {
                 case ReadPageType.smooth:
                   return smooth();
+                case ReadPageType.point:
+                  return point();
               }
               return Container();
             },

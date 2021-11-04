@@ -41,4 +41,8 @@ class ReadMoreSettingController  extends GetxController{
     Get.back(result: {'autoPage': autoPage, 'autoPageRate': autoPageRate});
   }
 
+  void fresh() {
+    update(["moreSetting"]);
+  }
+
 }
