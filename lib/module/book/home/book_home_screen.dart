@@ -15,7 +15,6 @@ class BookHomeScreen extends GetView<BookHomeController> {
 
   @override
   Widget build(BuildContext context) {
-    globalContext = context;
     return Scaffold(
       appBar: AppBar(
         title: const Text("书架"),

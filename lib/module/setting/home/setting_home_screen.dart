@@ -45,6 +45,25 @@ class SettingHomeScreen extends GetView<SettingHomeController>{
                 controller.backgroundColor,
                 controller.textColor
             ),
+            Container(
+              padding: const EdgeInsets.only(left: 15, right: 15),
+              child: Divider(
+                height: 1,
+                color: Colors.grey[300],
+              ),
+            ),
+            GestureDetector(
+              child: ListItem(
+                  "检查更新",
+                  Container()
+                  ,
+                  controller.backgroundColor,
+                  controller.textColor
+              ),
+              onTap: () {
+                controller.checkVersion();
+              },
+            ),
           ],
         );
       },
