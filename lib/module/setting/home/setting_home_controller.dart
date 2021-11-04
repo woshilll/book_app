@@ -1,5 +1,7 @@
 import 'package:book_app/api/dio/dio_manager.dart';
+import 'package:book_app/api/version_api.dart';
 import 'package:book_app/log/log.dart';
+import 'package:book_app/model/versionUpdate/version.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -34,12 +36,17 @@ class SettingHomeController extends GetxController {
 
   /// 检查更新
   void checkVersion() async{
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    String version = packageInfo.version;
+    Version newVersion = await VersionApi.getVersion();
+
+    // if (await _checkNewVersion(newVersion.name)) {
+    //   EasyLoading.showToast("已是最新版本");
+    //   return;
+    // }
+    String versionName = newVersion.name.substring(0, newVersion.name.lastIndexOf("."));
     showDialog(context: context, builder: (context) {
       return AlertDialog(
-        title: Text("1.0.7更新"),
-        content: Text("1.花生地挥洒\n2.大师嘎十一点"),
+        title: Text("$versionName更新"),
+        content: Text(newVersion.description),
         actionsAlignment: MainAxisAlignment.spaceAround,
         actions: [
           TextButton(
@@ -49,21 +56,19 @@ class SettingHomeController extends GetxController {
           TextButton(
             child: const Text("立即更新", style: TextStyle(fontSize: 16),),
             onPressed: () async {
-              Log.i(33333);
+              await Permission.storage.request();
               if (await Permission.storage.isGranted) {
-                Log.i(11111);
                 var dir = await getExternalStorageDirectory();
                 DioManager.instance.download(
-                    "https://github.com/woshilll/book_app/releases/download/1.0.7/1.0.7.apk",
-                    "${dir!.path}/1.0.7.apk",
+                    newVersion.downloadUrl,
+                    "${dir!.path}/${newVersion.name}",
                     onProgress: (receive, total) {
                       EasyLoading.showProgress(receive / total, status: "下载中...");
                     }
                 ).then((_) {
                   EasyLoading.dismiss();
-                  OpenFile.open("${dir.path}/1.0.7.apk");
+                  OpenFile.open("${dir.path}/${newVersion.name}");
                 });
-                Log.i(2222);
                 Navigator.pop(context);
 
               }
@@ -72,5 +77,10 @@ class SettingHomeController extends GetxController {
         ],
       );
     });
+  }
+
+  Future<bool> _checkNewVersion(String version) async{
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    return version.substring(0, version.lastIndexOf(".")) == packageInfo.version;
   }
 }
