@@ -350,12 +350,6 @@ class ReadController extends GetxController {
     // 得到第一页偏移量
     int i = 1;
     do {
-      if (offset == content.characters.length - 1) {
-        String subContent = content.substring(offset);
-        list.add(
-            ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, wordWith));
-        break;
-      }
       String subContent = content.substring(0, offset);
       list.add(
           ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, wordWith));
@@ -372,6 +366,10 @@ class ReadController extends GetxController {
       offset =
           _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
     } while (offset < content.characters.length);
+    if (offset > 0) {
+      list.add(
+          ContentPage(content, contentStyle, i, chapter.id, chapter.name, wordWith));
+    }
     return list;
   }
 

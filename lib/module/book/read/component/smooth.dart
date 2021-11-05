@@ -61,7 +61,6 @@ Widget content(context, index, controller) {
                       style: TextStyle(
                           color: controller.pages[index].style.color,
                           fontSize: 25,
-                          height: 1,
                           fontWeight: FontWeight.bold),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
