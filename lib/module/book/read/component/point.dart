@@ -3,6 +3,8 @@ import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'content.dart';
+
 /// 点击
 Widget point() {
   ReadController controller = Get.find();

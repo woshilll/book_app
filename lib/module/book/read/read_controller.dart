@@ -99,6 +99,17 @@ class ReadController extends GetxController {
     await _batteryCap();
   }
   initData() async{
+    /// 亮度 放在前面
+    double sysBrightness = await DeviceDisplayBrightness.getBrightness();
+    if (sysBrightness > 1) {
+      brightness = sysBrightness / 10;
+    } else {
+      brightness = sysBrightness;
+    }
+    if (brightness >= 1.0) {
+      brightness = 1;
+    }
+    brightnessTemp = brightness;
     /// 背景色
     readSettingConfig = _getReadSettingConfig();
     if (isDark) {
@@ -124,17 +135,6 @@ class ReadController extends GetxController {
         contentPageController.jumpToPage(pageIndex);
       }
     }
-    /// 亮度
-    double sysBrightness = await DeviceDisplayBrightness.getBrightness();
-    if (sysBrightness > 1) {
-      brightness = sysBrightness / 10;
-    } else {
-      brightness = sysBrightness;
-    }
-    if (brightness >= 1.0) {
-      brightness = 1;
-    }
-    brightnessTemp = brightness;
   }
 
   ReadSettingConfig _getReadSettingConfig() {
@@ -176,8 +176,10 @@ class ReadController extends GetxController {
     if ((content == null || content.isEmpty) && book.type == 1) {
       content = await ChapterApi.parseContent(url, showDialog);
       // 格式化文本
-      content = FontUtil.formatContent(content);
-      await _chapterDbProvider.updateContent(id, content);
+      if (content != null) {
+        content = FontUtil.formatContent(content);
+        await _chapterDbProvider.updateContent(id, content);
+      }
     }
     // 赋值
     return content;
@@ -212,7 +214,6 @@ class ReadController extends GetxController {
       return;
     }
     Chapter chapter = chapters[index + 1];
-    chapter.content = await getContent(chapter.id, chapter.url, false);
     await initPage(chapter);
   }
 
@@ -270,7 +271,6 @@ class ReadController extends GetxController {
         // 找到下一章
         _pageStartStyle();
         Chapter next = chapters[chapterIndex + 1];
-        next.content = await getContent(next.id, next.url, false);
         await initPage(next);
         // 跳转
         _nextPageStyle(index);
@@ -313,7 +313,6 @@ class ReadController extends GetxController {
         _pageStartStyle();
         EasyLoading.show(maskType: EasyLoadingMaskType.clear);
         Chapter pre = chapters[chapterIndex - 1];
-        pre.content = await getContent(pre.id, pre.url, false);
         List<ContentPage> returnPages = await initPageWithReturn(pre);
         pages.insertAll(0, returnPages);
         update(["content"]);
@@ -335,10 +334,16 @@ class ReadController extends GetxController {
   }
 
   Future<List<ContentPage>> initPageWithReturn(Chapter chapter) async {
+    chapter.content = await getContent(chapter.id, chapter.url, false);
     List<ContentPage> list = [];
     _calWordHeightAndWidth();
     _calMaxLines(firstPage: true);
     String content = FontUtil.alphanumericToFullLength(chapter.content);
+    if (content.isEmpty) {
+      list.add(
+          ContentPage("", contentStyle, 1, chapter.id, chapter.name, wordWith, noContent: true));
+      return list;
+    }
     _painter.text = TextSpan(text: content, style: contentStyle);
     _painter.maxLines = maxLines;
     // 统计第一页字符偏移量
@@ -654,6 +659,17 @@ class ReadController extends GetxController {
 
   void setPageType(ReadPageType pageType) {
     readPageType = pageType;
+    update(["content"]);
+  }
+
+  /// 重新加载章节
+  reloadPage() async{
+    var chapterId = pages[pageIndex].chapterId;
+    int firstIndex = pages.indexWhere((element) => chapterId == element.chapterId);
+    pages.removeWhere((element) => element.chapterId == chapterId);
+    Chapter chapter = chapters.firstWhere((element) => element.id == chapterId);
+    List<ContentPage> list = await initPageWithReturn(chapter);
+    pages.insertAll(firstIndex, list);
     update(["content"]);
   }
 }

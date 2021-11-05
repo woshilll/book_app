@@ -278,7 +278,10 @@ class HomeController extends GetxController {
                 ));
               } else {
                 // 发起网络请求解析
-                String content = await ChapterApi.parseContent(nextChapter.url, false);
+                String? content = await ChapterApi.parseContent(nextChapter.url, false);
+                if (content == null) {
+                  return;
+                }
                 await audioHandler.addQueueItem(MediaItem(
                     id: nextChapter.id.toString(),
                     album: bookName,

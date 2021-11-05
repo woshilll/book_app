@@ -7,8 +7,9 @@ class ContentPage {
   int? chapterId;
   String? chapterName;
   double wordWith;
+  bool noContent;
 
-  ContentPage(this.content, this.style, this.index, this.chapterId, this.chapterName, this.wordWith);
+  ContentPage(this.content, this.style, this.index, this.chapterId, this.chapterName, this.wordWith, {this.noContent = false});
 
 }
 

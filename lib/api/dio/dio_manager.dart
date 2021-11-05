@@ -22,6 +22,7 @@ class DioManager {
   DioManager._init() {
     _dio ??= Dio(BaseOptions(
         // 请求基地址
+        // baseUrl: "http://192.168.72.192:9898",
         baseUrl: "http://app.woshilll.top",
         // baseUrl: "http://192.168.31.237:9898",
         // 连接服务器超时时间，单位是毫秒

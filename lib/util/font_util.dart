@@ -4,6 +4,9 @@ import 'package:book_app/log/log.dart';
 class FontUtil {
   /// 字符转全角
   static String alphanumericToFullLength(str) {
+    if (str == null) {
+      return "";
+    }
     var temp = str.codeUnits;
     //a-zA-Z0-9!,.@#$%^&*()@?;\u0022\u0027}{
     final regex = RegExp(r"^[\u0021-\u007E]+$");
