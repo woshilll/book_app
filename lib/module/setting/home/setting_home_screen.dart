@@ -55,7 +55,7 @@ class SettingHomeScreen extends GetView<SettingHomeController>{
             GestureDetector(
               child: ListItem(
                   "检查更新",
-                  Container()
+                  Text("V${controller.thisVersion}", style: TextStyle(color: controller.textColor, fontSize: 14),)
                   ,
                   controller.backgroundColor,
                   controller.textColor

@@ -84,27 +84,21 @@ class BookHomeScreen extends GetView<BookHomeController> {
                 ),
               );
             }
-            return Container(
-              alignment: Alignment.topCenter,
-              margin: const EdgeInsets.only(top: 10),
-              child: Text.rich(
-                TextSpan(
-                  text: "书架里还没有书,快去",
-                  children: [
-                    TextSpan(
-                      text: "搜索",
-                      recognizer: TapGestureRecognizer()..onTap = () {
-                        controller.toSearch();
-                      },
-                        style: TextStyle(color: Theme.of(context).primaryColor)
-                    ),
-                    const TextSpan(
-                        text: "吧"
-                    ),
-                  ],
-                  style: TextStyle(fontSize: 18, color: Theme.of(context).textTheme.bodyText1!.color)
-                )
+            return GestureDetector(
+              child: Container(
+                alignment: Alignment.center,
+                width: (MediaQuery.of(context).size.width - 30) / 3,
+                height: (MediaQuery.of(context).size.width - 30) / 2,
+                margin: const EdgeInsets.only(top: 15, left: 10),
+                child: Icon(Icons.add, color: Theme.of(context).textTheme.bodyText1!.color, size: 40,),
+                decoration: BoxDecoration(
+                    color: Colors.grey,
+                    borderRadius: BorderRadius.circular(4)
+                ),
               ),
+              onTap: () {
+                controller.toSearch();
+              },
             );
           },
         )

@@ -30,8 +30,8 @@ class DioManager {
         receiveTimeout: 60 * 1000));
   }
 
-  Future download(url, savePath, {Function(int, int)? onProgress}) async{
-    await _dio?.download(url, savePath, onReceiveProgress: onProgress);
+  Future download(url, savePath, {Function(int, int)? onProgress, CancelToken? cancelToken}) async{
+    return _dio?.download(url, savePath, onReceiveProgress: onProgress, cancelToken: cancelToken);
   }
 
   Future get<T>(
