@@ -2,6 +2,7 @@
 abstract class Routes {
   static const splash = '/';
   static const home = '/home';
+  static const login = '/login';
   static const bookHome = '/book/home';
   static const read = '/book/read';
   static const readSetting = '/book/read/setting';

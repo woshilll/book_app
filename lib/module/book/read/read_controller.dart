@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:battery_plus/battery_plus.dart';
@@ -18,6 +19,7 @@ import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/constant.dart';
 import 'package:book_app/util/font_util.dart';
 import 'package:book_app/util/save_util.dart';
+import 'package:book_app/util/size_fit_util.dart';
 import 'package:device_display_brightness/device_display_brightness.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -46,8 +48,6 @@ class ReadController extends GetxController {
   final TextPainter _painter = TextPainter(textDirection: TextDirection.ltr);
   /// 是否正在加载
   bool loading = false;
-  /// 屏幕宽度
-  double screenWidth = 0;
   /// 阅读进度
   int readChapterIndex = 0;
   var scaffoldKey = GlobalKey<ScaffoldState>();
@@ -86,6 +86,11 @@ class ReadController extends GetxController {
   ReadPageType readPageType = ReadPageType.smooth;
   /// 点击翻页淡入淡出
   bool pointShow = true;
+  double screenHeight = 0;
+  double screenWidth = 0;
+  double screenLeft = 0;
+  double screenBottom = 0;
+  double screenTop = 0;
   @override
   void onInit() async{
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -99,6 +104,8 @@ class ReadController extends GetxController {
     await _batteryCap();
   }
   initData() async{
+    /// 初始化宽度
+    _initSize();
     /// 亮度 放在前面
     double sysBrightness = await DeviceDisplayBrightness.getBrightness();
     if (sysBrightness > 1) {
@@ -115,7 +122,7 @@ class ReadController extends GetxController {
     if (isDark) {
       readSettingConfig = ReadSettingConfig.defaultDarkConfig(readSettingConfig.fontSize, readSettingConfig.fontHeight);
     }
-    contentStyle = TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: readSettingConfig.fontSize, height: readSettingConfig.fontHeight);
+    contentStyle = TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: SizeFitUtil.setPx(readSettingConfig.fontSize), height: SizeFitUtil.setPx(readSettingConfig.fontHeight));
     /// 加载章节
     chapters = await _chapterDbProvider.getChapters(null, book.id);
     Chapter cur = chapters[0];
@@ -194,10 +201,10 @@ class ReadController extends GetxController {
   /// 计算词宽和词高
   _calWordHeightAndWidth() {
     _painter.text = TextSpan(text: "哈", style: contentStyle);
-    _painter.layout(maxWidth: MediaQuery.of(context).size.width);
+    _painter.layout(maxWidth: screenWidth);
     var cal = _painter.computeLineMetrics()[0];
-    wordHeight = cal.height;
-    wordWith = cal.width;
+    wordHeight = SizeFitUtil.setPx(cal.height);
+    wordWith = SizeFitUtil.setPx(cal.width);
   }
   /// 计算当前章节一共多少页
   calThisChapterTotalPage(index) {
@@ -348,8 +355,8 @@ class ReadController extends GetxController {
     _painter.maxLines = maxLines;
     // 统计第一页字符偏移量
     _painter.layout(maxWidth: _contentWidth());
-    double paintWidth = _painter.width;
-    double paintHeight = _painter.height;
+    double paintWidth = SizeFitUtil.setPx(_painter.width);
+    double paintHeight = SizeFitUtil.setPx(_painter.height);
     int offset =
         _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
     // 得到第一页偏移量
@@ -363,6 +370,9 @@ class ReadController extends GetxController {
         _calMaxLines();
       }
       content = content.substring(offset);
+      if (content.startsWith("\n")) {
+        content = content.substring(1);
+      }
       _painter.text = TextSpan(text: content, style: contentStyle);
       _painter.maxLines = maxLines;
       _painter.layout(maxWidth: _contentWidth());
@@ -496,7 +506,7 @@ class ReadController extends GetxController {
 
   _reload(ReadSettingConfig config) async{
     await EasyLoading.show(maskType: EasyLoadingMaskType.clear);
-    contentStyle = TextStyle(color: hexToColor(config.fontColor), fontSize: config.fontSize, height: config.fontHeight);
+    contentStyle = TextStyle(color: hexToColor(config.fontColor), fontSize: SizeFitUtil.setPx(config.fontSize), height: SizeFitUtil.setPx(config.fontHeight));
     int chapterIndex = chapters.indexWhere((element) => pages[pageIndex].chapterId == element.id);
     pages.clear();
     await jumpChapter(chapterIndex, pop: false);
@@ -543,17 +553,17 @@ class ReadController extends GetxController {
     homeController.audioProcessingState = AudioProcessingState.error;
   }
   double _contentWidth() {
-  return MediaQuery.of(context).size.width - wordWith - (MediaQuery.of(context).padding.left * 2);
+  return screenWidth - (wordWith * 2) - (screenLeft * 2);
   }
 
 
   void _calMaxLines({bool firstPage = false}) {
     double extend = 0;
     if (firstPage) {
-      extend = 80;
+      extend = SizeFitUtil.setPx(80);
     }
-    maxLines = (MediaQuery.of(context).size.height -
-        MediaQuery.of(context).padding.top - 16 - extend) ~/
+    maxLines = (screenHeight -
+        screenTop - screenBottom - extend) ~/
         wordHeight;
   }
 
@@ -671,6 +681,18 @@ class ReadController extends GetxController {
     List<ContentPage> list = await initPageWithReturn(chapter);
     pages.insertAll(firstIndex, list);
     update(["content"]);
+  }
+
+  double calPaddingLeft(index) {
+    return (screenWidth % pages[index].wordWith) / 2 + screenLeft + pages[index].wordWith / 2;
+  }
+
+  void _initSize() {
+    screenWidth = SizeFitUtil.setPx(MediaQuery.of(context).size.width);
+    screenHeight = SizeFitUtil.setPx(MediaQuery.of(context).size.height);
+    screenLeft = SizeFitUtil.setPx(MediaQuery.of(context).padding.left);
+    screenBottom = SizeFitUtil.setPx(16);
+    screenTop = SizeFitUtil.setPx(33);
   }
 }
 

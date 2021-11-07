@@ -6,17 +6,14 @@ Widget content(context, index, controller) {
   return Stack(
     children: [
       Positioned(
-          top: MediaQuery.of(context).padding.top,
+          top: controller.screenTop,
           left: 0,
           right: 0,
           child: Container(
-            width: MediaQuery.of(context).size.width,
+            alignment: Alignment.topCenter,
+            width: controller.screenWidth,
             padding: EdgeInsets.only(
-                left: ((MediaQuery.of(context).size.width %
-                    controller.pages[index].wordWith) +
-                    controller.pages[index].wordWith) /
-                    2 +
-                    MediaQuery.of(context).padding.left),
+                left: controller.calPaddingLeft(index)),
             child: Column(
               children: [
                 if (controller.pages[index].index == 1)
@@ -27,7 +24,7 @@ Widget content(context, index, controller) {
                       "${controller.pages[index].chapterName}\n",
                       style: TextStyle(
                           color: controller.pages[index].style.color,
-                          fontSize: 25,
+                          fontSize: SizeFitUtil.setPx(25),
                           fontWeight: FontWeight.bold),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

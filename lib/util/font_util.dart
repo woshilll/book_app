@@ -36,6 +36,7 @@ class FontUtil {
       return content;
     }
     content = content.replaceAll(" ", "").replaceAll("\u3000", "").replaceAll("“", "\"").replaceAll("”", "\"");
+    content = "  " + content;
     List<String> list = [];
     List<int> codes = content.codeUnits;
     for (int i = 0; i < codes.length; i++) {

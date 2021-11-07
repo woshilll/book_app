@@ -23,11 +23,6 @@ class SizeFitUtil {
 
   // 按照rxp来设置
   static double setRpx(double size) {
-    Log.i(SizeFitUtil.rpx! * size);
-    Log.i(_mediaQueryData!.size.width);
-    Log.i(_mediaQueryData!.size.height);
-    Log.i(_mediaQueryData!.padding.top);
-    Log.i(_mediaQueryData!.padding.bottom);
     return SizeFitUtil.rpx! * size;
   }
 

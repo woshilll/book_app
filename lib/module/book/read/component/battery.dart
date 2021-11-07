@@ -1,6 +1,7 @@
 import 'package:battery_plus/battery_plus.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
+import 'package:book_app/util/size_fit_util.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:book_app/util/time_util.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,7 @@ Widget battery() {
           children: [
             Container(
               width: 25,
-              height: 12,
+              height: SizeFitUtil.setPx(12),
               margin: const EdgeInsets.only(left: 10),
               decoration: BoxDecoration(
                   border: Border.all(color: activeColor)
@@ -51,15 +52,15 @@ Widget battery() {
           children: [
             Container(
               width: 25,
-              height: 12,
+              height: SizeFitUtil.setPx(12),
               margin: const EdgeInsets.only(left: 10),
               decoration: BoxDecoration(
                   border: Border.all(color: unActiveColor)
               ),
               child: Container(
-                margin: const EdgeInsets.all(1),
+                margin: EdgeInsets.all(SizeFitUtil.setPx(1)),
                 alignment: Alignment.center,
-                child: Text("${controller.batteryLevel}", style: TextStyle(fontSize: 10, color: unActiveColor, height: 1),),
+                child: Text("${controller.batteryLevel}", style: TextStyle(fontSize: SizeFitUtil.setPx(10), color: unActiveColor, height: 1),),
               ),
             ),
             Container(

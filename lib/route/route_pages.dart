@@ -14,6 +14,8 @@ import 'package:book_app/module/book/searchValue/search_value_binding.dart';
 import 'package:book_app/module/book/searchValue/search_value_screen.dart';
 import 'package:book_app/module/home/home_binding.dart';
 import 'package:book_app/module/home/home_screen.dart';
+import 'package:book_app/module/login/login_binding.dart';
+import 'package:book_app/module/login/login_screen.dart';
 import 'package:book_app/module/setting/home/setting_home_binding.dart';
 import 'package:book_app/module/setting/home/setting_home_screen.dart';
 import 'package:book_app/route/routes.dart';
@@ -33,6 +35,11 @@ class RoutePages {
       name: Routes.home,
       page: () => const HomeScreen(),
       binding: HomeBinding()
+    ),
+    GetPage(
+        name: Routes.login,
+        page: () => const LoginScreen(),
+        binding: LoginBinding()
     ),
     GetPage(
         name: Routes.bookHome,

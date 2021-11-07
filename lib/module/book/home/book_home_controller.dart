@@ -107,19 +107,19 @@ class BookHomeController extends GetxController {
         File bookFile = File(filePath!);
         List<String> lines = await bookFile.readAsLines();
         List<Chapter> chapters = [];
-        String content = "\n";
+        String content = "";
         Chapter chapter = Chapter();
         RegExp chapterMatch = RegExp(r"^第.*章|^\d+$");
         for (var line in lines) {
           if (chapterMatch.hasMatch(line)) {
             if (chapter.name == null) {
               chapter.name = line;
-              content = "\n";
+              content = "";
             } else {
               chapter.content = FontUtil.formatContent(content);
               chapters.add(chapter);
               chapter = Chapter(name: line);
-              content = "\n";
+              content = "";
             }
           } else {
             content = content + line + "\n";
