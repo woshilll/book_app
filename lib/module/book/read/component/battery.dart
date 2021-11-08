@@ -1,10 +1,10 @@
 import 'package:battery_plus/battery_plus.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
-import 'package:book_app/util/size_fit_util.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:book_app/util/time_util.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'dart:math' as math;
 Color activeColor = Theme.of(globalContext).primaryColor;
@@ -22,7 +22,7 @@ Widget battery() {
           children: [
             Container(
               width: 25,
-              height: SizeFitUtil.setPx(12),
+              height: 14,
               margin: const EdgeInsets.only(left: 10),
               decoration: BoxDecoration(
                   border: Border.all(color: activeColor)
@@ -37,12 +37,12 @@ Widget battery() {
             Container(
               margin: const EdgeInsets.only(left: 1),
               width: 1,
-              height: 6,
+              height: 6.h,
               color: activeColor,
             ),
             Container(
               margin: const EdgeInsets.only(left: 5),
-              child: Text(TimeUtil.getSystemTime(), style: TextStyle(color: unActiveColor),),
+              child: Text(TimeUtil.getSystemTime(), style: TextStyle(color: unActiveColor, fontSize: 10),),
             )
           ],
         );
@@ -52,15 +52,15 @@ Widget battery() {
           children: [
             Container(
               width: 25,
-              height: SizeFitUtil.setPx(12),
+              height: 14,
               margin: const EdgeInsets.only(left: 10),
               decoration: BoxDecoration(
                   border: Border.all(color: unActiveColor)
               ),
               child: Container(
-                margin: EdgeInsets.all(SizeFitUtil.setPx(1)),
+                margin: EdgeInsets.all(1),
                 alignment: Alignment.center,
-                child: Text("${controller.batteryLevel}", style: TextStyle(fontSize: SizeFitUtil.setPx(10), color: unActiveColor, height: 1),),
+                child: Text("${controller.batteryLevel}", style: TextStyle(fontSize: 9, color: unActiveColor, height: 1),),
               ),
             ),
             Container(
@@ -71,7 +71,7 @@ Widget battery() {
             ),
             Container(
               margin: const EdgeInsets.only(left: 5),
-              child: Text(TimeUtil.getSystemTime(), style: TextStyle(color: unActiveColor),),
+              child: Text(TimeUtil.getSystemTime(), style: TextStyle(color: unActiveColor, fontSize: 10),),
             )
           ],
         );

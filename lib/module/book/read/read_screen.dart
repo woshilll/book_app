@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:book_app/log/log.dart';
 import 'package:book_app/model/read_page_type.dart';
 import 'package:book_app/module/book/read/component/battery.dart';
 import 'package:book_app/module/book/read/component/bottom.dart';
@@ -10,6 +11,7 @@ import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/size_fit_util.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import 'component/custom_drawer.dart';
@@ -70,13 +72,13 @@ class ReadScreen extends GetView<ReadController> {
             },
           ),
           Positioned(
-            bottom: SizeFitUtil.setPx(4),
+            top: 6,
             left: 15,
             child: battery(),
           ),
         ],
       ),
-      onTertiaryTapUp: (e) async {
+      onTapUp: (e) async {
         if (e.globalPosition.dx < controller.screenWidth / 3) {
           if (controller.readPageType == ReadPageType.point) {
             await controller.prePage();
