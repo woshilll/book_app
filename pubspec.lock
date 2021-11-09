@@ -29,6 +29,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.3.0"
+  asn1lib:
+    dependency: transitive
+    description:
+      name: asn1lib
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.2"
   async:
     dependency: transitive
     description:
@@ -288,6 +295,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "4.0.1"
+  encrypt:
+    dependency: "direct main"
+    description:
+      name: encrypt
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "5.0.1"
   fake_async:
     dependency: transitive
     description:
@@ -744,6 +758,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.0.2"
+  pointycastle:
+    dependency: "direct main"
+    description:
+      name: pointycastle
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.3.5"
   pool:
     dependency: transitive
     description:

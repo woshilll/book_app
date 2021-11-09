@@ -71,6 +71,8 @@ dependencies:
   open_file: ^3.2.1
   flutter_screenutil: ^5.0.0+2
   pin_code_fields: ^7.3.0
+  pointycastle: ^3.3.5
+  encrypt: ^5.0.1
 
 dev_dependencies:
   flutter_test:

@@ -22,8 +22,8 @@ class DioManager {
   DioManager._init() {
     _dio ??= Dio(BaseOptions(
         // 请求基地址
-        // baseUrl: "http://192.168.72.192:9898",
-        baseUrl: "http://app.woshilll.top",
+        baseUrl: "http://192.168.72.192:9898",
+        // baseUrl: "http://app.woshilll.top",
         // baseUrl: "http://192.168.31.237:9898",
         // 连接服务器超时时间，单位是毫秒
         connectTimeout: 60 * 1000,
@@ -39,7 +39,8 @@ class DioManager {
       {
         required String url,
         Map<String, dynamic>? params,
-        bool showLoading = true
+        bool showLoading = true,
+        Map<String, dynamic>? headers,
       }
       ) async {
     if (showLoading) {
@@ -54,6 +55,7 @@ class DioManager {
       Map<String, dynamic>? params,
       bool isShowErrorToast = true,
       bool isAddTokenInHeader = true,
+      Map<String, dynamic>? headers,
       FormData? formData,
       CancelToken? cancelToken,
       ProgressCallback? onSendProgress,
@@ -78,7 +80,7 @@ class DioManager {
               options: Options(method: methodValues[method], extra: {
                 'isAddTokenInHeader': isAddTokenInHeader,
                 'isShowErrorToast': isShowErrorToast
-              }));
+              }, headers: headers));
           break;
         default:
           // 如果有formData参数，说明是传文件，忽略params的参数

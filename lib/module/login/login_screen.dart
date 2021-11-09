@@ -131,7 +131,12 @@ class LoginScreen extends GetView<LoginController> {
                       // 验证手机
                       controller.validPhone(value);
                     },
-                  ));
+                  ),
+                    onEnd: () {
+                      controller.register = 1;
+                      controller.update(["extend"]);
+                    },
+                  );
                 }
                 return AnimatedOpacity(
                     opacity: controller.inOp,
@@ -154,24 +159,18 @@ class LoginScreen extends GetView<LoginController> {
               },
             ),
           ),
+          if (controller.codeLength != 11)
           Container(
             margin: const EdgeInsets.only(left: 15, right: 15),
             child: GetBuilder<LoginController>(
               id: "extend",
               builder: (controller) {
-                if (controller.codeLength == 11) {
-                  return AnimatedOpacity(
-                    opacity: controller.register,
-                    duration: const Duration(seconds: 1),
-                    child: const Text("注册"),
-                  );
-                }
                 return Row(
                   children: [
                     GestureDetector(
-                      child: Text(controller.time == 10 ? "重新发送" : "${controller.time}/s后可再次发送"),
+                      child: Text(controller.time == 60 ? "重新发送" : "${controller.time}/s后可再次发送"),
                       onTap: () {
-                        if (controller.time == 10) {
+                        if (controller.time == 60) {
                           LimitUtil.throttle(() => controller.resend());
                         }
                       },
