@@ -73,6 +73,7 @@ dependencies:
   pin_code_fields: ^7.3.0
   pointycastle: ^3.3.5
   encrypt: ^5.0.1
+  device_info_plus: ^3.1.1
 
 dev_dependencies:
   flutter_test:

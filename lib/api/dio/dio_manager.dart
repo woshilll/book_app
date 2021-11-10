@@ -1,8 +1,14 @@
 import 'dart:convert';
 
-import 'package:book_app/model/result/result.dart';
+import 'package:book_app/log/log.dart';
+import 'package:book_app/route/routes.dart';
+import 'package:book_app/util/constant.dart';
+import 'package:book_app/util/decrypt_util.dart';
+import 'package:book_app/util/encrypt_util.dart';
+import 'package:book_app/util/save_util.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:get/get.dart' as gt;
 
 import 'dio_method.dart';
 
@@ -22,20 +28,21 @@ class DioManager {
   DioManager._init() {
     _dio ??= Dio(BaseOptions(
         // 请求基地址
-        baseUrl: "http://192.168.72.192:9898",
-        // baseUrl: "http://app.woshilll.top",
+        // baseUrl: "http://192.168.72.192:9898",
+        baseUrl: "http://app.woshilll.top",
         // baseUrl: "http://192.168.31.237:9898",
         // 连接服务器超时时间，单位是毫秒
         connectTimeout: 60 * 1000,
         // 接收数据的最长时限
-        receiveTimeout: 60 * 1000));
+        receiveTimeout: 60 * 1000,
+    ));
   }
 
   Future download(url, savePath, {Function(int, int)? onProgress, CancelToken? cancelToken}) async{
     return _dio?.download(url, savePath, onReceiveProgress: onProgress, cancelToken: cancelToken);
   }
 
-  Future get<T>(
+  Future<dynamic> get(
       {
         required String url,
         Map<String, dynamic>? params,
@@ -46,19 +53,70 @@ class DioManager {
     if (showLoading) {
       await EasyLoading.show(status: '加载中...', maskType: EasyLoadingMaskType.clear);
     }
-    return await requestHttp(url, params: params);
+    return await requestHttp(url, params: params, encrypt: false);
+  }
+
+  Future<dynamic> post(
+      {
+        required String url,
+        Map<String, dynamic>? params,
+        Map<String, dynamic>? body,
+        FormData? formData,
+        bool showLoading = true,
+        Map<String, dynamic>? headers,
+        bool encrypt = false
+      }
+      ) async {
+    if (showLoading) {
+      await EasyLoading.show(status: '加载中...', maskType: EasyLoadingMaskType.clear);
+    }
+    return await requestHttp(url, params: params, method: DioMethod.post, headers: headers, formData: formData, body: body, encrypt: encrypt);
+  }
+
+  Future<dynamic> put(
+      {
+        required String url,
+        Map<String, dynamic>? params,
+        Map<String, dynamic>? body,
+        FormData? formData,
+        bool showLoading = true,
+        Map<String, dynamic>? headers,
+        bool encrypt = false
+      }
+      ) async {
+    if (showLoading) {
+      await EasyLoading.show(status: '加载中...', maskType: EasyLoadingMaskType.clear);
+    }
+    return await requestHttp(url, params: params, method: DioMethod.put, headers: headers, formData: formData, body: body, encrypt: encrypt);
+  }
+
+  Future<dynamic> delete(
+      {
+        required String url,
+        Map<String, dynamic>? params,
+        Map<String, dynamic>? body,
+        FormData? formData,
+        bool showLoading = true,
+        Map<String, dynamic>? headers,
+        bool encrypt = false
+      }
+      ) async {
+    if (showLoading) {
+      await EasyLoading.show(status: '加载中...', maskType: EasyLoadingMaskType.clear);
+    }
+    return await requestHttp(url, params: params, method: DioMethod.delete, headers: headers, formData: formData, body: body, encrypt: encrypt);
   }
 
   /// Dio request 方法
-  Future requestHttp<T>(String url,
+  Future<dynamic> requestHttp(String url,
       {DioMethod method = DioMethod.get,
       Map<String, dynamic>? params,
-      bool isShowErrorToast = true,
-      bool isAddTokenInHeader = true,
+      Map<String, dynamic>? body,
       Map<String, dynamic>? headers,
       FormData? formData,
       CancelToken? cancelToken,
       ProgressCallback? onSendProgress,
+      bool encrypt = false,
       ProgressCallback? onReceiveProgress}) async {
     const methodValues = {
       DioMethod.get: 'get',
@@ -68,7 +126,21 @@ class DioManager {
     };
 
     try {
+      Log.i("发起请求 $url");
+      String? token = SaveUtil.getString(Constant.token);
+      if (token != null) {
+        token = token.replaceAll("\"", "");
+      }
       Response response;
+
+      if (encrypt) {
+        // 是加密
+        var encryptData = EncryptUtil.encryptData(body);
+        body = {
+          "encryptData": encryptData[0],
+          "encryptAes": encryptData[1]
+        };
+      }
 
       /// 不同请求方法，不同的请求参数,按实际项目需求分.
       /// 这里 get 是 queryParameters，其它用 data. FormData 也是 data
@@ -77,75 +149,94 @@ class DioManager {
         case DioMethod.get:
           response = await _dio!.request(url,
               queryParameters: params,
-              options: Options(method: methodValues[method], extra: {
-                'isAddTokenInHeader': isAddTokenInHeader,
-                'isShowErrorToast': isShowErrorToast
-              }, headers: headers));
+              options: Options(method: methodValues[method], headers: {"token": token}));
           break;
         default:
           // 如果有formData参数，说明是传文件，忽略params的参数
           if (formData != null) {
             response = await _dio!.post(url,
                 data: formData,
+                queryParameters: params,
                 cancelToken: cancelToken,
                 onSendProgress: onSendProgress,
                 onReceiveProgress: onReceiveProgress);
           } else {
             response = await _dio!.request(url,
-                data: params,
+                data: body,
+                queryParameters: params,
                 cancelToken: cancelToken,
-                options: Options(method: methodValues[method], extra: {
-                  'isAddToken': isAddTokenInHeader,
-                  'isShowErrorToast': isShowErrorToast
-                }));
+                options: Options(method: methodValues[method], headers: {"token": token}));
           }
       }
       await EasyLoading.dismiss();
       // json转model
       String jsonStr = json.encode(response.data);
       Map<String, dynamic> responseMap = json.decode(jsonStr);
-      Result<T> result = Result.fromJson(responseMap, (T) => T);
 
-      if (result.code != 200) {
-        EasyLoading.showError(result.msg, duration: const Duration(seconds: 1));
+      if (responseMap["code"] != 200) {
+        if (responseMap["code"] == 401) {
+          if (gt.Get.currentRoute == Routes.home) {
+            await gt.Get.toNamed(Routes.login);
+          } else {
+            await gt.Get.offAndToNamed(Routes.login);
+          }
+          SaveUtil.remove(Constant.token);
+          throw "";
+        } else {
+          throw responseMap["msg"];
+        }
       }
-      return result.data;
+      dynamic data = responseMap["data"];
+      if (responseMap["encrypt"]) {
+        // 加密数据
+        return DecryptUtil.decryptAes(DecryptUtil.getAes(data["encryptAes"]), data["data"]);
+      }
+      return data;
     } on DioError catch (e) {
       EasyLoading.dismiss();
       // DioError是指返回值不为200的情况
       // 对错误进行判断
       onErrorInterceptor(e);
       // 判断是否断网了
+      throw "";
     } catch (e) {
       // 其他一些意外的报错
+      if (e is String) {
+        if (e.isNotEmpty) {
+          EasyLoading.showError(e);
+        }
+      }
+      throw "";
     }
   }
 
 // 错误判断
   void onErrorInterceptor(DioError err) {
     // 异常分类
+    String msg;
     switch (err.type) {
       // 4xx 5xx response
       case DioErrorType.response:
-        err.requestOptions.extra["errorMsg"] = err.response?.data ?? "连接异常";
+        msg = err.response?.data ?? "连接异常";
         break;
       case DioErrorType.connectTimeout:
-        err.requestOptions.extra["errorMsg"] = "连接超时";
+        msg = "连接超时";
         break;
       case DioErrorType.sendTimeout:
-        err.requestOptions.extra["errorMsg"] = "发送超时";
+        msg = "发送超时";
         break;
       case DioErrorType.receiveTimeout:
-        err.requestOptions.extra["errorMsg"] = "接收超时";
+        msg = "接收超时";
         break;
       case DioErrorType.cancel:
-        err.requestOptions.extra["errorMsg"] =
+        msg =
             err.message.isNotEmpty ? err.message : "取消连接";
         break;
       case DioErrorType.other:
       default:
-        err.requestOptions.extra["errorMsg"] = "连接异常";
+        msg = "连接异常";
         break;
     }
+    EasyLoading.showError(msg);
   }
 }

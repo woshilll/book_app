@@ -7,14 +7,13 @@ import 'package:encrypt/encrypt.dart';
 import 'package:pointycastle/asymmetric/api.dart';
 
 class DecryptUtil {
-  static getAes(String aes) {
-    RSAPublicKey publicKey = RSAPublicKey(RsaUtil.publicKey!.modulus!, RsaUtil.publicKey!.exponent!);
-    RSAPrivateKey privateKey = RSAPrivateKey(RsaUtil.privateKey!.modulus!, RsaUtil.privateKey!.exponent!, RsaUtil.privateKey!.p!, RsaUtil.privateKey!.q!);
+  static String getAes(String aes) {
+    RSAPublicKey publicKey = RSAPublicKey(RsaUtil.publicKey!.modulus!, RsaUtil.publicKey!.publicExponent!);
+    RSAPrivateKey privateKey = RSAPrivateKey(RsaUtil.privateKey!.modulus!, RsaUtil.privateKey!.privateExponent!, RsaUtil.privateKey!.p!, RsaUtil.privateKey!.q!);
     final encrypt = Encrypter(RSA(publicKey: publicKey, privateKey: privateKey));
-    Log.i(encrypt.encrypt("12345678").base64);
     Uint8List sourceBytes = base64Decode(aes);
     int inputLen = sourceBytes.length;
-    int maxLen = 245;
+    int maxLen = 256;
     List<int> totalBytes = [];
     for (var i = 0; i < inputLen; i += maxLen) {
       int endLen = inputLen - i;
@@ -26,6 +25,12 @@ class DecryptUtil {
       }
       totalBytes.addAll(encrypt.decryptBytes(Encrypted(item)));
     }
-    Log.i(utf8.decode(totalBytes));
+    return utf8.decode(totalBytes);
+  }
+
+  static String decryptAes(String aes, String data) {
+    final key = Key.fromUtf8(aes);
+    final encrypt = Encrypter(AES(key, mode: AESMode.ecb));
+    return encrypt.decrypt64(data, iv: IV.fromUtf8(aes));
   }
 }

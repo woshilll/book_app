@@ -16,6 +16,8 @@ import 'package:book_app/module/home/home_binding.dart';
 import 'package:book_app/module/home/home_screen.dart';
 import 'package:book_app/module/login/login_binding.dart';
 import 'package:book_app/module/login/login_screen.dart';
+import 'package:book_app/module/movie/home/movie_home_binding.dart';
+import 'package:book_app/module/movie/home/movie_home_screen.dart';
 import 'package:book_app/module/setting/home/setting_home_binding.dart';
 import 'package:book_app/module/setting/home/setting_home_screen.dart';
 import 'package:book_app/route/routes.dart';
@@ -84,11 +86,22 @@ class RoutePages {
 
 
 
-
+    /// 设置
     GetPage(
         name: Routes.settingHome,
         page: () => const SettingHomeScreen(),
         binding: SettingHomeBinding()
-    )
+    ),
+
+
+
+
+
+    /// 电影
+    GetPage(
+        name: Routes.movieHome,
+        page: () => const MovieHomeScreen(),
+        binding: MovieHomeBinding()
+    ),
   ];
 }

@@ -7,7 +7,7 @@ import 'package:book_app/model/versionUpdate/version.dart';
 class VersionApi {
   /// 获取版本
   static Future<Version> getVersion() async{
-    return Version.fromJson(await DioManager.instance.get<dynamic>(url: "/version"));
+    return Version.fromJson(await DioManager.instance.get(url: "/version"));
   }
 
 

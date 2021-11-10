@@ -3,8 +3,12 @@ import 'dart:convert';
 
 import 'package:book_app/api/login_api.dart';
 import 'package:book_app/log/log.dart';
+import 'package:book_app/util/constant.dart';
 import 'package:book_app/util/decrypt_util.dart';
+import 'package:book_app/util/device_util.dart';
+import 'package:book_app/util/encrypt_util.dart';
 import 'package:book_app/util/rsa_util.dart';
+import 'package:book_app/util/save_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
@@ -23,12 +27,22 @@ class LoginController extends GetxController{
   String? phone;
   int time = 60;
   Timer? _timeDown;
+  String? route;
   @override
-  void onReady() {
+  void onInit() {
+    super.onInit();
+    var map = Get.arguments;
+    if (map != null) {
+      route = map["route"];
+    }
+  }
+
+  @override
+  void onReady() async{
     super.onReady();
-    RsaUtil.gen();
     welcome = 1;
     update(["welcome"]);
+    await RsaUtil.getServerPublicKey();
   }
 
   void validPhone(String value) async{
@@ -36,35 +50,32 @@ class LoginController extends GetxController{
       EasyLoading.showToast("手机号不正确");
       return;
     }
-    Log.i(RsaUtil.publicKey!.modulus);
-    // Log.i(RsaUtil.publicKey!.exponent);
-    var str = await LoginApi.getPublicKey(RsaUtil.publicKey!.modulus, RsaUtil.publicKey!.exponent);
-    Log.i(json.decode(str)["aes"]);
-    // DecryptUtil.getAes(json.decode(str)["aes"]);
-    DecryptUtil.getAes(json.decode(str)["aes"]);
-    // /// 数据库验证
-    // phone = value;
-    // textController.text = "";
-    // inOp = 0;
-    // textOp = 0;
-    // update(["textOp", "inOp"]);
-    // _timeDown = Timer.periodic(const Duration(seconds: 1), (timer) {
-    //   if (time >= 1) {
-    //     time--;
-    //     update(["extend"]);
-    //   } else {
-    //     timer.cancel();
-    //     _timeDown?.cancel();
-    //     time = 60;
-    //     update(["extend"]);
-    //   }
-    // });
-    // Timer(const Duration(milliseconds: 800), () {
-    //   codeLength = 6;
-    //   inOp = 1;
-    //   textOp = 1;
-    //   update(["textOp", "inOp"]);
-    // });
+    /// 数据库验证
+    phone = value;
+    LoginApi.sendSms(phone).then((value) {
+      textController.text = "";
+      inOp = 0;
+      textOp = 0;
+      update(["textOp", "inOp"]);
+      _timeDown = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (time >= 1) {
+          time--;
+          update(["extend"]);
+        } else {
+          timer.cancel();
+          _timeDown?.cancel();
+          time = 60;
+          update(["extend"]);
+        }
+      });
+      Timer(const Duration(milliseconds: 800), () {
+        codeLength = 6;
+        inOp = 1;
+        textOp = 1;
+        update(["textOp", "inOp"]);
+      });
+    // ignore: argument_type_not_assignable_to_error_handler
+    }).catchError((_){});
   }
 
   void resend() {
@@ -73,15 +84,46 @@ class LoginController extends GetxController{
       return;
     }
     _timeDown?.cancel();
-    _timeDown = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (time >= 1) {
-        time--;
-        update(["extend"]);
-      } else {
-        time = 60;
-        _timeDown?.cancel();
-        update(["extend"]);
-      }
+    LoginApi.sendSms(phone).then((value) {
+      _timeDown = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (time >= 1) {
+          time--;
+          update(["extend"]);
+        } else {
+          time = 60;
+          _timeDown?.cancel();
+          update(["extend"]);
+        }
+      });
     });
+
+  }
+
+  showPhone() {
+    textController.text = "";
+    inOp = 0;
+    textOp = 0;
+    update(["textOp", "inOp"]);
+    Timer(const Duration(milliseconds: 800), () {
+      codeLength = 11;
+      inOp = 1;
+      textOp = 1;
+      update(["textOp", "inOp"]);
+    });
+  }
+  login(value) async{
+    var device = await DeviceUtil.getId();
+    String token = await LoginApi.login({"phone": phone, "smsCode": value, "device": device});
+    Log.i(token);
+    SaveUtil.setString(Constant.token, token);
+    if (route != null) {
+      Get.offAndToNamed(route!);
+    } else {
+      goBack(true);
+    }
+  }
+
+  goBack(bool flag) {
+    Get.back(result: {"jump": flag});
   }
 }

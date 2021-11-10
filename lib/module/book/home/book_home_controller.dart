@@ -7,7 +7,6 @@ import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/chapter/chapter.dart';
-import 'package:book_app/model/result/result.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/util/font_util.dart';
 import 'package:device_display_brightness/device_display_brightness.dart';

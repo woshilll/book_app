@@ -1,6 +1,7 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/module/login/login_controller.dart';
+import 'package:book_app/route/routes.dart';
 import 'package:book_app/util/limit_util.dart';
 import 'package:book_app/util/size_fit_util.dart';
 import 'package:book_app/util/system_utils.dart';
@@ -15,11 +16,17 @@ class LoginScreen extends GetView<LoginController> {
 
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      child: Scaffold(
-        body: _body(context),
+    return WillPopScope(
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        child: Scaffold(
+          body: _body(context),
+        ),
+        value: SystemUiOverlayStyle.light,
       ),
-      value: SystemUiOverlayStyle.light,
+      onWillPop: () async {
+        controller.goBack(false);
+        return false;
+      },
     );
   }
 
@@ -41,7 +48,7 @@ class LoginScreen extends GetView<LoginController> {
               margin: const EdgeInsets.only(left: 15),
               child: GestureDetector(
                 child: Icon(Icons.close, color: Colors.white, size: 30.sp,),
-                onTap: () => Get.back(),
+                onTap: () => controller.goBack(false),
               ),
             ),
           ),
@@ -116,10 +123,10 @@ class LoginScreen extends GetView<LoginController> {
                     opacity: controller.inOp,
                     duration: const Duration(seconds: 1),
                     child: PinCodeTextField(
+                      key: const Key("1"),
                     appContext: context,
                     length: 11,
                     keyboardType: TextInputType.number,
-                    controller: controller.textController,
                     onChanged: (v) {},
                     pinTheme: PinTheme(
                         fieldWidth: (MediaQuery.of(context).size.width - 80) / 11,
@@ -142,45 +149,53 @@ class LoginScreen extends GetView<LoginController> {
                     opacity: controller.inOp,
                     duration: const Duration(seconds: 1),
                     child:PinCodeTextField(
+                      key: const Key("2"),
                       appContext: globalContext,
                       length: 6,
                       keyboardType: TextInputType.number,
-                      controller: controller.textController,
                       onChanged: (v) {},
                       pinTheme: PinTheme(
                           activeColor: Colors.white,
                           selectedColor: Theme.of(context).primaryColor,
                           inactiveColor: Colors.white
                       ),
-                      onCompleted: (value) {
+                      onCompleted: (value) async{
+                        await controller.login(value);
                       },
                     )
                   );
               },
             ),
           ),
-          if (controller.codeLength != 11)
           Container(
             margin: const EdgeInsets.only(left: 15, right: 15),
             child: GetBuilder<LoginController>(
               id: "extend",
               builder: (controller) {
-                return Row(
-                  children: [
-                    GestureDetector(
-                      child: Text(controller.time == 60 ? "重新发送" : "${controller.time}/s后可再次发送"),
-                      onTap: () {
-                        if (controller.time == 60) {
-                          LimitUtil.throttle(() => controller.resend());
-                        }
-                      },
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(left: 10),
-                      child: const Text("返回"),
-                    ),
-                  ],
-                );
+                if (controller.codeLength != 11) {
+                  return Row(
+                    children: [
+                      GestureDetector(
+                        child: Text(controller.time == 60 ? "重新发送" : "${controller.time}/s后可再次发送"),
+                        onTap: () {
+                          if (controller.time == 60) {
+                            LimitUtil.throttle(() => controller.resend());
+                          }
+                        },
+                      ),
+                      Container(
+                        margin: const EdgeInsets.only(left: 10),
+                        child: GestureDetector(
+                          child: const Text("返回"),
+                          onTap: () {
+                            controller.showPhone();
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                }
+                return Container();
               },
             ),
           )

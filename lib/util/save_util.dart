@@ -42,4 +42,8 @@ class SaveUtil {
   static String? getString(key) {
     return _sharedPreferences.getString(key);
   }
+
+  static void remove(key) {
+    _sharedPreferences.remove(key);
+  }
 }
