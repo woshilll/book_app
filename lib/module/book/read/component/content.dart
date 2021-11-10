@@ -1,16 +1,18 @@
 import 'package:book_app/log/log.dart';
+import 'package:book_app/module/book/read/read_controller.dart';
+import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-Widget content(context, index, controller) {
+Widget content(context, index, ReadController controller) {
   return Column(
     children: [
       SizedBox(
-        height: 33,
+        height: controller.screenTop,
       ),
       Expanded(
-        child: Container(
+        child: SizedBox(
           width: controller.pages[index].width,
           child: Column(
             children: [
@@ -31,6 +33,7 @@ Widget content(context, index, controller) {
               Text(
                   controller.pages[index].content,
                   textWidthBasis: TextWidthBasis.longestLine,
+                  textScaleFactor: MediaQuery.of(context).textScaleFactor,
                   style: controller.pages[index].style),
             ],
           ),

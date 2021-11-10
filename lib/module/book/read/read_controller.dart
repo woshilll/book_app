@@ -705,14 +705,11 @@ class ReadController extends GetxController {
     screenLeft = MediaQuery.of(context).padding.left;
     screenRight = MediaQuery.of(context).padding.right;
     screenBottom = 16;
-    screenTop = MediaQuery.of(globalContext).padding.top;
-    EasyLoading.show(status: "${MediaQuery.of(globalContext).size.width}\n${MediaQuery.of(globalContext).size.height}\n${MediaQuery.of(globalContext).padding.left}\n${MediaQuery.of(globalContext).padding.right}\n${MediaQuery.of(globalContext).padding.top}\n${MediaQuery.of(globalContext).padding.bottom}");
-    Log.i(MediaQuery.of(globalContext).size.width);
-    Log.i(MediaQuery.of(globalContext).size.height);
-    Log.i(MediaQuery.of(globalContext).padding.left);
-    Log.i(MediaQuery.of(globalContext).padding.right);
-    Log.i(MediaQuery.of(globalContext).padding.top);
-    Log.i(MediaQuery.of(globalContext).padding.bottom);
+    double top = MediaQuery.of(globalContext).padding.top;
+    if (top < 20) {
+      top = 20;
+    }
+    screenTop = top;
   }
 }
 

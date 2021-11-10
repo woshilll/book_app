@@ -21,17 +21,19 @@ Widget battery() {
         return Row(
           children: [
             Container(
-              width: 25,
+              width: 28,
               height: 14,
               margin: const EdgeInsets.only(left: 10),
               decoration: BoxDecoration(
                   border: Border.all(color: activeColor)
               ),
-              child: Container(
-                margin: const EdgeInsets.all(1),
-                width: (controller.batteryLevel / 100) * 21,
-                child: Container(),
-                color: activeColor,
+              child: FractionallySizedBox(
+                widthFactor: controller.batteryLevel / 100,
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  margin: const EdgeInsets.all(1),
+                  color: activeColor,
+                ),
               ),
             ),
             Container(
@@ -42,7 +44,7 @@ Widget battery() {
             ),
             Container(
               margin: const EdgeInsets.only(left: 5),
-              child: Text(TimeUtil.getSystemTime(), style: TextStyle(color: unActiveColor, fontSize: 10),),
+              child: Text(TimeUtil.getSystemTime(), style: TextStyle(color: unActiveColor, fontSize: 10, height: 1),),
             )
           ],
         );
@@ -51,14 +53,14 @@ Widget battery() {
         return Row(
           children: [
             Container(
-              width: 25,
+              width: 28,
               height: 14,
               margin: const EdgeInsets.only(left: 10),
               decoration: BoxDecoration(
                   border: Border.all(color: unActiveColor)
               ),
               child: Container(
-                margin: EdgeInsets.all(1),
+                margin: const EdgeInsets.all(1),
                 alignment: Alignment.center,
                 child: Text("${controller.batteryLevel}", style: TextStyle(fontSize: 9, color: unActiveColor, height: 1),),
               ),
@@ -71,7 +73,7 @@ Widget battery() {
             ),
             Container(
               margin: const EdgeInsets.only(left: 5),
-              child: Text(TimeUtil.getSystemTime(), style: TextStyle(color: unActiveColor, fontSize: 10),),
+              child: Text(TimeUtil.getSystemTime(), style: TextStyle(color: unActiveColor, fontSize: 10, height: 1),),
             )
           ],
         );
