@@ -73,7 +73,7 @@ class ReadScreen extends GetView<ReadController> {
           ),
           Positioned(
             top: 6,
-            left: 15,
+            right: 15,
             child: battery(),
           ),
         ],

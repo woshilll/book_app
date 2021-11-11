@@ -6,11 +6,10 @@ class ContentPage {
   int index;
   int? chapterId;
   String? chapterName;
-  double wordWidth;
   double width;
   bool noContent;
 
-  ContentPage(this.content, this.style, this.index, this.chapterId, this.chapterName, this.wordWidth, this.width, {this.noContent = false});
+  ContentPage(this.content, this.style, this.index, this.chapterId, this.chapterName, this.width, {this.noContent = false});
 
 }
 

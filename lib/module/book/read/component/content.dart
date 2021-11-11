@@ -18,15 +18,16 @@ Widget content(context, index, ReadController controller) {
             children: [
               if (controller.pages[index].index == 1)
                 Container(
-                  height: 80.h,
+                  height: controller.titleHeight,
                   alignment: Alignment.centerLeft,
                   child: Text(
                     "${controller.pages[index].chapterName}\n",
                     style: TextStyle(
                         color: controller.pages[index].style.color,
-                        fontSize: 25.sp,
+                        fontSize: 25,
                         fontWeight: FontWeight.bold),
                     maxLines: 1,
+                    textScaleFactor: MediaQuery.of(context).textScaleFactor,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),

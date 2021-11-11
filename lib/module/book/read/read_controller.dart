@@ -92,6 +92,7 @@ class ReadController extends GetxController {
   double screenBottom = 0;
   double screenTop = 0;
   double screenRight = 0;
+  double titleHeight = 0;
   @override
   void onInit() async{
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -207,6 +208,17 @@ class ReadController extends GetxController {
     wordHeight = cal.height;
     wordWith = cal.width;
   }
+
+  /// 计算标题高度
+  _calTitleHeight() {
+    _painter.text = const TextSpan(text: "哈", style: TextStyle(
+        fontSize: 25,
+        fontWeight: FontWeight.bold));
+    _painter.layout(maxWidth: screenWidth);
+    var cal = _painter.computeLineMetrics()[0];
+    titleHeight = cal.height;
+  }
+
   /// 计算当前章节一共多少页
   calThisChapterTotalPage(index) {
     var chapterId = pages[index].chapterId;
@@ -349,7 +361,7 @@ class ReadController extends GetxController {
     String content = FontUtil.alphanumericToFullLength(chapter.content);
     if (content.isEmpty) {
       list.add(
-          ContentPage("", contentStyle, 1, chapter.id, chapter.name, wordWith, _contentWidth(), noContent: true));
+          ContentPage("", contentStyle, 1, chapter.id, chapter.name, _contentWidth(), noContent: true));
       return list;
     }
     _painter.text = TextSpan(text: content, style: contentStyle);
@@ -365,7 +377,7 @@ class ReadController extends GetxController {
     do {
       String subContent = content.substring(0, offset);
       list.add(
-          ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, wordWith, _contentWidth()));
+          ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, _contentWidth()));
       i++;
       if (i == 2) {
         _calMaxLines();
@@ -384,7 +396,7 @@ class ReadController extends GetxController {
     } while (offset < content.characters.length);
     if (offset > 0) {
       list.add(
-          ContentPage(content, contentStyle, i, chapter.id, chapter.name, wordWith, _contentWidth()));
+          ContentPage(content, contentStyle, i, chapter.id, chapter.name, _contentWidth()));
     }
     return list;
   }
@@ -561,7 +573,7 @@ class ReadController extends GetxController {
   void _calMaxLines({bool firstPage = false}) {
     double extend = 0;
     if (firstPage) {
-      extend = 80.h;
+      extend = titleHeight;
     }
     maxLines = (screenHeight -
         screenTop - screenBottom - extend) ~/
@@ -700,14 +712,15 @@ class ReadController extends GetxController {
   }
 
   void _initSize() {
+    _calTitleHeight();
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     screenLeft = MediaQuery.of(context).padding.left;
     screenRight = MediaQuery.of(context).padding.right;
     screenBottom = 16;
     double top = MediaQuery.of(globalContext).padding.top;
-    if (top < 20) {
-      top = 20;
+    if (top < 33) {
+      top = 33;
     }
     screenTop = top;
   }

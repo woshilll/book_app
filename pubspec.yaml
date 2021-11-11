@@ -74,6 +74,8 @@ dependencies:
   pointycastle: ^3.3.5
   encrypt: ^5.0.1
   device_info_plus: ^3.1.1
+  flutter_swiper_null_safety: ^1.0.2
+  video_player: ^2.2.7
 
 dev_dependencies:
   flutter_test:
