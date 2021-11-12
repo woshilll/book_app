@@ -1,5 +1,7 @@
 import 'package:book_app/api/video_api.dart';
+import 'package:book_app/log/log.dart';
 import 'package:book_app/model/video/video_index.dart';
+import 'package:book_app/route/routes.dart';
 import 'package:get/get.dart';
 
 class MovieHomeController extends GetxController {
@@ -11,8 +13,13 @@ class MovieHomeController extends GetxController {
   @override
   void onReady() async{
     super.onReady();
-    // videoIndex = await VideoApi.getIndex();
-    // showShimmer = false;
-    // update(["body"]);
+    videoIndex = await VideoApi.getIndex();
+    showShimmer = false;
+    update(["body"]);
+  }
+
+
+  toInfo(id) {
+    Get.toNamed(Routes.movieInfo, arguments: {"id": id});
   }
 }

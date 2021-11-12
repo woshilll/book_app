@@ -21,4 +21,5 @@ abstract class Routes {
 
   /// 电影
   static const movieHome = '/movie/home';
+  static const movieInfo = '/movie/info';
 }

@@ -99,8 +99,15 @@ class MovieHomeScreen extends GetView<MovieHomeController> {
                 child:
                 isShimmer ?
                     Container(color: Colors.white,) :
-                CachedNetworkImage(
-                  imageUrl: "${data[index].coverImg}", fit: BoxFit.cover,),
+                GestureDetector(
+                  child: CachedNetworkImage(
+                    imageUrl: "${data[index].coverImg}", fit: BoxFit.cover,),
+                  onTap: () {
+                    if (!isShimmer) {
+                      controller.toInfo(data[index].id);
+                    }
+                  },
+                ),
               );
             },
             itemCount: isShimmer ? 5 : data.length,

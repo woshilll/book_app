@@ -172,7 +172,7 @@ class DioManager {
       // json转model
       String jsonStr = json.encode(response.data);
       Map<String, dynamic> responseMap = json.decode(jsonStr);
-
+      Log.i("接收到服务器数据：$responseMap");
       if (responseMap["code"] != 200) {
         if (responseMap["code"] == 401) {
           if (gt.Get.currentRoute == Routes.home) {

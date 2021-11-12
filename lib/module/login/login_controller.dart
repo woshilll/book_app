@@ -42,7 +42,6 @@ class LoginController extends GetxController{
     super.onReady();
     welcome = 1;
     update(["welcome"]);
-    await RsaUtil.getServerPublicKey();
   }
 
   void validPhone(String value) async{

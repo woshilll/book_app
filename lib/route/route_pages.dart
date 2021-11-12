@@ -18,6 +18,8 @@ import 'package:book_app/module/login/login_binding.dart';
 import 'package:book_app/module/login/login_screen.dart';
 import 'package:book_app/module/movie/home/movie_home_binding.dart';
 import 'package:book_app/module/movie/home/movie_home_screen.dart';
+import 'package:book_app/module/movie/info/movie_info_binding.dart';
+import 'package:book_app/module/movie/info/movie_info_screen.dart';
 import 'package:book_app/module/setting/home/setting_home_binding.dart';
 import 'package:book_app/module/setting/home/setting_home_screen.dart';
 import 'package:book_app/route/routes.dart';
@@ -102,6 +104,11 @@ class RoutePages {
         name: Routes.movieHome,
         page: () => const MovieHomeScreen(),
         binding: MovieHomeBinding()
+    ),
+    GetPage(
+        name: Routes.movieInfo,
+        page: () => const MovieInfoScreen(),
+        binding: MovieInfoBinding()
     ),
   ];
 }

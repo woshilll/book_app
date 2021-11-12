@@ -44,4 +44,19 @@ class EncryptUtil {
     final encrypt = Encrypter(RSA(publicKey: publicKey));
     return encrypt.encrypt(aes).base64;
   }
+
+  static Future<String> encryptToken(String token) async{
+    final encrypt = await getRsa();
+    var b64 = encrypt.encrypt(token).base64;
+    return Uri.encodeComponent(b64.replaceAll("+", "%2B"));
+  }
+
+  static Future<Encrypter> getRsa() async{
+    if (RsaUtil.serverPublicKey == null) {
+      await RsaUtil.getServerPublicKey();
+    }
+    String rsaPublic = "-----BEGIN PUBLIC KEY-----\n${RsaUtil.serverPublicKey!.replaceAll("\"", "")}\n-----END PUBLIC KEY-----";
+    RSAPublicKey publicKey =  RSAKeyParser().parse(rsaPublic) as RSAPublicKey;
+    return Encrypter(RSA(publicKey: publicKey));
+  }
 }
