@@ -110,7 +110,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
     if (img == null || img.isEmpty) {
       return Container(
         alignment: Alignment.center,
-        child: Text("本地书籍\n\n${controller.books[index].name}", textAlign: TextAlign.center,),
+        child: Text("${controller.books[index].type == 2 ? '本地书籍' : '无封面'}\n\n${controller.books[index].name}", textAlign: TextAlign.center,),
         decoration: const BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(4)),
             color: Colors.grey
@@ -131,7 +131,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
       errorWidget: (context, url, error) {
         return Container(
           alignment: Alignment.center,
-          child: Text("本地书籍\n\n${controller.books[index].name}", textAlign: TextAlign.center,),
+          child: Text("${controller.books[index].type == 2 ? '本地书籍' : '无封面'}\n\n${controller.books[index].name}", textAlign: TextAlign.center,),
           decoration: const BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(4)),
             color: Colors.grey

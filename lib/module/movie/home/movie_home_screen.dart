@@ -4,6 +4,7 @@ import 'package:book_app/module/movie/home/movie_home_controller.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_swiper_null_safety/flutter_swiper_null_safety.dart';
 import 'package:get/get.dart';
 import 'package:shimmer/shimmer.dart';
@@ -49,9 +50,50 @@ class MovieHomeScreen extends GetView<MovieHomeController> {
         itemBuilder: (context, index) {
           return isShimmer ?
           Container(color: Colors.white,) :
-          CachedNetworkImage(
-              imageUrl: "${controller.videoIndex.carouselList![index]
-                  .coverImg}", fit: BoxFit.fill);
+          GestureDetector(
+            child: Container(
+                color: Colors.black.withOpacity(.8),
+                child: Stack(
+                  children: [
+                    Positioned(
+                      top: 0,
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: CachedNetworkImage(
+                          imageUrl: "${controller.videoIndex.carouselList![index]
+                              .coverImgBig ?? controller.videoIndex.carouselList![index]
+                              .coverImg}", fit: controller.videoIndex.carouselList![index]
+                          .coverImgBig == null ? BoxFit.fitHeight : BoxFit.cover),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.only(bottom: 5),
+                        child: Text("${controller.videoIndex.carouselList![index]
+                            .name}", style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 16),),
+                        decoration: const BoxDecoration(
+                            gradient: LinearGradient(      //渐变位置
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                stops: [0.0, 1.0],         //[渐变起始点, 渐变结束点]
+                                //渐变颜色[始点颜色, 结束颜色]
+                                colors: [Colors.black, Colors.transparent]
+                            )
+                        ),
+                      ),
+                    )
+                  ],
+                )),
+            onTap: () {
+              if (!isShimmer) {
+                controller.toInfo(controller.videoIndex.carouselList![index].id);
+              }
+            },
+          );
         },
         itemCount: isShimmer ? 3 : controller.videoIndex.carouselList!.length,
         viewportFraction: .8,
@@ -60,13 +102,14 @@ class MovieHomeScreen extends GetView<MovieHomeController> {
       ),
     ));
     list.add(const SizedBox(height: 10,));
-    list.addAll(_item("热门", "1", controller.videoIndex.hotList!, isShimmer: isShimmer));
-    list.addAll(_item("影视", "2", controller.videoIndex.movieList!, isShimmer: isShimmer));
-    list.addAll(_item("电视剧", "3", controller.videoIndex.tvList!, isShimmer: isShimmer));
+    list.addAll(_item("热门", controller.videoIndex.hotList!, isShimmer: isShimmer));
+    list.addAll(_item("影视", controller.videoIndex.movieList!, isShimmer: isShimmer));
+    list.addAll(_item("电视剧", controller.videoIndex.tvList!, isShimmer: isShimmer));
+    list.addAll(_item("动漫", controller.videoIndex.animeList!, isShimmer: isShimmer));
     return list;
   }
 
-  List<Widget> _item(String label, String type, List<Video> data, {bool isShimmer = false}) {
+  List<Widget> _item(String label, List<Video> data, {bool isShimmer = false}) {
     return [
       Container(
         height: 40,
@@ -88,7 +131,7 @@ class MovieHomeScreen extends GetView<MovieHomeController> {
         ),
       ),
       SizedBox(
-          height: 150,
+          height: 190,
           child: ListView.builder(
             padding: const EdgeInsets.only(top: 10, bottom: 10, right: 10),
             scrollDirection: Axis.horizontal,
@@ -99,14 +142,24 @@ class MovieHomeScreen extends GetView<MovieHomeController> {
                 child:
                 isShimmer ?
                     Container(color: Colors.white,) :
-                GestureDetector(
-                  child: CachedNetworkImage(
-                    imageUrl: "${data[index].coverImg}", fit: BoxFit.cover,),
-                  onTap: () {
-                    if (!isShimmer) {
-                      controller.toInfo(data[index].id);
-                    }
-                  },
+                Column(
+                  children: [
+                    GestureDetector(
+                      child: CachedNetworkImage(
+                        imageUrl: "${data[index].coverImg}", fit: BoxFit.cover, height: 150,),
+                      onTap: () {
+                        if (!isShimmer) {
+                          controller.toInfo(data[index].id);
+                        }
+                      },
+                    ),
+                    Expanded(
+                      child: Container(
+                        alignment: Alignment.bottomCenter,
+                        child: Text("${data[index].name}", style: TextStyle(color: Theme.of(context).textTheme.bodyText1!.color, height: 1), maxLines: 1,),
+                      ),
+                    )
+                  ],
                 ),
               );
             },

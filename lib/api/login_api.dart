@@ -8,8 +8,8 @@ class LoginApi {
   }
 
   /// 发送短信验证码
-  static Future<dynamic> sendSms(phone) async{
-    return await DioManager.instance.get(url: "/login/send/$phone");
+  static Future<dynamic> sendSms(phone, device) async{
+    return await DioManager.instance.get(url: "/login/send/$phone/$device");
   }
 
   /// 验证token

@@ -34,6 +34,7 @@ Widget content(context, index, ReadController controller) {
               Text(
                   controller.pages[index].content,
                   textWidthBasis: TextWidthBasis.longestLine,
+                  textAlign: TextAlign.justify,
                   textScaleFactor: MediaQuery.of(context).textScaleFactor,
                   style: controller.pages[index].style),
             ],
@@ -52,7 +53,7 @@ Widget content(context, index, ReadController controller) {
               ],
             ),
             onTap: () async {
-              if (controller.book.type == 1) {
+              if (controller.book!.type == 1) {
                 await controller.reloadPage();
               } else {
                 EasyLoading.showToast("本地导入文章,无法加载");
@@ -62,7 +63,7 @@ Widget content(context, index, ReadController controller) {
         ),
       Container(
         height: 16,
-        margin: EdgeInsets.only(bottom: 2),
+        margin: EdgeInsets.only(bottom: 4),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [

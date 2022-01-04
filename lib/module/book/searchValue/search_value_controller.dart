@@ -1,27 +1,39 @@
 import 'package:book_app/api/book_api.dart';
 import 'package:book_app/log/log.dart';
+import 'package:book_app/mapper/book_db_provider.dart';
+import 'package:book_app/mapper/chapter_db_provider.dart';
+import 'package:book_app/model/book/book.dart';
+import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/model/search/search_history.dart';
 import 'package:book_app/model/search/search_result.dart';
+import 'package:book_app/util/html_parse_util.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class SearchValueController extends GetxController {
-  late SearchHistory site;
-  List<SearchResult> searchResults = [];
-
+  // late SearchHistory site;
+  // List<SearchResult> searchResults = [];
+  WebViewController? webViewController;
+  String? keyword;
+  final BookDbProvider _bookDbProvider = BookDbProvider();
+  final ChapterDbProvider _chapterDbProvider = ChapterDbProvider();
+  String? site;
   @override
   void onInit() async {
     super.onInit();
     var map = Get.arguments;
+    keyword = map["keyword"];
     site = map["site"];
   }
 
   @override
   void onReady() async {
     super.onReady();
-    searchResults = await BookApi.getSearchResults(site.label, site.site);
-    update(["result"]);
+    // searchResults = await BookApi.getSearchResults(site.label, site.site);
+    // update(["result"]);
   }
 
   Widget buildRichText(str, double fontSize, FontWeight fontWeight) {
@@ -57,6 +69,44 @@ class SearchValueController extends GetxController {
         style: TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: Theme.of(globalContext).textTheme.bodyText1!.color)
       );
     })));
+  }
+
+  pop() async{
+    if (webViewController != null) {
+      if (await webViewController!.canGoBack()) {
+        webViewController!.goBack();
+        webViewController!.goBack();
+      } else {
+        Get.back();
+      }
+    } else {
+      Get.back();
+    }
+  }
+
+  parse() async{
+    try {
+      String url = (await webViewController!.currentUrl())!;
+      dynamic count = await _bookDbProvider.getBookCount(url);
+      if (count > 0) {
+        EasyLoading.showToast("小说已存在书架");
+        return;
+      }
+      await EasyLoading.show(status: "解析中...", maskType: EasyLoadingMaskType.clear);
+      var chapters = await HtmlParseUtil.parseChapter(url);
+      final Book book = Book(url: url, name: await webViewController!.getTitle());
+      var bookId = await _bookDbProvider.commonInsert(book);
+      chapters.forEach((Chapter e) {
+        e.bookId = bookId;
+      });
+      await _chapterDbProvider.commonBatchInsert(chapters);
+      EasyLoading.dismiss();
+      EasyLoading.showToast("解析完成");
+    } catch(err) {
+      EasyLoading.dismiss();
+      EasyLoading.showToast("解析失败");
+    }
+
   }
 }
 

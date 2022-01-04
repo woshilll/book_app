@@ -30,18 +30,16 @@ class EncryptUtil {
     return aes;
   }
 
-  static dynamic encryptData(data) {
+  static dynamic encryptData(data) async{
     String aes = _genAes();
     final encrypt = Encrypter(AES(Key.fromUtf8(aes), mode: AESMode.ecb));
     final encryptData = encrypt.encrypt(json.encode(data), iv: IV.fromUtf8(aes)).base64;
-    final encryptAes = _encryptAes(aes);
+    final encryptAes = await _encryptAes(aes);
     return [encryptData, encryptAes];
   }
 
-  static String _encryptAes(String aes) {
-    String rsaPublic = "-----BEGIN PUBLIC KEY-----\n${RsaUtil.serverPublicKey!.replaceAll("\"", "")}\n-----END PUBLIC KEY-----";
-    RSAPublicKey publicKey =  RSAKeyParser().parse(rsaPublic) as RSAPublicKey;
-    final encrypt = Encrypter(RSA(publicKey: publicKey));
+  static Future<String> _encryptAes(String aes) async{
+    final encrypt = await getRsa();
     return encrypt.encrypt(aes).base64;
   }
 

@@ -1,4 +1,5 @@
 import 'package:book_app/db/base_db_provider.dart';
+import 'package:book_app/log/log.dart';
 import 'package:book_app/model/book/book.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -75,7 +76,7 @@ class BookDbProvider extends BaseDbProvider {
   /// 更新阅读章节
   updateCurChapter(id, chapterId, page) async{
     Database db = await getDataBase();
-    db.rawUpdate("update $name set $columnCurChapter = ?, $columnCurPage = ? where $columnId = ?", [chapterId, page, id]);
+    await db.rawUpdate("update $name set $columnCurChapter = ?, $columnCurPage = ? where $columnId = ?", [chapterId, page, id]);
   }
 
   // Future<void> update(Book book) async {

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:audio_service/audio_service.dart';
@@ -18,22 +19,24 @@ import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/constant.dart';
 import 'package:book_app/util/font_util.dart';
+import 'package:book_app/util/html_parse_util.dart';
 import 'package:book_app/util/save_util.dart';
 import 'package:device_display_brightness/device_display_brightness.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'component/content_page.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class ReadController extends GetxController {
+class ReadController extends GetxController with SingleGetTickerProviderMixin {
   /// 数据库
   static final ChapterDbProvider _chapterDbProvider = ChapterDbProvider();
   static final BookDbProvider _bookDbProvider = BookDbProvider();
   /// 主页传来的书籍信息
-  late Book book;
+  Book? book;
   /// 所有章节
   List<Chapter> chapters = [];
   /// 上下文
@@ -52,7 +55,9 @@ class ReadController extends GetxController {
   int readChapterIndex = 0;
   var scaffoldKey = GlobalKey<ScaffoldState>();
   /// 目录控制器
-  ScrollController menuController = ScrollController();
+  ItemScrollController menuController = ItemScrollController();
+  ItemPositionsListener menuPositionsListener = ItemPositionsListener.create();
+  double menuBarMove = 0;
   /// 底部类型 1-正常 2-亮度 3-设置
   String bottomType = "1";
   /// 屏幕亮度
@@ -93,18 +98,33 @@ class ReadController extends GetxController {
   double screenTop = 0;
   double screenRight = 0;
   double titleHeight = 0;
+  AnimationController? coverController;
+  final double paddingWidth = 40;
   @override
   void onInit() async{
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     super.onInit();
+    // 覆盖翻页
+    coverController = AnimationController(
+      value: 0,
+      duration: const Duration(milliseconds: 450),
+      vsync: this,
+    );
     batteryLevel = await _battery.batteryLevel;
     var map = Get.arguments;
     book = map["book"];
-    await initData();
     initAudio();
     _batteryListen();
     await _batteryCap();
+    _menuListen();
   }
+
+  @override
+  onReady() async{
+    super.onReady();
+    initData();
+  }
+
   initData() async{
     /// 初始化宽度
     _initSize();
@@ -126,24 +146,16 @@ class ReadController extends GetxController {
     }
     contentStyle = TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: readSettingConfig.fontSize, height: readSettingConfig.fontHeight);
     /// 加载章节
-    chapters = await _chapterDbProvider.getChapters(null, book.id);
+    chapters = await _chapterDbProvider.getChapters(null, book!.id);
     Chapter cur = chapters[0];
     int index = 0;
-    if (book.curChapter != null) {
-      index = chapters.indexWhere((element) => element.id == book.curChapter);
+    if (book!.curChapter != null) {
+      index = chapters.indexWhere((element) => element.id == book!.curChapter);
       if (index >= 0) {
         cur = chapters[index];
       }
     }
-    cur.content = await getContent(cur.id, cur.url, true);
-    await initPage(cur, dialog: true, withUpdate: false);
-    update(["content"]);
-    if (book.curPage != null) {
-      pageIndex = book.curPage! - 1;
-      if (readPageType == ReadPageType.smooth) {
-        contentPageController.jumpToPage(pageIndex);
-      }
-    }
+    initPage(cur, dialog: true, firstInit: true);
   }
 
   ReadSettingConfig _getReadSettingConfig() {
@@ -154,7 +166,7 @@ class ReadController extends GetxController {
     return ReadSettingConfig.defaultConfig();
   }
   /// 将文本转文字页面
-  initPage(Chapter chapter, {bool dialog = false, bool withUpdate = true}) async {
+  initPage(Chapter chapter, {bool firstInit = false, bool dialog = false, Function? finishFunc}) async {
     if (loading) {
       return;
     }
@@ -162,35 +174,51 @@ class ReadController extends GetxController {
     if (dialog) {
       await EasyLoading.show();
     }
-    List<ContentPage> list = await initPageWithReturn(chapter);
-    if (list.isNotEmpty && pages.isNotEmpty) {
-      int exist = pages.indexWhere((element) => element.chapterId == list[0].chapterId);
-      if (exist == -1) {
-        pages.addAll(list);
-      }
-    } else {
-      pages.addAll(list);
-    }
-    if (withUpdate) {
-      update(["content"]);
-    }
-    await EasyLoading.dismiss();
-    loading = false;
+    getContent(chapter, dialog).then((value) {
+      initPageWithReturn(chapter).then((list) async{
+        if (list.isNotEmpty && pages.isNotEmpty) {
+          int exist = pages.indexWhere((element) => element.chapterId == list[0].chapterId);
+          if (exist == -1) {
+            pages.addAll(list);
+          }
+        } else {
+          pages.addAll(list);
+        }
+        update(["content"]);
+        if (firstInit && book!.curPage != null) {
+          pageIndex = book!.curPage! - 1;
+          if (readPageType == ReadPageType.smooth) {
+            contentPageController.jumpToPage(pageIndex);
+          }
+        }
+        await EasyLoading.dismiss();
+        loading = false;
+        if (finishFunc != null) {
+          finishFunc;
+        }
+      });
+    });
+
+
   }
+
+
   /// 获取章节内容
-  Future<String?> getContent(id, url, showDialog) async{
+  Future<String?> getContent(Chapter chapter, showDialog) async{
     // 查找内容
-    Chapter? temp = await _chapterDbProvider.getChapterById(id);
+    Chapter? temp = await _chapterDbProvider.getChapterById(chapter.id);
     var content = temp?.content;
-    if ((content == null || content.isEmpty) && book.type == 1) {
-      content = await ChapterApi.parseContent(url, showDialog);
+    if ((content == null || content.isEmpty) && book!.type == 1) {
+      // content = await ChapterApi.parseContent(url, showDialog);
+      content = await HtmlParseUtil.parseContent(chapter.url!);
       // 格式化文本
       if (content != null) {
         content = FontUtil.formatContent(content);
-        await _chapterDbProvider.updateContent(id, content);
+        await _chapterDbProvider.updateContent(chapter.id, content);
       }
     }
     // 赋值
+    chapter.content = content;
     return content;
   }
 
@@ -234,19 +262,16 @@ class ReadController extends GetxController {
       return;
     }
     Chapter chapter = chapters[index + 1];
-    await initPage(chapter);
+    initPage(chapter);
   }
 
   /// 页面返回监听
-  pop() async{
-    // 更新当前的章节和页数
-    if (pages.isNotEmpty) {
-      var chapterId = pages[pageIndex].chapterId;
-      var curPageIndex = pages[pageIndex].index;
-      await _bookDbProvider.updateCurChapter(book.id, chapterId, curPageIndex);
-    }
-    Get.back(result: {"brightness": brightnessTemp});
-    if (rotateScreen) {
+  popRead() async{
+    ReadController controller = Get.find();
+    var chapterId = controller.pages[controller.pageIndex].chapterId;
+    var curPageIndex = controller.pages[controller.pageIndex].index;
+    Get.back(result: {"brightness": brightnessTemp, "chapterId": chapterId, "curPage": curPageIndex});
+    if (controller.rotateScreen) {
       SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
       ]);
@@ -262,11 +287,12 @@ class ReadController extends GetxController {
       contentPageController.jumpToPage(index);
       pageIndex = index;
     } else {
-      chapter.content = await getContent(chapter.id, chapter.url, true);
       pages.clear();
-      await initPage(chapter);
-      contentPageController.jumpToPage(0);
-      pageIndex = 0;
+      bool dialog = (chapter.content == null || chapter.content!.isEmpty);
+      initPage(chapter, dialog: dialog, finishFunc: () {
+        contentPageController.jumpToPage(0);
+        pageIndex = 0;
+      });
     }
     if (pop) {
       Navigator.of(context).pop();
@@ -291,9 +317,9 @@ class ReadController extends GetxController {
         // 找到下一章
         _pageStartStyle();
         Chapter next = chapters[chapterIndex + 1];
-        await initPage(next);
+        initPage(next, finishFunc: _nextPageStyle(index));
         // 跳转
-        _nextPageStyle(index);
+        // _nextPageStyle(index);
       }
     }
   }
@@ -333,12 +359,16 @@ class ReadController extends GetxController {
         _pageStartStyle();
         EasyLoading.show(maskType: EasyLoadingMaskType.clear);
         Chapter pre = chapters[chapterIndex - 1];
-        List<ContentPage> returnPages = await initPageWithReturn(pre);
-        pages.insertAll(0, returnPages);
-        update(["content"]);
-        pageIndex = returnPages.length - 1;
-        _prePageStyle();
-        EasyLoading.dismiss();
+        getContent(pre, false).then((value) async{
+          initPageWithReturn(pre).then((returnPages) {
+            pages.insertAll(0, returnPages);
+            update(["content"]);
+            pageIndex = returnPages.length - 1;
+            _prePageStyle();
+            EasyLoading.dismiss();
+          });
+        });
+
       }
     }
   }
@@ -354,11 +384,12 @@ class ReadController extends GetxController {
   }
 
   Future<List<ContentPage>> initPageWithReturn(Chapter chapter) async {
-    chapter.content = await getContent(chapter.id, chapter.url, false);
+    // chapter.content = await getContent(chapter.id, chapter.url, false);
     List<ContentPage> list = [];
     _calWordHeightAndWidth();
     _calMaxLines(firstPage: true);
-    String content = FontUtil.alphanumericToFullLength(chapter.content);
+    // String content = FontUtil.alphanumericToFullLength(chapter.content);
+    String content = chapter.content!;
     if (content.isEmpty) {
       list.add(
           ContentPage("", contentStyle, 1, chapter.id, chapter.name, _contentWidth(), noContent: true));
@@ -430,11 +461,13 @@ class ReadController extends GetxController {
     update(["chapterChange"]);
   }
 
-  void openDrawer() async{
-    Timer(const Duration(milliseconds: 300), () {
+  openDrawer() async{
+    menuBarMove = (readChapterIndex / (chapters.length - 1)) * (screenHeight - screenTop - 82);
+    Log.i(menuBarMove);
+    Timer(const Duration(milliseconds: 400), () {
       scaffoldKey.currentState!.openDrawer();
       Timer(const Duration(milliseconds: 300), () {
-        menuController.jumpTo(readChapterIndex * 41);
+        menuController.jumpTo(index: readChapterIndex);
       });
     });
   }
@@ -529,7 +562,7 @@ class ReadController extends GetxController {
   @override
   void onClose() async{
     super.onClose();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge, overlays: []);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     if (isDark) {
       var config = _getReadSettingConfig();
       readSettingConfig.backgroundColor = config.backgroundColor;
@@ -539,6 +572,13 @@ class ReadController extends GetxController {
     SaveUtil.setString(Constant.readSettingConfig, data);
     autoPage?.cancel();
     _batteryTimer?.cancel();
+    if (Platform.isAndroid) {
+      // 以下两行 设置android状态栏为透明的沉浸。写在组件渲染之后，是为了在渲染后进行set赋值，覆盖状态栏，写在渲染之前MaterialApp组件会覆盖掉这个值。
+      SystemUiOverlayStyle systemUiOverlayStyle =
+      const SystemUiOverlayStyle(statusBarColor: Colors.transparent, systemNavigationBarColor: Colors.transparent, systemNavigationBarDividerColor: Colors.transparent);
+      SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
+    }
+
     // await audioHandler.stop();
     // await audioHandler.updateQueue([]);
   }
@@ -557,7 +597,7 @@ class ReadController extends GetxController {
     for (int i = pageIndex; i <= lastIndex; i++) {
       await audioHandler.addQueueItem(MediaItem(
           id: pages[pageIndex].chapterId.toString(),
-          album: book.name,
+          album: book!.name,
           title: pages[pageIndex].chapterName.toString(),
           extras: <String, String>{"content": pages[i].content, "type": "1"}
       ));
@@ -566,7 +606,7 @@ class ReadController extends GetxController {
     homeController.audioProcessingState = AudioProcessingState.error;
   }
   double _contentWidth() {
-  return screenWidth - 30 - screenLeft - screenRight;
+  return screenWidth - paddingWidth - screenLeft - screenRight;
   }
 
 
@@ -702,9 +742,12 @@ class ReadController extends GetxController {
     int firstIndex = pages.indexWhere((element) => chapterId == element.chapterId);
     pages.removeWhere((element) => element.chapterId == chapterId);
     Chapter chapter = chapters.firstWhere((element) => element.id == chapterId);
-    List<ContentPage> list = await initPageWithReturn(chapter);
-    pages.insertAll(firstIndex, list);
-    update(["content"]);
+    getContent(chapter, true).then((value) async{
+      List<ContentPage> list = await initPageWithReturn(chapter);
+      pages.insertAll(firstIndex, list);
+      update(["content"]);
+    });
+
   }
 
   double calPaddingLeft(index) {
@@ -724,6 +767,12 @@ class ReadController extends GetxController {
     }
     screenTop = top;
   }
+
+  void _menuListen() {
+    menuPositionsListener.itemPositions.addListener(() {
+    });
+  }
+
 }
 
 

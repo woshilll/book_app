@@ -69,14 +69,14 @@ bottom(context) async {
                                           ),
                                           onTap: () {
                                             Navigator.of(context).pop();
-                                            controller.pop();
+                                            controller.popRead();
                                           },
                                         ),
                                         Container(
                                           margin:
                                               const EdgeInsets.only(left: 15),
                                           child: Text(
-                                            "${controller.book.name!.length > 10 ? controller.book.name!.substring(0, 10) : controller.book.name}",
+                                            "${controller.book!.name!.length > 10 ? controller.book!.name!.substring(0, 10) : controller.book!.name}",
                                             style: const TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 16),
@@ -149,9 +149,9 @@ bottom(context) async {
                                                   ],
                                                 ),
                                               ),
-                                              onTap: () {
+                                              onTap: () async{
                                                 Navigator.of(context).pop();
-                                                controller.openDrawer();
+                                                await controller.openDrawer();
                                               },
                                             ),
                                           ),
@@ -251,13 +251,14 @@ bottom(context) async {
               child: AnnotatedRegion<SystemUiOverlayStyle>(
                   value: SystemUiOverlayStyle.light, child: child),
             );
-          }))
+          }
+          ))
       .then((value) {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   });
 }
 
-Widget _bottomType(controller) {
+Widget _bottomType(ReadController controller) {
   if (controller.bottomType == "1") {
     return Row(
       children: [

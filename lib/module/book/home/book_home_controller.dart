@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:book_app/api/book_api.dart';
@@ -11,6 +12,7 @@ import 'package:book_app/route/routes.dart';
 import 'package:book_app/util/font_util.dart';
 import 'package:device_display_brightness/device_display_brightness.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
@@ -63,17 +65,12 @@ class BookHomeController extends GetxController {
       }
       selected.chapters = [];
     }
-    Get.toNamed(Routes.read, arguments: {"book": selected})!.then((value) async{
-
-      // 重新更新页面数据
-      Book? book = await _bookDbProvider.getBookById(selected.id);
-      if (book != null) {
-        books[index] = book;
-        update(['bookList']);
-      }
-      // 设置亮度
-      await DeviceDisplayBrightness.setBrightness(value["brightness"]);
-    });
+    var value = await Get.toNamed(Routes.read, arguments: {"book": selected})!;
+    var chapterId = value["chapterId"];
+    var curPage = value["curPage"];
+    await _bookDbProvider.updateCurChapter(selected.id, chapterId, curPage);
+    await getBookList();
+    await DeviceDisplayBrightness.setBrightness(value["brightness"]);
   }
 
   void toSearch() {

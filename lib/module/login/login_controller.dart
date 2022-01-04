@@ -51,7 +51,8 @@ class LoginController extends GetxController{
     }
     /// 数据库验证
     phone = value;
-    LoginApi.sendSms(phone).then((value) {
+    LoginApi.sendSms(phone, await DeviceUtil.getId()).then((value) {
+      Log.i(value);
       textController.text = "";
       inOp = 0;
       textOp = 0;
@@ -77,13 +78,13 @@ class LoginController extends GetxController{
     }).catchError((_){});
   }
 
-  void resend() {
+  void resend() async{
     /// 重新发送验证码
     if (time != 60) {
       return;
     }
     _timeDown?.cancel();
-    LoginApi.sendSms(phone).then((value) {
+    LoginApi.sendSms(phone, await DeviceUtil.getId()).then((value) {
       _timeDown = Timer.periodic(const Duration(seconds: 1), (timer) {
         if (time >= 1) {
           time--;

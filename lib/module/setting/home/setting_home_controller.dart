@@ -148,6 +148,13 @@ class SettingHomeController extends GetxController {
   }
 
   bool _checkNewVersion(String version) {
-    return version.substring(0, version.lastIndexOf(".")) == thisVersion;
+    List<String> versions = thisVersion.split(".");
+    List<String> searchVersions = version.split(".");
+    for(int i = 0; i < versions.length; i++) {
+      if (int.parse(searchVersions[i]) >  int.parse(versions[i])) {
+        return false;
+      }
+    }
+    return true;
   }
 }

@@ -1,3 +1,4 @@
+import 'package:book_app/log/log.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -15,7 +16,7 @@ Widget smooth() {
       },
       onPageChanged: (index) async {
         controller.pageIndex = index;
-        if (index + 10 >= controller.pages.length &&
+        if (index + 30 >= controller.pages.length &&
             !controller.loading) {
           await controller.pageChangeListen(index);
         }

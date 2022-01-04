@@ -9,8 +9,10 @@ class VideoIndex{
 
  List<Video>? hotList;
 
+ List<Video>? animeList;
 
- VideoIndex({this.carouselList, this.movieList, this.tvList, this.hotList});
+
+ VideoIndex({this.carouselList, this.movieList, this.tvList, this.hotList, this.animeList});
 
   factory VideoIndex.fromJson(Map<String, dynamic> json) {
     List<Video>? carouselList = [];
@@ -33,10 +35,15 @@ class VideoIndex{
       hotList.add(Video.fromJson(data));
     }
 
-    return VideoIndex(carouselList: carouselList, movieList: movieList, tvList: tvList, hotList: hotList);
+    List<Video>? animeList = [];
+    for (var data in json["animeList"]) {
+      animeList.add(Video.fromJson(data));
+    }
+
+    return VideoIndex(carouselList: carouselList, movieList: movieList, tvList: tvList, hotList: hotList, animeList: animeList);
   }
 
   static VideoIndex defaultValue() {
-    return VideoIndex(carouselList: [], movieList: [], tvList: [], hotList: []);
+    return VideoIndex(carouselList: [], movieList: [], tvList: [], hotList: [], animeList: []);
   }
 }

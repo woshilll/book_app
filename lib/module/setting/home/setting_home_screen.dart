@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:get/get.dart';
+import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 
 class SettingHomeScreen extends GetView<SettingHomeController>{
   const SettingHomeScreen({Key? key}) : super(key: key);
@@ -18,7 +19,9 @@ class SettingHomeScreen extends GetView<SettingHomeController>{
         title: Text("设置"),
         centerTitle: true,
       ),
-      body: _body(context),
+      body: SingleChildScrollView(
+        child: _body(context),
+      ),
     );
   }
 

@@ -22,11 +22,11 @@ class ReadScreen extends GetView<ReadController> {
   @override
   Widget build(BuildContext context) {
     controller.context = context;
-    return Scaffold(
-      key: controller.scaffoldKey,
-      drawerEdgeDragWidth: 0,
-      body: WillPopScope(
-        child: Stack(
+    return WillPopScope(
+      child: Scaffold(
+        key: controller.scaffoldKey,
+        drawerEdgeDragWidth: 0,
+        body: Stack(
           children: [
             Positioned(
               top: 0,
@@ -46,12 +46,12 @@ class ReadScreen extends GetView<ReadController> {
             _body(context),
           ],
         ),
-        onWillPop: () async {
-          controller.pop();
-          return false;
-        },
+        drawer: drawer(),
       ),
-      drawer: drawer(),
+      onWillPop: () async {
+        await controller.popRead();
+        return false;
+      },
     );
   }
 
@@ -72,9 +72,30 @@ class ReadScreen extends GetView<ReadController> {
             },
           ),
           Positioned(
-            top: 6,
-            right: 25,
-            child: battery(),
+            top: 0,
+            child: SizedBox(
+              height: MediaQuery.of(context).padding.top,
+              width: MediaQuery.of(context).size.width,
+              child: Container(
+                margin: const EdgeInsets.only(top: 10, bottom: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        alignment: Alignment.centerLeft,
+                        margin: const EdgeInsets.only(left: 15),
+                        child: Text("${controller.book == null ? "" : controller.book!.name}", maxLines: 1, style: const TextStyle(height: 1, color: Colors.grey)),
+                      ),
+                    ),
+                    Container(
+                      alignment: Alignment.centerRight,
+                      margin: const EdgeInsets.only(right: 15),
+                      child: battery(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),

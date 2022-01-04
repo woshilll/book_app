@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:book_app/exception/common_exception.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/util/constant.dart';
@@ -29,8 +30,8 @@ class DioManager {
     _dio ??= Dio(BaseOptions(
         // 请求基地址
         // baseUrl: "http://192.168.72.192:9898",
-        baseUrl: "http://app.woshilll.top",
-        // baseUrl: "http://192.168.31.237:9898",
+        // baseUrl: "http://app.woshilll.top",
+        baseUrl: "http://192.168.31.236:9898",
         // 连接服务器超时时间，单位是毫秒
         connectTimeout: 60 * 1000,
         // 接收数据的最长时限
@@ -39,7 +40,7 @@ class DioManager {
   }
 
   Future download(url, savePath, {Function(int, int)? onProgress, CancelToken? cancelToken}) async{
-    return _dio?.download(url, savePath, onReceiveProgress: onProgress, cancelToken: cancelToken);
+    return await _dio?.download(url, savePath, onReceiveProgress: onProgress, cancelToken: cancelToken);
   }
 
   Future<dynamic> get(
@@ -135,7 +136,7 @@ class DioManager {
 
       if (encrypt) {
         // 是加密
-        var encryptData = EncryptUtil.encryptData(body);
+        var encryptData = await EncryptUtil.encryptData(body);
         body = {
           "encryptData": encryptData[0],
           "encryptAes": encryptData[1]
@@ -178,12 +179,12 @@ class DioManager {
           if (gt.Get.currentRoute == Routes.home) {
             await gt.Get.toNamed(Routes.login);
           } else {
-            await gt.Get.offAndToNamed(Routes.login);
+            await gt.Get.offAndToNamed(Routes.login, arguments: {"route": gt.Get.currentRoute});
           }
           SaveUtil.remove(Constant.token);
-          throw "";
+          throw CommonException("未登录");
         } else {
-          throw responseMap["msg"];
+          throw CommonException(responseMap["msg"]);
         }
       }
       dynamic data = responseMap["data"];
@@ -197,15 +198,13 @@ class DioManager {
       // DioError是指返回值不为200的情况
       // 对错误进行判断
       onErrorInterceptor(e);
+      throw "";
       // 判断是否断网了
+    } on CommonException catch (e) {
+      EasyLoading.showError(e.message);
       throw "";
     } catch (e) {
       // 其他一些意外的报错
-      if (e is String) {
-        if (e.isNotEmpty) {
-          EasyLoading.showError(e);
-        }
-      }
       throw "";
     }
   }

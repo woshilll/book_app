@@ -5,10 +5,12 @@ import 'package:book_app/log/log.dart';
 import 'package:book_app/model/search/search_history.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/util/constant.dart';
+import 'package:book_app/util/html_parse_util.dart';
 import 'package:book_app/util/save_util.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 
 class SearchController extends GetxController {
   late BuildContext context = globalContext;
@@ -19,8 +21,10 @@ class SearchController extends GetxController {
   /// 历史记录
   List<SearchHistory> histories = [];
   /// 站点列表
-  List<SearchHistory> sites = [];
+  List<SearchHistory> sites = SearchHistory.defaultList();
   String site = "";
+  FloatingSearchBarController searchBarController = FloatingSearchBarController();
+  var searchText = "";
   @override
   Future<void> onInit() async {
     super.onInit();
@@ -38,10 +42,10 @@ class SearchController extends GetxController {
   void onReady() async{
     super.onReady();
     // 获取站点列表
-    sites = await BookApi.getSites();
-    if (sites.isNotEmpty && sites[0].site != null) {
-      site = sites[0].site!;
-    }
+    // sites = await BookApi.getSites();
+    // if (sites.isNotEmpty && sites[0].site != null) {
+    //   site = sites[0].site!;
+    // }
     update(["sites"]);
   }
   @override
@@ -83,6 +87,10 @@ class SearchController extends GetxController {
       this.site = site;
       update(["sites"]);
     }
+  }
+
+  void toSearch(siteIndex) {
+    Get.offAndToNamed(Routes.searchValue, arguments: {"keyword": "$searchText 小说", "site": sites[siteIndex].site, "siteIndex": siteIndex, "sites": sites});
   }
 
 

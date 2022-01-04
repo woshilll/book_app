@@ -173,6 +173,12 @@ class ThemeConfig {
           fontWeight: FontWeight.w500,
         ),
       ),
+      textButtonTheme: TextButtonThemeData(
+        style: ButtonStyle(
+          minimumSize: MaterialStateProperty.all(const Size(1, 1)),
+          padding: MaterialStateProperty.all(EdgeInsets.zero),
+        )
+      )
     );
   }
 
