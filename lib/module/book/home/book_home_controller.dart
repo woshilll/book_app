@@ -20,6 +20,7 @@ class BookHomeController extends GetxController {
   static final BookDbProvider _bookDbProvider = BookDbProvider();
   static final ChapterDbProvider _chapterDbProvider = ChapterDbProvider();
   List<Book> books = [];
+  List<Book> localBooks = [];
   @override
   void onInit() async{
     super.onInit();
@@ -27,26 +28,32 @@ class BookHomeController extends GetxController {
   }
 
   getBookList() async{
+    localBooks.clear();
     books = await _bookDbProvider.getBooks();
+    for (var book in books) {
+      if (book.type == 2) {
+        localBooks.add(book);
+      }
+    }
+    books.removeWhere((element) => element.type == 2);
     update(['bookList']);
   }
   insertBook() async {
     await _bookDbProvider.commonInsert(Book(name: '伏天氏', author: '净无痕', indexImg: 'https://www.biqooge.com/files/article/image/0/1/1s.jpg', url: 'https://www.biqooge.com/0_1/',));
     await getBookList();
   }
-  deleteBook(index) async {
-    Book book = books[index];
+  deleteBook(Book book) async {
     // 数据库删除
     await _bookDbProvider.commonDelete(book.id);
     // 删除对应的章节信息
     await _chapterDbProvider.deleteByBookId(book.id);
     Log.i("删除 --> $book");
     books.removeWhere((element) => element.id == book.id);
+    localBooks.removeWhere((element) => element.id == book.id);
     update(['bookList']);
   }
 
-  getBookInfo(index) async{
-    Book selected = books[index];
+  getBookInfo(Book selected) async{
     dynamic count = await _chapterDbProvider.getChapterCount(selected.id);
     if (count <= 0) {
       // 没有内容
@@ -82,7 +89,7 @@ class BookHomeController extends GetxController {
   manageChoose(String value) async{
     switch(value) {
       case "1":
-        await _selectTextFile();
+        _selectTextFile();
         break;
     }
   }
@@ -125,7 +132,7 @@ class BookHomeController extends GetxController {
         chapters.add(chapter);
         Book book = Book(type: 2);
         book.name = fileName;
-        book.url = "";
+        book.url = filePath;
         int bookId = await _bookDbProvider.commonInsert(book);
         for (Chapter item in chapters) {
           item.bookId = bookId;

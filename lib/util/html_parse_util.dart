@@ -2,6 +2,7 @@
 
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -12,7 +13,7 @@ import 'package:html/dom.dart';
 
 import 'package:book_app/api/dio/dio_manager.dart';
 import 'package:book_app/log/log.dart';
-import 'package:fast_gbk/fast_gbk.dart';
+import 'package:path_provider/path_provider.dart';
 
 class HtmlParseUtil {
   static final List<String> IGNORE_CONTENT_HTML_TAG = ["a", "option", "h1", "h2", "strong", "font", "button", "script"];
@@ -21,8 +22,10 @@ class HtmlParseUtil {
     if (url.contains("m.")) {
       url = url.replaceFirst("m.", "www.");
     }
-    var html = await http.get(Uri.parse(url), headers: headers());
-    Document document = parse(gbk.decode(html.bodyBytes));
+    if (url.contains("all.html")) {
+      url = url.replaceAll("all.html", "");
+    }
+    Document document = parse(await getFileString(url));
     var body = document.body;
     var aTags = body?.getElementsByTagName("a");
     Map<String, List<Map<String, dynamic>>> parseMap = {};
@@ -48,6 +51,7 @@ class HtmlParseUtil {
       index = index + 1;
       if (parseMap.containsKey(prefix)) {
         List<Map<String, dynamic>> chapters = parseMap[prefix]!;
+        chapters.removeWhere((element) => element["name"] == chapter["name"]);
         chapters.add(chapter);
         parseMap[prefix] = chapters;
       } else {
@@ -128,18 +132,13 @@ class HtmlParseUtil {
     for (var element in chapters) {
       returnChapters.add(Chapter(name: element["name"], url: url + element["url"]));
     }
+    _distinct(returnChapters);
     return returnChapters;
   }
 
 
   static parseContent(String url) async{
-    var html = await http.get(Uri.parse(url));
-    Document document;
-    try {
-      document = parse(gbk.decode(html.bodyBytes));
-    } catch(e) {
-      document = parse(html.body);
-    }
+    Document document = parse(await getFileString(url));
     var body = document.body;
     List<Element> elements = [];
     getElement(elements, body!);
@@ -191,6 +190,17 @@ class HtmlParseUtil {
   }
 
   static formatContent(String content) {
-    return content.replaceAll("&nbsp;", "").replaceAll("<br>", "\n").replaceAll(RegExp(r"<.*>.*</.*>"), "").replaceAll(RegExp(r".*(www|http)+.*\n"), "");
+    return content.replaceAll("&nbsp;", "").replaceAll("<br>", "\n").replaceAll(RegExp(r"<.*>.*|.*</.*>|.*<!.*>"), "").replaceAll(RegExp(r".*(www|http)+.*\n"), "");
+  }
+
+  static getFileString(String url) async{
+    var dir = await getExternalStorageDirectory();
+    String filePath = "${dir!.path}/book/temp.txt";
+    await DioManager.instance.download(url, filePath);
+    File file = File(filePath);
+    return file.readAsStringSync();
+  }
+
+  static void _distinct(List<Chapter> returnChapters) {
   }
 }

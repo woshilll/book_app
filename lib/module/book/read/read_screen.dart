@@ -4,6 +4,7 @@ import 'package:book_app/log/log.dart';
 import 'package:book_app/model/read_page_type.dart';
 import 'package:book_app/module/book/read/component/battery.dart';
 import 'package:book_app/module/book/read/component/bottom.dart';
+import 'package:book_app/module/book/read/component/cover.dart';
 import 'package:book_app/module/book/read/component/drawer.dart';
 import 'package:book_app/module/book/read/component/point.dart';
 import 'package:book_app/module/book/read/component/smooth.dart';
@@ -70,32 +71,6 @@ class ReadScreen extends GetView<ReadController> {
               }
               return Container();
             },
-          ),
-          Positioned(
-            top: 0,
-            child: SizedBox(
-              height: MediaQuery.of(context).padding.top,
-              width: MediaQuery.of(context).size.width,
-              child: Container(
-                margin: const EdgeInsets.only(top: 10, bottom: 10),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        alignment: Alignment.centerLeft,
-                        margin: const EdgeInsets.only(left: 15),
-                        child: Text("${controller.book == null ? "" : controller.book!.name}", maxLines: 1, style: const TextStyle(height: 1, color: Colors.grey)),
-                      ),
-                    ),
-                    Container(
-                      alignment: Alignment.centerRight,
-                      margin: const EdgeInsets.only(right: 15),
-                      child: battery(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ),
         ],
       ),

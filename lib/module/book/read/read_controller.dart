@@ -389,10 +389,10 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     _calWordHeightAndWidth();
     _calMaxLines(firstPage: true);
     // String content = FontUtil.alphanumericToFullLength(chapter.content);
-    String content = chapter.content!;
+    String content = chapter.content??"";
     if (content.isEmpty) {
       list.add(
-          ContentPage("", contentStyle, 1, chapter.id, chapter.name, _contentWidth(), noContent: true));
+          ContentPage("", 1, chapter.id, chapter.name, _contentWidth(), noContent: true));
       return list;
     }
     _painter.text = TextSpan(text: content, style: contentStyle);
@@ -408,7 +408,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     do {
       String subContent = content.substring(0, offset);
       list.add(
-          ContentPage(subContent, contentStyle, i, chapter.id, chapter.name, _contentWidth()));
+          ContentPage(subContent, i, chapter.id, chapter.name, _contentWidth()));
       i++;
       if (i == 2) {
         _calMaxLines();
@@ -427,7 +427,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     } while (offset < content.characters.length);
     if (offset > 0) {
       list.add(
-          ContentPage(content, contentStyle, i, chapter.id, chapter.name, _contentWidth()));
+          ContentPage(content, i, chapter.id, chapter.name, _contentWidth()));
     }
     return list;
   }
@@ -452,6 +452,9 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
 
   // 计算进度
   void calReadProgress() {
+    if (pages.isEmpty) {
+      return;
+    }
     var chapterId = pages[pageIndex].chapterId;
     readChapterIndex =  chapters.indexWhere((element) => chapterId == element.id);
   }
@@ -463,7 +466,6 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
 
   openDrawer() async{
     menuBarMove = (readChapterIndex / (chapters.length - 1)) * (screenHeight - screenTop - 82);
-    Log.i(menuBarMove);
     Timer(const Duration(milliseconds: 400), () {
       scaffoldKey.currentState!.openDrawer();
       Timer(const Duration(milliseconds: 300), () {
@@ -539,7 +541,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     var value = await Get.toNamed(Routes.readSetting, arguments: {"config": temp});
     if (value != null && value["config"] != null) {
       ReadSettingConfig config = value["config"];
-      if (config.fontSize != readSettingConfig.fontSize || config.fontColor != readSettingConfig.fontColor) {
+      if (config.fontSize != readSettingConfig.fontSize) {
         // 需要重新加载
         await _reload(config);
       }
@@ -673,13 +675,13 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       readSettingConfig.backgroundColor = config.backgroundColor;
       readSettingConfig.fontColor = config.fontColor;
       update(["backgroundColor"]);
-      await _reload(readSettingConfig);
+      // await _reload(readSettingConfig);
       isDark = false;
       update(["content", "bottomType"]);
     } else {
       readSettingConfig = ReadSettingConfig.defaultDarkConfig(readSettingConfig.fontSize, readSettingConfig.fontHeight);
       update(["backgroundColor"]);
-      await _reload(readSettingConfig);
+      // await _reload(readSettingConfig);
       isDark = true;
       update(["content", "bottomType"]);
     }

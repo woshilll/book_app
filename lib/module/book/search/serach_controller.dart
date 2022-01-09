@@ -93,5 +93,9 @@ class SearchController extends GetxController {
     Get.offAndToNamed(Routes.searchValue, arguments: {"keyword": "$searchText 小说", "site": sites[siteIndex].site, "siteIndex": siteIndex, "sites": sites});
   }
 
+  void pop() {
+    Get.back();
+  }
+
 
 }

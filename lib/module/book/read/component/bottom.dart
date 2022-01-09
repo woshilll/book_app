@@ -474,7 +474,7 @@ Widget _bottomType(ReadController controller) {
   return Container();
 }
 
-List<Widget> _colors(controller) {
+List<Widget> _colors(ReadController controller) {
   List<Widget> list =
       List<Widget>.generate(controller.backgroundColors.length, (index) {
     return GestureDetector(

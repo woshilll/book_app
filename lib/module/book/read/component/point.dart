@@ -16,7 +16,7 @@ Widget point() {
     builder: (controller) {
       return AnimatedOpacity(
         opacity: controller.pointShow ? 1 : 0,
-        duration: Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 200),
         child: content(controller.context, controller.pageIndex, controller),
       );
     },

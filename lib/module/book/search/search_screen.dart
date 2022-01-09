@@ -129,7 +129,9 @@ class SearchScreen extends GetView<SearchController> {
       transition: CircularFloatingSearchBarTransition(),
       leadingActions: [
         TextButton(
-            onPressed: (){},
+            onPressed: (){
+              controller.pop();
+            },
             child: const Text("取消")
         )
       ],

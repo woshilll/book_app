@@ -31,7 +31,7 @@ class SearchHistory extends Base{
   }
   static List<SearchHistory> defaultList() {
     List<SearchHistory> res = [];
-    res.add(SearchHistory(label: "百度搜索", site: "https://m.baidu.com/s?wd=%s"));
+    // res.add(SearchHistory(label: "百度搜索", site: "https://m.baidu.com/s?wd=%s"));
     res.add(SearchHistory(label: "神马小说", site: "https://quark.sm.cn/s?q=%s&from=smor&safe=1"));
     res.add(SearchHistory(label: "360搜索", site: "https://m.so.com/s?q=%s"));
     res.add(SearchHistory(label: "必应搜索", site: "https://cn.bing.com/search?q=%s"));
