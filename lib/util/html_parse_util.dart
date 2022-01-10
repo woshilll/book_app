@@ -14,6 +14,7 @@ import 'package:html/dom.dart';
 import 'package:book_app/api/dio/dio_manager.dart';
 import 'package:book_app/log/log.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:fast_gbk/fast_gbk.dart';
 
 class HtmlParseUtil {
   static final List<String> IGNORE_CONTENT_HTML_TAG = ["a", "option", "h1", "h2", "strong", "font", "button", "script"];
@@ -198,7 +199,20 @@ class HtmlParseUtil {
     String filePath = "${dir!.path}/book/temp.txt";
     await DioManager.instance.download(url, filePath);
     File file = File(filePath);
-    return file.readAsStringSync();
+    try {
+      return file.readAsStringSync();
+    } catch(err) {
+      // var stream = file.openRead();
+      // String str = "";
+      // stream.transform(gbk.decoder)
+      //     .transform(const LineSplitter())
+      //     .listen((line) {
+      //   str += line;
+      // });
+      String res = gbk.decode(file.readAsBytesSync());
+      Log.i(res);
+      return res;
+    }
   }
 
   static void _distinct(List<Chapter> returnChapters) {

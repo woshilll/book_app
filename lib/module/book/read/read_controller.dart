@@ -172,7 +172,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     }
     loading = true;
     if (dialog) {
-      await EasyLoading.show();
+      await EasyLoading.show(maskType: EasyLoadingMaskType.clear);
     }
     getContent(chapter, dialog).then((value) {
       initPageWithReturn(chapter).then((list) async{
@@ -184,17 +184,17 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
         } else {
           pages.addAll(list);
         }
+        if (finishFunc != null) {
+          finishFunc;
+        }
+        await EasyLoading.dismiss();
+        loading = false;
         update(["content"]);
         if (firstInit && book!.curPage != null) {
           pageIndex = book!.curPage! - 1;
           if (readPageType == ReadPageType.smooth) {
             contentPageController.jumpToPage(pageIndex);
           }
-        }
-        await EasyLoading.dismiss();
-        loading = false;
-        if (finishFunc != null) {
-          finishFunc;
         }
       });
     });
@@ -288,10 +288,10 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       pageIndex = index;
     } else {
       pages.clear();
+      pageIndex = 0;
       bool dialog = (chapter.content == null || chapter.content!.isEmpty);
-      initPage(chapter, dialog: dialog, finishFunc: () {
-        contentPageController.jumpToPage(0);
-        pageIndex = 0;
+      await initPage(chapter, dialog: dialog, finishFunc: () {
+        contentPageController.jumpToPage(pageIndex);
       });
     }
     if (pop) {
@@ -489,6 +489,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       await jumpChapter(readChapterIndex - 1, pop: false);
     }
     readChapterIndex -= 1;
+    update(["chapterChange"]);
   }
 
   /// 下一章
@@ -497,15 +498,17 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       EasyLoading.showToast("没有更多了");
       return;
     }
-    Chapter next = chapters[readChapterIndex + 1];
-    int index = pages.indexWhere((element) => element.chapterId == next.id);
-    if (index >= 0) {
-      // 已缓存
-      contentPageController.jumpToPage(index);
-    } else {
-      await jumpChapter(readChapterIndex + 1, pop: false);
-    }
+    await jumpChapter(readChapterIndex + 1, pop: false);
+    // Chapter next = chapters[readChapterIndex + 1];
+    // int index = pages.indexWhere((element) => element.chapterId == next.id);
+    // if (index >= 0) {
+    //   // 已缓存
+    //   contentPageController.jumpToPage(index);
+    // } else {
+    //   await jumpChapter(readChapterIndex + 1, pop: false);
+    // }
     readChapterIndex += 1;
+    update(["chapterChange"]);
   }
 
   void changeBottomType(String type) {

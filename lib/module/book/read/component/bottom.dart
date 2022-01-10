@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/limit_util.dart';
+import 'package:book_app/util/time_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -311,8 +312,10 @@ Widget _bottomType(ReadController controller) {
                 style: TextStyle(color: Colors.white, fontSize: 16),
               ),
             ),
-            onTap: () async {
-              await controller.nextChapter();
+            onTap: () => {
+              LimitUtil.throttle(() async{
+                await controller.nextChapter();
+              })
             },
           ),
         ),

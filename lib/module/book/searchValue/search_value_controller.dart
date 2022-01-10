@@ -25,6 +25,7 @@ class SearchValueController extends GetxController {
   final BookDbProvider _bookDbProvider = BookDbProvider();
   final ChapterDbProvider _chapterDbProvider = ChapterDbProvider();
   String? site;
+  bool showParseButton = false;
   @override
   void onInit() async {
     super.onInit();

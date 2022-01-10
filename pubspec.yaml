@@ -86,6 +86,7 @@ dependencies:
   font_awesome_flutter: ^9.2.0
   flutter_inappwebview: ^5.3.2
   modal_bottom_sheet: ^2.0.0
+  fast_gbk: ^1.0.0
 
 
 dev_dependencies:

@@ -365,6 +365,13 @@ packages:
       url: "https://mirrors.tuna.tsinghua.edu.cn/dart-pub/"
     source: hosted
     version: "1.2.0"
+  fast_gbk:
+    dependency: "direct main"
+    description:
+      name: fast_gbk
+      url: "https://mirrors.tuna.tsinghua.edu.cn/dart-pub/"
+    source: hosted
+    version: "1.0.0"
   ffi:
     dependency: transitive
     description:
