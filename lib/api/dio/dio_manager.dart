@@ -127,6 +127,7 @@ class DioManager {
     };
 
     try {
+      SaveUtil.setString(Constant.initRoute, "/home");
       Log.i("发起请求 $url");
       String? token = SaveUtil.getString(Constant.token);
       if (token != null) {

@@ -30,13 +30,13 @@ class App extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    Get.put(AppController());
     String initRoute = Routes.splash;
     var splashTrue = SaveUtil.getTrue(Constant.splashTrue);
     if (splashTrue != null && splashTrue) {
-      // 去首页
-      initRoute = Routes.home;
+      // 去默认页
+      initRoute = SaveUtil.getString(Constant.initRoute) ?? Routes.home;
     }
-    Get.put(AppController());
     return GetBuilder<AppController>(
       id: "fullScreen",
       builder: (controller) {

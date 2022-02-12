@@ -6,6 +6,8 @@ import 'dart:io';
 
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
@@ -15,18 +17,20 @@ import 'package:book_app/api/dio/dio_manager.dart';
 import 'package:book_app/log/log.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:fast_gbk/fast_gbk.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class HtmlParseUtil {
   static final List<String> IGNORE_CONTENT_HTML_TAG = ["a", "option", "h1", "h2", "strong", "font", "button", "script"];
 
   static parseChapter(String url) async{
+    String originUrl = url;
     if (url.contains("m.")) {
       url = url.replaceFirst("m.", "www.");
     }
     if (url.contains("all.html")) {
       url = url.replaceAll("all.html", "");
     }
-    Document document = parse(await getFileString(url));
+    Document document = parse(await getFileString(url, originUrl: originUrl));
     var body = document.body;
     var aTags = body?.getElementsByTagName("a");
     Map<String, List<Map<String, dynamic>>> parseMap = {};
@@ -133,22 +137,28 @@ class HtmlParseUtil {
     for (var element in chapters) {
       returnChapters.add(Chapter(name: element["name"], url: url + element["url"]));
     }
-    _distinct(returnChapters);
+    Log.i("章节数 --- ${returnChapters.length}");
     return returnChapters;
   }
 
 
   static parseContent(String url) async{
-    Document document = parse(await getFileString(url));
-    var body = document.body;
-    List<Element> elements = [];
-    getElement(elements, body!);
-    String content = findMaxChineseContent(elements);
-    if (content.isEmpty) {
-      EasyLoading.showToast("解析失败");
-      return;
+    try {
+      Document document = parse(await getFileString(url));
+      var body = document.body;
+      List<Element> elements = [];
+      getElement(elements, body!);
+      String content = findMaxChineseContent(elements);
+      if (content.isEmpty) {
+        EasyLoading.showToast("解析失败");
+        return;
+      }
+      return formatContent(content);
+    } catch(err) {
+      Log.e(url);
+      await EasyLoading.showToast("解析失败");
+      // EasyLoading.dismiss();
     }
-    return formatContent(content);
   }
   static getElement(List<Element> elements, Element parent) {
     if (IGNORE_CONTENT_HTML_TAG.contains(parent.localName)) {
@@ -194,27 +204,28 @@ class HtmlParseUtil {
     return content.replaceAll("&nbsp;", "").replaceAll("<br>", "\n").replaceAll(RegExp(r"<.*>.*|.*</.*>|.*<!.*>"), "").replaceAll(RegExp(r".*(www|http)+.*\n"), "");
   }
 
-  static getFileString(String url) async{
-    var dir = await getExternalStorageDirectory();
-    String filePath = "${dir!.path}/book/temp.txt";
-    await DioManager.instance.download(url, filePath);
-    File file = File(filePath);
+  static getFileString(String url, {String? originUrl}) async{
+    File file = File(await getFilePath(url, originUrl: originUrl));
     try {
       return file.readAsStringSync();
     } catch(err) {
-      // var stream = file.openRead();
-      // String str = "";
-      // stream.transform(gbk.decoder)
-      //     .transform(const LineSplitter())
-      //     .listen((line) {
-      //   str += line;
-      // });
       String res = gbk.decode(file.readAsBytesSync());
-      Log.i(res);
       return res;
     }
   }
-
-  static void _distinct(List<Chapter> returnChapters) {
+  static getFilePath(String url, {String? originUrl}) async{
+    var dir = await getExternalStorageDirectory();
+    String filePath = "${dir!.path}/book/temp.txt";
+    try {
+      await DioManager.instance.download(url, filePath);
+      return filePath;
+    } catch(err) {
+      if (originUrl != null) {
+        await DioManager.instance.download(originUrl, filePath);
+        return filePath;
+      } else {
+        rethrow;
+      }
+    }
   }
 }

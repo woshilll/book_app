@@ -73,9 +73,6 @@ class BookHomeController extends GetxController {
       selected.chapters = [];
     }
     var value = await Get.toNamed(Routes.read, arguments: {"book": selected})!;
-    var chapterId = value["chapterId"];
-    var curPage = value["curPage"];
-    await _bookDbProvider.updateCurChapter(selected.id, chapterId, curPage);
     await getBookList();
     await DeviceDisplayBrightness.setBrightness(value["brightness"]);
   }
@@ -90,6 +87,9 @@ class BookHomeController extends GetxController {
     switch(value) {
       case "1":
         _selectTextFile();
+        break;
+      case "3":
+        Get.toNamed(Routes.settingHome);
         break;
     }
   }

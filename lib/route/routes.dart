@@ -22,4 +22,15 @@ abstract class Routes {
   /// 电影
   static const movieHome = '/movie/home';
   static const movieInfo = '/movie/info';
+
+  static String getRouteName(String? route) {
+    switch(route) {
+      case bookHome:
+        return "小说";
+      case movieHome:
+        return "电影";
+      default:
+        return "默认";
+    }
+  }
 }

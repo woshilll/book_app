@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:audio_service/audio_service.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:book_app/api/chapter_api.dart';
+import 'package:book_app/app_controller.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
@@ -20,6 +21,7 @@ import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/constant.dart';
 import 'package:book_app/util/font_util.dart';
 import 'package:book_app/util/html_parse_util.dart';
+import 'package:book_app/util/notify/counter_notify.dart';
 import 'package:book_app/util/save_util.dart';
 import 'package:device_display_brightness/device_display_brightness.dart';
 import 'package:flutter/services.dart';
@@ -44,7 +46,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   /// 阅读的页
   List<ContentPage> pages = [];
   /// 当前阅读页索引
-  int pageIndex = 0;
+  CounterNotify pageIndex = CounterNotify();
   /// 页面监听
   PageController contentPageController = PageController();
   /// 画笔 https://www.jianshu.com/p/f713e5a36da5
@@ -53,7 +55,8 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   bool loading = false;
   /// 阅读进度
   int readChapterIndex = 0;
-  var scaffoldKey = GlobalKey<ScaffoldState>();
+  // ignore: prefer_typing_uninitialized_variables
+  final scaffoldKey = GlobalKey<ScaffoldState>();
   /// 目录控制器
   ItemScrollController menuController = ItemScrollController();
   ItemPositionsListener menuPositionsListener = ItemPositionsListener.create();
@@ -100,6 +103,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   double titleHeight = 0;
   AnimationController? coverController;
   final double paddingWidth = 40;
+  List<Chapter> menuItems = [];
   @override
   void onInit() async{
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -117,6 +121,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     _batteryListen();
     await _batteryCap();
     _menuListen();
+    _pageIndexChangeListen();
   }
 
   @override
@@ -191,9 +196,9 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
         loading = false;
         update(["content"]);
         if (firstInit && book!.curPage != null) {
-          pageIndex = book!.curPage! - 1;
+          pageIndex.setCount(book!.curPage! - 1);
           if (readPageType == ReadPageType.smooth) {
-            contentPageController.jumpToPage(pageIndex);
+            contentPageController.jumpToPage(pageIndex.count);
           }
         }
       });
@@ -268,9 +273,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   /// 页面返回监听
   popRead() async{
     ReadController controller = Get.find();
-    var chapterId = controller.pages[controller.pageIndex].chapterId;
-    var curPageIndex = controller.pages[controller.pageIndex].index;
-    Get.back(result: {"brightness": brightnessTemp, "chapterId": chapterId, "curPage": curPageIndex});
+    Get.back(result: {"brightness": brightnessTemp});
     if (controller.rotateScreen) {
       SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
@@ -280,18 +283,18 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
 
   /// 跳转章节
   jumpChapter(index, {bool pop = true}) async{
-    Chapter chapter = chapters[index];
+    Chapter chapter = menuItems[index];
     index = pages.indexWhere((element) => chapter.id == element.chapterId);
     if (index >= 0) {
       // 已存在
       contentPageController.jumpToPage(index);
-      pageIndex = index;
+      pageIndex.setCount(index);
     } else {
       pages.clear();
-      pageIndex = 0;
+      pageIndex.resetCount();
       bool dialog = (chapter.content == null || chapter.content!.isEmpty);
       await initPage(chapter, dialog: dialog, finishFunc: () {
-        contentPageController.jumpToPage(pageIndex);
+        contentPageController.jumpToPage(pageIndex.count);
       });
     }
     if (pop) {
@@ -304,7 +307,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     if (loading) {
       return;
     }
-    int index = pageIndex;
+    int index = pageIndex.count;
     if (index < pages.length - 2) {
       _pageStartStyle();
       // 有下一页
@@ -332,9 +335,9 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   _nextPageStyle(index) {
     if (readPageType == ReadPageType.smooth) {
       contentPageController.jumpToPage(index + 1);
-      pageIndex = index + 1;
+      pageIndex.setCount(index + 1);
     } else if (readPageType == ReadPageType.point) {
-      pageIndex = index + 1;
+      pageIndex.setCount(index + 1);
       pointShow = true;
       update(["point"]);
     }
@@ -344,11 +347,11 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     if (loading) {
       return;
     }
-    int index = pageIndex;
+    int index = pageIndex.count;
     if (index > 0) {
       // 有上一页
       _pageStartStyle();
-      pageIndex = index - 1;
+      pageIndex.setCount(index - 1);
       _prePageStyle();
     } else {
       // 无上一页
@@ -363,7 +366,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
           initPageWithReturn(pre).then((returnPages) {
             pages.insertAll(0, returnPages);
             update(["content"]);
-            pageIndex = returnPages.length - 1;
+            pageIndex.setCount(returnPages.length - 1);
             _prePageStyle();
             EasyLoading.dismiss();
           });
@@ -375,7 +378,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
 
   _prePageStyle() {
     if (readPageType == ReadPageType.smooth) {
-      contentPageController.jumpToPage(pageIndex);
+      contentPageController.jumpToPage(pageIndex.count);
 
     } else if (readPageType == ReadPageType.point) {
       pointShow = true;
@@ -455,7 +458,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     if (pages.isEmpty) {
       return;
     }
-    var chapterId = pages[pageIndex].chapterId;
+    var chapterId = pages[pageIndex.count].chapterId;
     readChapterIndex =  chapters.indexWhere((element) => chapterId == element.id);
   }
 
@@ -465,15 +468,28 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   }
 
   openDrawer() async{
-    menuBarMove = (readChapterIndex / (chapters.length - 1)) * (screenHeight - screenTop - 82);
+    menuBarMove = 0;
+    // update(["refreshKey"]);
     Timer(const Duration(milliseconds: 400), () {
       scaffoldKey.currentState!.openDrawer();
-      Timer(const Duration(milliseconds: 300), () {
-        menuController.jumpTo(index: readChapterIndex);
+      Timer(const Duration(milliseconds: 200), () {
+        menuItems = _initItem();
+        update(["loadMenuItems"]);
       });
     });
   }
-
+  List<Chapter> _initItem() {
+    if (controller.pages.isEmpty) {
+      return [];
+    }
+    var chapterId = controller.pages[controller.pageIndex.count].chapterId;
+    List<Chapter> res = [];
+    int index = controller.chapters.indexWhere((element) => element.id == chapterId);
+    for(int i = index; i < controller.chapters.length && i < index + 30; i++) {
+      res.add(controller.chapters[i]);
+    }
+    return res;
+  }
   /// 上一章
   preChapter() async{
     if (readChapterIndex <= 0) {
@@ -558,7 +574,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   _reload(ReadSettingConfig config) async{
     await EasyLoading.show(maskType: EasyLoadingMaskType.clear);
     contentStyle = TextStyle(color: hexToColor(config.fontColor), fontSize: config.fontSize, height: config.fontHeight);
-    int chapterIndex = chapters.indexWhere((element) => pages[pageIndex].chapterId == element.id);
+    int chapterIndex = chapters.indexWhere((element) => pages[pageIndex.count].chapterId == element.id);
     pages.clear();
     await jumpChapter(chapterIndex, pop: false);
     await EasyLoading.dismiss();
@@ -583,27 +599,24 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       const SystemUiOverlayStyle(statusBarColor: Colors.transparent, systemNavigationBarColor: Colors.transparent, systemNavigationBarDividerColor: Colors.transparent);
       SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
     }
-
-    // await audioHandler.stop();
-    // await audioHandler.updateQueue([]);
   }
 
   void initAudio() {
-    HomeController homeController = Get.find();
+    AppController homeController = Get.find();
     audioHandler = homeController.audioHandler;
   }
 
   play() async{
-    HomeController homeController = Get.find();
+    AppController homeController = Get.find();
     await audioHandler.pause();
     await audioHandler.updateQueue([]);
     // 直接加载一整章的小说
-    int lastIndex = pages.lastIndexWhere((element) => element.chapterId == pages[pageIndex].chapterId);
-    for (int i = pageIndex; i <= lastIndex; i++) {
+    int lastIndex = pages.lastIndexWhere((element) => element.chapterId == pages[pageIndex.count].chapterId);
+    for (int i = pageIndex.count; i <= lastIndex; i++) {
       await audioHandler.addQueueItem(MediaItem(
-          id: pages[pageIndex].chapterId.toString(),
+          id: pages[pageIndex.count].chapterId.toString(),
           album: book!.name,
-          title: pages[pageIndex].chapterName.toString(),
+          title: pages[pageIndex.count].chapterName.toString(),
           extras: <String, String>{"content": pages[i].content, "type": "1"}
       ));
     }
@@ -743,7 +756,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
 
   /// 重新加载章节
   reloadPage() async{
-    var chapterId = pages[pageIndex].chapterId;
+    var chapterId = pages[pageIndex.count].chapterId;
     int firstIndex = pages.indexWhere((element) => chapterId == element.chapterId);
     pages.removeWhere((element) => element.chapterId == chapterId);
     Chapter chapter = chapters.firstWhere((element) => element.id == chapterId);
@@ -775,6 +788,15 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
 
   void _menuListen() {
     menuPositionsListener.itemPositions.addListener(() {
+    });
+  }
+
+  void _pageIndexChangeListen() {
+    pageIndex.addListener(() {
+      final index = pageIndex.count;
+      if (index < pages.length) {
+        _bookDbProvider.updateCurChapter(book!.id, pages[index].chapterId, pages[index].index);
+      }
     });
   }
 

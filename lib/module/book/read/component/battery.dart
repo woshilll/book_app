@@ -7,8 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'dart:math' as math;
+/// 充电时颜色
 Color activeColor = Theme.of(globalContext).primaryColor;
+/// 放电颜色
 Color unActiveColor = Colors.grey;
+/// 电量低于20
+Color warningColor = Colors.orangeAccent;
+/// 电量低于10
+Color dangerColor = Colors.redAccent;
 /// 底部电池和时间
 Widget battery() {
 
@@ -49,24 +55,30 @@ Widget battery() {
         );
       } else {
         // 放电
+        Color color = unActiveColor;
+        if (controller.batteryLevel <= 10) {
+          color = dangerColor;
+        } else if (controller.batteryLevel <= 20) {
+          color = warningColor;
+        }
         return Row(
           children: [
             Container(
               width: 28,
               decoration: BoxDecoration(
-                  border: Border.all(color: unActiveColor)
+                  border: Border.all(color: color)
               ),
               child: Container(
                 margin: const EdgeInsets.all(1),
                 alignment: Alignment.center,
-                child: Text("${controller.batteryLevel}", style: TextStyle(fontSize: 9, color: unActiveColor),textScaleFactor: MediaQuery.of(globalContext).textScaleFactor,),
+                child: Text("${controller.batteryLevel}", style: TextStyle(fontSize: 9, color: color),textScaleFactor: MediaQuery.of(globalContext).textScaleFactor,),
               ),
             ),
             Container(
               margin: const EdgeInsets.only(left: 1),
               width: 1,
               height: 6,
-              color: unActiveColor,
+              color: color,
             ),
             Container(
               margin: const EdgeInsets.only(left: 5),

@@ -17,37 +17,42 @@ import 'package:get/get.dart';
 
 import 'component/custom_drawer.dart';
 
-class ReadScreen extends GetView<ReadController> {
+class ReadScreen extends GetView<ReadController>{
   const ReadScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     controller.context = context;
     return WillPopScope(
-      child: Scaffold(
-        key: controller.scaffoldKey,
-        drawerEdgeDragWidth: 0,
-        body: Stack(
-          children: [
-            Positioned(
-              top: 0,
-              right: 0,
-              left: 0,
-              bottom: 0,
-              child: GetBuilder<ReadController>(
-                id: "backgroundColor",
-                builder: (controller) {
-                  return Container(
-                    color: hexToColor(
-                        controller.readSettingConfig.backgroundColor),
-                  );
-                },
-              ),
+      child: GetBuilder<ReadController>(
+        id: "refreshKey",
+        builder: (controller) {
+          return Scaffold(
+            key: controller.scaffoldKey,
+            drawerEdgeDragWidth: 0,
+            body: Stack(
+              children: [
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  left: 0,
+                  bottom: 0,
+                  child: GetBuilder<ReadController>(
+                    id: "backgroundColor",
+                    builder: (controller) {
+                      return Container(
+                        color: hexToColor(
+                            controller.readSettingConfig.backgroundColor),
+                      );
+                    },
+                  ),
+                ),
+                _body(context),
+              ],
             ),
-            _body(context),
-          ],
-        ),
-        drawer: drawer(),
+            drawer: drawer(),
+          );
+        },
       ),
       onWillPop: () async {
         await controller.popRead();

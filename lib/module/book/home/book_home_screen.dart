@@ -5,6 +5,7 @@ import 'package:book_app/module/book/home/book_home_controller.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/util/bar_util.dart';
 import 'package:book_app/util/no_shadow_scroll_behavior.dart';
+import 'package:book_app/util/size_fit_util.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
@@ -20,6 +21,9 @@ class BookHomeScreen extends GetView<BookHomeController> {
 
   @override
   Widget build(BuildContext context) {
+    SizeFitUtil.initialize(context);
+    ScreenUtil.init(BoxConstraints(maxWidth: MediaQuery.of(context).size.width, maxHeight: MediaQuery.of(context).size.height));
+    globalContext = context;
     return Scaffold(
       appBar: AppBar(
         title: const Text("书架"),
@@ -211,6 +215,10 @@ class BookHomeScreen extends GetView<BookHomeController> {
           child: Text("多选"),
           value: "2",
         ),
+        const PopupMenuItem<String>(
+          child: Text("设置"),
+          value: "3",
+        ),
       ],
       offset: const Offset(20, 30),
       onSelected: (value) async{
@@ -275,28 +283,28 @@ class BookHomeScreen extends GetView<BookHomeController> {
   _localBookModal() {
     return Container(
       color: Colors.white,
-      height: 51 * (controller.localBooks.length + 1),
+      height: 51 * (controller.localBooks.length + 1) + 16,
       child: Column(
         children: [
           Container(
             height: 50,
             alignment: Alignment.center,
-            child: Text("本地书籍", style: TextStyle(color: Colors.black, fontSize: 16),),
+            child: const Text("本地书籍", style: TextStyle(color: Colors.black, fontSize: 16),),
           ),
           Container(height: 1, color: Colors.grey,),
           Expanded(
             child: ListView.separated(
               itemCount: controller.localBooks.length,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               itemBuilder: (context, index) {
                 return InkWell(
-                  child: Container(
+                  child: SizedBox(
                     height: 50,
                     child: Row(
                       children: [
                         Container(
-                          margin: EdgeInsets.only(left: 15, right: 15),
-                          child: FaIcon(FontAwesomeIcons.bookOpen, color: Colors.black,),
+                          margin: const EdgeInsets.only(left: 15, right: 15),
+                          child: const FaIcon(FontAwesomeIcons.bookOpen, color: Colors.black,),
                         ),
                         Expanded(
                           child: Column(
@@ -304,11 +312,11 @@ class BookHomeScreen extends GetView<BookHomeController> {
                             children: [
                               Container(
                                 alignment: Alignment.centerLeft,
-                                child: Text("${controller.localBooks[index].name}", style: TextStyle(color: Colors.black, fontSize: 14),),
+                                child: Text("${controller.localBooks[index].name}", style: const TextStyle(color: Colors.black, fontSize: 14),),
                               ),
                               Container(
                                 alignment: Alignment.centerLeft,
-                                child: Text("大小 : ${getFileSize(controller.localBooks[index].url)}", style: TextStyle(color: Colors.grey),),
+                                child: Text("大小 : ${getFileSize(controller.localBooks[index].url)}", style: const TextStyle(color: Colors.grey),),
                               ),
                             ],
                           ),

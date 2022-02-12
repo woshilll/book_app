@@ -15,7 +15,7 @@ Widget smooth() {
         return content(context, index, controller);
       },
       onPageChanged: (index) async {
-        controller.pageIndex = index;
+        controller.pageIndex.setCount(index);
         if (index + 30 >= controller.pages.length &&
             !controller.loading) {
           await controller.pageChangeListen(index);
@@ -29,10 +29,10 @@ Widget smooth() {
     onPointerUp: (e) async {
       double move = e.position.dx - controller.xMove;
       // 滑动了五十距离, 且当前为0
-      if (move > 50 && controller.pageIndex == 0) {
+      if (move > 50 && controller.pageIndex.count == 0) {
         await controller.prePage();
       } else if (move < -50 &&
-          controller.pageIndex == controller.pages.length - 1) {
+          controller.pageIndex.count == controller.pages.length - 1) {
         await controller.nextPage();
       }
     },
