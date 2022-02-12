@@ -62,40 +62,40 @@ class ReadScreen extends GetView<ReadController>{
   }
 
   Widget _body(context) {
-    return GestureDetector(
-      child: Stack(
-        children: [
-          GetBuilder<ReadController>(
-            id: "content",
-            builder: (controller) {
-              switch (controller.readPageType) {
-                case ReadPageType.smooth:
-                  return smooth();
-                case ReadPageType.point:
-                  return point();
+    return GetBuilder<ReadController>(
+        id: "content",
+        builder: (controller) {
+          return GestureDetector(
+            child: _content(),
+            onTapUp: (e) async {
+              if (e.globalPosition.dx < controller.screenWidth / 3) {
+                if (controller.readPageType == ReadPageType.point) {
+                  await controller.prePage();
+                }
+              } else if (e.globalPosition.dx > (controller.screenWidth / 3 * 2)) {
+                if (!controller.loading) {
+                  if (controller.readPageType == ReadPageType.point) {
+                    await controller.nextPage();
+                  }
+                }
+              } else {
+                // 中间
+                await bottom(context);
               }
-              return Container();
             },
-          ),
-        ],
-      ),
-      onTapUp: (e) async {
-        if (e.globalPosition.dx < controller.screenWidth / 3) {
-          if (controller.readPageType == ReadPageType.point) {
-            await controller.prePage();
-          }
-        } else if (e.globalPosition.dx > (controller.screenWidth / 3 * 2)) {
-          if (!controller.loading) {
-            if (controller.readPageType == ReadPageType.point) {
-              await controller.nextPage();
-            }
-          }
-        } else {
-          // 中间
-          await bottom(context);
+          );
         }
-      },
     );
+  }
+
+  _content() {
+    switch (controller.readPageType) {
+      case ReadPageType.smooth:
+        return smooth(controller);
+      case ReadPageType.point:
+        return point();
+    }
+    return Container();
   }
 
 }

@@ -19,6 +19,7 @@ bottom(context) async {
     });
     controller.showStatusBar = true;
   }
+  controller.bottomType = "1";
   await Navigator.of(context)
       .push(PageRouteBuilder(
           opaque: false,
@@ -156,51 +157,61 @@ bottom(context) async {
                                               },
                                             ),
                                           ),
-                                          Expanded(
-                                            flex: 1,
-                                            child: GestureDetector(
-                                              child: Container(
-                                                alignment: Alignment.center,
-                                                child: Column(
-                                                  children: const [
-                                                    Icon(Icons.wb_sunny,
-                                                        size: 24,
-                                                        color: Colors.white),
-                                                    Text("亮度",
-                                                        style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 14))
-                                                  ],
+                                          GetBuilder<ReadController>(
+                                            id: "bottomType",
+                                            builder: (controller) {
+                                              return Expanded(
+                                                flex: 1,
+                                                child: GestureDetector(
+                                                  child: Container(
+                                                    alignment: Alignment.center,
+                                                    child: Column(
+                                                      children: [
+                                                        Icon(Icons.wb_sunny,
+                                                            size: 24,
+                                                            color: controller.bottomType == "2" ? Theme.of(context).primaryColor : Colors.white),
+                                                        Text("亮度",
+                                                            style: TextStyle(
+                                                                color: controller.bottomType == "2" ? Theme.of(context).primaryColor : Colors.white,
+                                                                fontSize: 14))
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  onTap: () {
+                                                    controller
+                                                        .changeBottomType("2");
+                                                  },
                                                 ),
-                                              ),
-                                              onTap: () {
-                                                controller
-                                                    .changeBottomType("2");
-                                              },
-                                            ),
+                                              );
+                                            },
                                           ),
-                                          Expanded(
-                                            flex: 1,
-                                            child: GestureDetector(
-                                              child: Container(
-                                                alignment: Alignment.center,
-                                                child: Column(
-                                                  children: const [
-                                                    Icon(Icons.settings,
-                                                        size: 24,
-                                                        color: Colors.white),
-                                                    Text("设置",
-                                                        style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 14))
-                                                  ],
+                                          GetBuilder<ReadController>(
+                                            id: "bottomType",
+                                            builder: (controller) {
+                                              return Expanded(
+                                                flex: 1,
+                                                child: GestureDetector(
+                                                  child: Container(
+                                                    alignment: Alignment.center,
+                                                    child: Column(
+                                                      children: [
+                                                        Icon(Icons.settings,
+                                                            size: 24,
+                                                            color: controller.bottomType == "3" ? Theme.of(context).primaryColor : Colors.white),
+                                                        Text("设置",
+                                                            style: TextStyle(
+                                                                color: controller.bottomType == "3" ? Theme.of(context).primaryColor : Colors.white,
+                                                                fontSize: 14))
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  onTap: () {
+                                                    controller
+                                                        .changeBottomType("3");
+                                                  },
                                                 ),
-                                              ),
-                                              onTap: () {
-                                                controller
-                                                    .changeBottomType("3");
-                                              },
-                                            ),
+                                              );
+                                            },
                                           ),
                                         ],
                                       ),

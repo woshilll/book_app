@@ -1,4 +1,6 @@
 import 'package:book_app/log/log.dart';
+import 'package:book_app/module/book/read/component/content_bottom.dart';
+import 'package:book_app/module/book/read/component/content_top.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/system_utils.dart';
@@ -14,7 +16,7 @@ Widget content(context, index, ReadController controller) {
   }
   return Column(
     children: [
-      _top(context, controller),
+      contentTop(context, controller),
       Expanded(
         child: SizedBox(
           width: controller.pages[index].width,
@@ -69,61 +71,7 @@ Widget content(context, index, ReadController controller) {
             },
           ),
         ),
-      _bottom(context, index, controller),
+      contentBottom(context, index, controller),
     ],
-  );
-}
-
-Widget _top(context, ReadController controller) {
-  return SizedBox(
-    height: MediaQuery.of(context).padding.top,
-    width: MediaQuery.of(context).size.width,
-    child: Container(
-      margin: const EdgeInsets.only(top: 10, bottom: 10),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              alignment: Alignment.centerLeft,
-              margin: const EdgeInsets.only(left: 15),
-              child: Text("${controller.book == null ? "" : controller.book!.name}", maxLines: 1, style: const TextStyle(height: 1, color: Colors.grey)),
-            ),
-          ),
-          Container(
-            alignment: Alignment.centerRight,
-            margin: const EdgeInsets.only(right: 15),
-            child: battery(),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-_bottom(context, index, ReadController controller) {
-  return Container(
-    height: 16,
-    width: MediaQuery.of(context).size.width,
-    margin: const EdgeInsets.only(bottom: 4),
-    child: Row(
-      children: [
-        Expanded(
-          child: Container(
-            margin: const EdgeInsets.only(left: 25),
-            child: Text(
-              "${controller.pages[index].chapterName}",
-              style: TextStyle(fontSize: 12.sp, color: Colors.grey),
-            ),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.only(right: 25),
-          child: Text(
-            "${controller.pages[index].index}/${controller.calThisChapterTotalPage(index)}",
-            style: TextStyle(fontSize: 12.sp, color: Colors.grey),
-          ),
-        )
-      ],
-    ),
   );
 }

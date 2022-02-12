@@ -171,7 +171,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     return ReadSettingConfig.defaultConfig();
   }
   /// 将文本转文字页面
-  initPage(Chapter chapter, {bool firstInit = false, bool dialog = false, Function? finishFunc}) async {
+  initPage(Chapter chapter, {bool firstInit = false, bool dialog = false, Function? finishFunc, bool canJumpPage = true}) async {
     if (loading) {
       return;
     }
@@ -194,14 +194,20 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
         }
         await EasyLoading.dismiss();
         loading = false;
-        update(["content"]);
-        if (firstInit && book!.curPage != null) {
-          pageIndex.setCount(book!.curPage! - 1);
-          if (readPageType == ReadPageType.smooth) {
-            contentPageController.jumpToPage(pageIndex.count);
+        if (canJumpPage){
+          if (firstInit && book!.curPage != null) {
+            _jumpPageIndex(book!.curPage! - 1);
+          } else if (pageIndex.count >= pages.length) {
+            _jumpPageIndex(pages.length - 1);
+          } else {
+            _jumpPageIndex(pageIndex.count);
           }
+        } else {
+          update(["content"]);
         }
       });
+    }).catchError((err) {
+      EasyLoading.dismiss();
     });
 
 
@@ -259,15 +265,15 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   }
 
   /// 页面变化监听
-  Future pageChangeListen(int index) async{
+  Future pageChangeListen() async{
     var chapterId = pages[pages.length - 1].chapterId;
-    index = chapters.indexWhere((element) => element.id == chapterId);
+    int index = chapters.indexWhere((element) => element.id == chapterId);
     if (index == chapters.length - 1) {
       // 没有了
       return;
     }
     Chapter chapter = chapters[index + 1];
-    initPage(chapter);
+    initPage(chapter, canJumpPage: false);
   }
 
   /// 页面返回监听
@@ -283,19 +289,15 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
 
   /// 跳转章节
   jumpChapter(index, {bool pop = true}) async{
-    Chapter chapter = menuItems[index];
+    Chapter chapter = chapters[index];
     index = pages.indexWhere((element) => chapter.id == element.chapterId);
     if (index >= 0) {
       // 已存在
-      contentPageController.jumpToPage(index);
-      pageIndex.setCount(index);
+      _jumpPageIndex(index);
     } else {
       pages.clear();
-      pageIndex.resetCount();
       bool dialog = (chapter.content == null || chapter.content!.isEmpty);
-      await initPage(chapter, dialog: dialog, finishFunc: () {
-        contentPageController.jumpToPage(pageIndex.count);
-      });
+      await initPage(chapter, dialog: dialog);
     }
     if (pop) {
       Navigator.of(context).pop();
@@ -311,7 +313,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     if (index < pages.length - 2) {
       _pageStartStyle();
       // 有下一页
-      _nextPageStyle(index);
+      _jumpPageIndex(index);
     } else {
       // 到底了， 加载 获取当前章节
       var chapterId = pages[index].chapterId;
@@ -320,7 +322,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
         // 找到下一章
         _pageStartStyle();
         Chapter next = chapters[chapterIndex + 1];
-        initPage(next, finishFunc: _nextPageStyle(index));
+        initPage(next);
         // 跳转
         // _nextPageStyle(index);
       }
@@ -329,16 +331,6 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   _pageStartStyle() {
     if (readPageType == ReadPageType.point) {
       pointShow = false;
-      update(["point"]);
-    }
-  }
-  _nextPageStyle(index) {
-    if (readPageType == ReadPageType.smooth) {
-      contentPageController.jumpToPage(index + 1);
-      pageIndex.setCount(index + 1);
-    } else if (readPageType == ReadPageType.point) {
-      pageIndex.setCount(index + 1);
-      pointShow = true;
       update(["point"]);
     }
   }
@@ -575,6 +567,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     await EasyLoading.show(maskType: EasyLoadingMaskType.clear);
     contentStyle = TextStyle(color: hexToColor(config.fontColor), fontSize: config.fontSize, height: config.fontHeight);
     int chapterIndex = chapters.indexWhere((element) => pages[pageIndex.count].chapterId == element.id);
+    pageIndex.setCount(pages[pageIndex.count].index - 1);
     pages.clear();
     await jumpChapter(chapterIndex, pop: false);
     await EasyLoading.dismiss();
@@ -662,7 +655,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.landscapeLeft, //全屏时旋转方向，左边
       ]);
-      _swap();
+      _swap(true);
       await _reload(readSettingConfig);
     } else {
       rotateScreen = false;
@@ -674,14 +667,17 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     }
 
   }
-  _swap() {
+  _swap([bool flag = false]) {
     double temp = screenHeight;
     screenHeight = screenWidth;
     screenWidth = temp;
-    ScreenUtil.init(BoxConstraints(
-      maxHeight: screenHeight,
-      maxWidth: screenWidth
-    ));
+    if (flag) {
+      screenLeft = screenTop;
+      screenRight = screenTop;
+    } else {
+      screenLeft = 0;
+      screenRight = 0;
+    }
   }
 
   /// 暗色主题
@@ -798,6 +794,14 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
         _bookDbProvider.updateCurChapter(book!.id, pages[index].chapterId, pages[index].index);
       }
     });
+  }
+
+  void _jumpPageIndex(int index) {
+    if (readPageType == ReadPageType.smooth) {
+      contentPageController.jumpToPage(index);
+      pageIndex.setCount(index);
+    }
+    update(["content"]);
   }
 
 }

@@ -1,12 +1,9 @@
 import 'package:battery_plus/battery_plus.dart';
-import 'package:book_app/log/log.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:book_app/util/time_util.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'dart:math' as math;
 /// 充电时颜色
 Color activeColor = Theme.of(globalContext).primaryColor;
 /// 放电颜色
@@ -44,7 +41,7 @@ Widget battery() {
             Container(
               margin: const EdgeInsets.only(left: 1),
               width: 1,
-              height: 6.h,
+              height: 6,
               color: activeColor,
             ),
             Container(

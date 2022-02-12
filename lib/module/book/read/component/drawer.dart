@@ -69,7 +69,8 @@ drawer() {
                                         ),
                                       ),
                                       onTap: () async {
-                                        await controller.jumpChapter(index);
+                                        controller.pageIndex.resetCount();
+                                        await controller.jumpChapter(controller.chapters.indexWhere((element) => element.id == controller.menuItems[index].id));
                                       },
                                     );
                                   },
@@ -130,7 +131,7 @@ _loadMore(ReadController controller, [bool flag = true]) {
       return;
     }
   }
-  for(int i = flag ? index : index - 1; flag ? (i < controller.chapters.length && i < index + 30) : (i >= 0 && i > index - 30); flag ? i++ : i--) {
+  for(int i = flag ? index + 1 : index - 1; flag ? (i < controller.chapters.length && i < index + 30) : (i >= 0 && i > index - 30); flag ? i++ : i--) {
     if (flag) {
       controller.menuItems.add(controller.chapters[i]);
     } else {

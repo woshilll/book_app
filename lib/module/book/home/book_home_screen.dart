@@ -99,16 +99,15 @@ class BookHomeScreen extends GetView<BookHomeController> {
               );
             }
             return GestureDetector(
-              child: Container(
-                alignment: Alignment.center,
-                width: (MediaQuery.of(context).size.width - 30) / 3,
-                height: (MediaQuery.of(context).size.width - 30) / 2,
-                margin: const EdgeInsets.only(top: 15, left: 10),
-                child: Icon(Icons.add, color: Theme.of(context).textTheme.bodyText1!.color, size: 40,),
-                decoration: BoxDecoration(
-                    color: Colors.grey,
-                    borderRadius: BorderRadius.circular(4)
-                ),
+              child: Card(
+                color: Colors.grey[200],
+                  margin: const EdgeInsets.only(top: 15, left: 10),
+                child: Container(
+                  alignment: Alignment.center,
+                  width: (MediaQuery.of(context).size.width - 30) / 3,
+                  height: (MediaQuery.of(context).size.width - 30) / 2,
+                  child: Icon(Icons.add, color: Theme.of(context).textTheme.bodyText1!.color, size: 40,),
+                )
               ),
               onTap: () {
                 controller.toSearch();
@@ -210,10 +209,6 @@ class BookHomeScreen extends GetView<BookHomeController> {
         const PopupMenuItem<String>(
           child: Text("导入"),
           value: "1",
-        ),
-        const PopupMenuItem<String>(
-          child: Text("多选"),
-          value: "2",
         ),
         const PopupMenuItem<String>(
           child: Text("设置"),

@@ -5,8 +5,7 @@ import 'package:get/get.dart';
 
 import 'content.dart';
 /// 平滑
-Widget smooth() {
-  ReadController controller = Get.find();
+Widget smooth(ReadController controller) {
   return Listener(
     child: PageView.builder(
       controller: controller.contentPageController,
@@ -18,7 +17,7 @@ Widget smooth() {
         controller.pageIndex.setCount(index);
         if (index + 30 >= controller.pages.length &&
             !controller.loading) {
-          await controller.pageChangeListen(index);
+          await controller.pageChangeListen();
         }
       },
     ),
