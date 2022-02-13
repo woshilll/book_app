@@ -295,13 +295,6 @@ packages:
       url: "https://mirrors.tuna.tsinghua.edu.cn/dart-pub/"
     source: hosted
     version: "0.5.6"
-  device_display_brightness:
-    dependency: "direct main"
-    description:
-      name: device_display_brightness
-      url: "https://mirrors.tuna.tsinghua.edu.cn/dart-pub/"
-    source: hosted
-    version: "0.0.6"
   device_info_plus:
     dependency: "direct main"
     description:

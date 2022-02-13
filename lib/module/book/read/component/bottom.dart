@@ -358,8 +358,6 @@ Widget _bottomType(ReadController controller) {
                   id: "brightness",
                   builder: (controller) {
                     return Slider(
-                      label:
-                          "${controller.chapters[controller.readChapterIndex].name}",
                       activeColor: Colors.blue,
                       inactiveColor: Colors.grey,
                       min: 0,

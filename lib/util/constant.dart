@@ -14,4 +14,9 @@ class Constant {
 
   /// 启动页
   static const String initRoute = "initRoute";
+
+  /// ------------------------- 插件 start -------------------------
+  static const String pluginVolumeFlag = "volumeFlag";
+
+  /// ------------------------- 插件 end -------------------------
 }

@@ -63,7 +63,7 @@ class ReadScreen extends GetView<ReadController>{
 
   Widget _body(context) {
     return GetBuilder<ReadController>(
-        id: "content",
+        id: "preContent",
         builder: (controller) {
           return GestureDetector(
             child: _content(),

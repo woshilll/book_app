@@ -18,12 +18,12 @@ import 'package:book_app/module/book/readSetting/component/read_setting_config.d
 import 'package:book_app/module/home/home_controller.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/color.dart';
+import 'package:book_app/util/channel_utils.dart';
 import 'package:book_app/util/constant.dart';
 import 'package:book_app/util/font_util.dart';
 import 'package:book_app/util/html_parse_util.dart';
 import 'package:book_app/util/notify/counter_notify.dart';
 import 'package:book_app/util/save_util.dart';
-import 'package:device_display_brightness/device_display_brightness.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -122,6 +122,8 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     await _batteryCap();
     _menuListen();
     _pageIndexChangeListen();
+    ChannelUtils.setConfig(Constant.pluginVolumeFlag, true);
+    _volumeChangeListen();
   }
 
   @override
@@ -134,15 +136,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     /// 初始化宽度
     _initSize();
     /// 亮度 放在前面
-    double sysBrightness = await DeviceDisplayBrightness.getBrightness();
-    if (sysBrightness > 1) {
-      brightness = sysBrightness / 10;
-    } else {
-      brightness = sysBrightness;
-    }
-    if (brightness >= 1.0) {
-      brightness = 1;
-    }
+    brightness = await ChannelUtils.getBrightness();
     brightnessTemp = brightness;
     /// 背景色
     readSettingConfig = _getReadSettingConfig();
@@ -313,7 +307,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     if (index < pages.length - 2) {
       _pageStartStyle();
       // 有下一页
-      _jumpPageIndex(index);
+      _jumpPageIndex(index + 1);
     } else {
       // 到底了， 加载 获取当前章节
       var chapterId = pages[index].chapterId;
@@ -530,7 +524,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
 
   setBrightness(double value) async{
     brightness = value;
-    await DeviceDisplayBrightness.setBrightness(value);
+    ChannelUtils.setBrightness(value);
     update(["brightness"]);
   }
 
@@ -592,6 +586,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       const SystemUiOverlayStyle(statusBarColor: Colors.transparent, systemNavigationBarColor: Colors.transparent, systemNavigationBarDividerColor: Colors.transparent);
       SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
     }
+    ChannelUtils.setConfig(Constant.pluginVolumeFlag, false);
   }
 
   void initAudio() {
@@ -665,7 +660,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       _swap();
       await _reload(readSettingConfig);
     }
-
+    update(["preContent"]);
   }
   _swap([bool flag = false]) {
     double temp = screenHeight;
@@ -802,6 +797,21 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       pageIndex.setCount(index);
     }
     update(["content"]);
+  }
+
+  /// 音量物理键变化
+  void _volumeChangeListen() {
+    ChannelUtils.methodChannel.setMethodCallHandler((call) async{
+      switch (call.method) {
+        case 'bookVolumeChange':
+          var res = call.arguments;
+          if (res) {
+            nextPage();
+          } else {
+            prePage();
+          }
+      }
+    });
   }
 
 }

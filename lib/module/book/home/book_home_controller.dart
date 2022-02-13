@@ -9,8 +9,8 @@ import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/route/routes.dart';
+import 'package:book_app/util/channel_utils.dart';
 import 'package:book_app/util/font_util.dart';
-import 'package:device_display_brightness/device_display_brightness.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -74,7 +74,7 @@ class BookHomeController extends GetxController {
     }
     var value = await Get.toNamed(Routes.read, arguments: {"book": selected})!;
     await getBookList();
-    await DeviceDisplayBrightness.setBrightness(value["brightness"]);
+    await ChannelUtils.setBrightness(value["brightness"]);
   }
 
   void toSearch() {
