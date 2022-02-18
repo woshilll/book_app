@@ -44,7 +44,7 @@ class ThemeConfig {
       // textSelectionHandleColor: accentColor,
       // cursorColor: accentColor,
       textSelectionTheme: TextSelectionThemeData(
-        selectionColor: accentColor,
+        selectionColor: accentColor.withOpacity(.5),
         selectionHandleColor: accentColor,
         cursorColor: accentColor,
       ),

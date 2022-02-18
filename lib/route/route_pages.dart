@@ -12,6 +12,8 @@ import 'package:book_app/module/book/searchValue/component/search_value_view_bin
 import 'package:book_app/module/book/searchValue/component/search_value_view_screen.dart';
 import 'package:book_app/module/book/searchValue/search_value_binding.dart';
 import 'package:book_app/module/book/searchValue/search_value_screen.dart';
+import 'package:book_app/module/diary/home/diary_home_binding.dart';
+import 'package:book_app/module/diary/home/diary_home_screen.dart';
 import 'package:book_app/module/home/home_binding.dart';
 import 'package:book_app/module/home/home_screen.dart';
 import 'package:book_app/module/login/login_binding.dart';
@@ -109,6 +111,14 @@ class RoutePages {
         name: Routes.movieInfo,
         page: () => const MovieInfoScreen(),
         binding: MovieInfoBinding()
+    ),
+
+
+    /// 日记
+    GetPage(
+        name: Routes.diaryHome,
+        page: () => const DiaryHomeScreen(),
+        binding: DiaryHomeBinding()
     ),
   ];
 }

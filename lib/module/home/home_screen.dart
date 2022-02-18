@@ -38,12 +38,10 @@ class HomeScreen extends GetView<HomeController> {
       builder: (controller) {
         return ScrollConfiguration(
             behavior: NoShadowScrollBehavior(),
-            child: StaggeredGridView.count(
+            child: StaggeredGrid.count(
               crossAxisCount: 4,
               crossAxisSpacing: 4,
-              staggeredTiles: _staggeredTiles,
               mainAxisSpacing: 4,
-              padding: const EdgeInsets.all(4),
               children: controller.tiles,
             ));
       },
@@ -70,16 +68,4 @@ class HomeScreen extends GetView<HomeController> {
   }
 }
 
-const List<StaggeredTile> _staggeredTiles = <StaggeredTile>[
-  StaggeredTile.count(2, 2),
-  StaggeredTile.count(2, 1),
-  // StaggeredTile.count(2, 1),
-  StaggeredTile.count(1, 2),
-  StaggeredTile.count(1, 1),
-  StaggeredTile.count(2, 2),
-  StaggeredTile.count(1, 2),
-  StaggeredTile.count(1, 1),
-  StaggeredTile.count(3, 1),
-  StaggeredTile.count(1, 1),
-  StaggeredTile.count(4, 1),
-];
+

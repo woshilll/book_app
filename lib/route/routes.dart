@@ -23,6 +23,9 @@ abstract class Routes {
   static const movieHome = '/movie/home';
   static const movieInfo = '/movie/info';
 
+  /// 日记
+  static const diaryHome = '/diary/home';
+
   static String getRouteName(String? route) {
     switch(route) {
       case bookHome:

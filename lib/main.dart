@@ -15,6 +15,7 @@ import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 
 void main() async {
@@ -58,6 +59,11 @@ class App extends StatelessWidget {
             builder: EasyLoading.init(),
             darkTheme: ThemeConfig.darkTheme,
             themeMode: ThemeMode.light,
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
           ),
         );
       },
