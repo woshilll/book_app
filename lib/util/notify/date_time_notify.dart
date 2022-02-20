@@ -36,4 +36,9 @@ class DateTimeNotify extends ChangeNotifier {
     _notifier = DateTime.now();
     notifyListeners();
   }
+
+  @override
+  String toString() {
+    return '${_notifier.year}-${_notifier.month < 10 ? '0' + _notifier.month.toString() : _notifier.month}-${_notifier.day < 10 ? '0' + _notifier.day.toString() : _notifier.day}';
+  }
 }

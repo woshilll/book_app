@@ -7,7 +7,6 @@ import 'package:book_app/util/size_fit_util.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
@@ -43,21 +42,21 @@ class LoginScreen extends GetView<LoginController> {
           ),
           GestureDetector(
             child: Container(
-              height: 56.h,
+              height: 56,
               alignment: Alignment.centerLeft,
               margin: const EdgeInsets.only(left: 15),
               child: GestureDetector(
-                child: Icon(Icons.close, color: Colors.white, size: 30.sp,),
+                child: Icon(Icons.close, color: Colors.white, size: 30,),
                 onTap: () => controller.goBack(false),
               ),
             ),
           ),
           Container(
-            height: 50.h,
+            height: 50,
             margin: const EdgeInsets.only(left: 15),
             child: DefaultTextStyle(
               style: TextStyle(
-                fontSize: 35.sp,
+                fontSize: 35,
                 color: Colors.white,
                 shadows: const [
                   Shadow(
@@ -84,10 +83,10 @@ class LoginScreen extends GetView<LoginController> {
           ),
           Container(
             margin: const EdgeInsets.only(left: 30, top: 20),
-            height: 50.h,
+            height: 50,
             child: DefaultTextStyle(
               style: TextStyle(
-                fontSize: 25.sp,
+                fontSize: 25,
                 height: 1,
                 shadows: const [
                   Shadow(
@@ -150,7 +149,7 @@ class LoginScreen extends GetView<LoginController> {
                     duration: const Duration(seconds: 1),
                     child:PinCodeTextField(
                       key: const Key("2"),
-                      appContext: globalContext,
+                      appContext: context,
                       length: 6,
                       keyboardType: TextInputType.number,
                       onChanged: (v) {},

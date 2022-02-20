@@ -88,9 +88,14 @@ dependencies:
   modal_bottom_sheet: ^2.0.0
   fast_gbk: ^1.0.0
   flutter_quill: ^4.0.0
-  date_picker_timeline: ^1.2.3
+  date_picker_timeline:
+    git:
+      url: git@github.com:woshilll/DatePickerTimelineFlutter.git
+      ref: 1.0.0
   flutter_staggered_animations: ^1.0.0
   syncfusion_flutter_datepicker: ^19.4.52
+  badges: ^2.0.2
+  flutter_slidable: ^1.2.0
 
 
 dev_dependencies:

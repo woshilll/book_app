@@ -10,8 +10,8 @@ import 'package:get/get.dart';
 
 import 'diary_edit_controller.dart';
 
-class DiaryHomeScreen extends GetView<DiaryEditController> {
-  const DiaryHomeScreen({Key? key}) : super(key: key);
+class DiaryEditScreen extends GetView<DiaryEditController> {
+  const DiaryEditScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

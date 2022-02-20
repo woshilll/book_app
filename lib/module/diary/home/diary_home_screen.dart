@@ -1,6 +1,11 @@
+import 'package:badges/badges.dart';
 import 'package:book_app/log/log.dart';
+import 'package:book_app/module/diary/add/diary/diary_add_binding.dart';
+import 'package:book_app/module/diary/add/diary/diary_add_controller.dart';
+import 'package:book_app/module/diary/add/diary/diary_add_screen.dart';
 import 'package:book_app/module/diary/component/quill_theme.dart';
 import 'package:book_app/module/diary/home/diary_home_controller.dart';
+import 'package:book_app/route/routes.dart';
 import 'package:book_app/util/time_util.dart';
 import 'package:date_picker_timeline/date_picker_widget.dart';
 import 'dart:async';
@@ -13,6 +18,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart' hide Text;
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -35,14 +41,13 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
   }
 
   Widget _body(BuildContext context) {
-    return GetBuilder<DiaryHomeController>(
-      id: "selectedDateChange",
-      builder: (controller) {
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: [
-              Row(
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          GetBuilder<DiaryHomeController>(
+            builder: (controller) {
+              return Row(
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,27 +55,44 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
                       const SizedBox(height: 10,),
                       GestureDetector(
                         child: Text(
-                          '${controller.selectedDay.date.year}.${controller.selectedDay.date.month < 10 ? '0' + controller.selectedDay.date.month.toString() : controller.selectedDay.date.month}',
-                          style: const TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
+                          '${controller.selectedDay.date.year}  ${controller.selectedDay.date.month < 10 ? '0' + controller.selectedDay.date.month.toString() : controller.selectedDay.date.month}',
+                          style: const TextStyle(color: Colors.black45, fontSize: 24),
                         ),
                         onTap: () {
                           _showMonthSelect(context);
                         },
                       ),
-                      Text(
-                        '${TimeUtil.getChineseDayDiff(controller.selectedDay.date)} - 写(3)收(4)',
-                        style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
+                      SizedBox(height: 5,),
+                      Row(
+                        children: [
+                          Text(
+                            '${TimeUtil.getChineseDayDiff(controller.selectedDay.date)}  -  ',
+                            style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          Badge(
+                            badgeContent: Text("3"),
+                            badgeColor: Theme.of(context).primaryColor,
+                            child: Text("写",style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+                          ),
+                          SizedBox(width: 10,),
+                          Badge(
+                            badgeContent: Text("4"),
+                            child: Text("收",style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
                       ),
+
+                      SizedBox(height: 5,),
                     ],
                   )
                 ],
-              ),
-              _dateBar(context),
-              _tasks(context),
-            ],
+              );
+            },
           ),
-        );
-      },
+          _dateBar(context),
+          _diaryItemListView(context),
+        ],
+      ),
     );
   }
 
@@ -80,7 +102,7 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
       child: DatePicker(
         DateTime(controller.selectedDay.date.year, controller.selectedDay.date.month),
         controller: controller.datePickerController,
-        initialSelectedDate:  controller.selectedDay.date,
+        initialSelectedDate: controller.selectedDay.date,
         onDateChange: (newDate) {
           controller.selectedDay.setDateTime(newDate);
         },
@@ -102,46 +124,89 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
     );
   }
 
-  Widget _tasks(BuildContext context) {
+  Widget _diaryItemListView(BuildContext context) {
     return Expanded(
-        child: _aaa(context)
+        child: GetBuilder<DiaryHomeController>(
+          id: "diaryItemListRefresh",
+          builder: (controller) {
+            return _diaryItemList(context);
+          },
+        )
     );
   }
 
-  Widget _aaa(BuildContext context) {
-    if (controller.diaryList.isEmpty) {
-      return _noTasksMessage(context);
-    } else {
-      return AnimationLimiter(
-        child: ListView.builder(
-            scrollDirection:
-            MediaQuery.of(context).orientation == Orientation.portrait
-                ? Axis.vertical
-                : Axis.horizontal,
-            itemCount: controller.diaryList.length,
-            physics: const ClampingScrollPhysics(),
-            itemBuilder: (BuildContext context, int index) {
-              return AnimationConfiguration.staggeredList(
-                position: index,
-                duration: Duration(milliseconds: 500 + index * 20),
-                child: SlideAnimation(
-                  horizontalOffset: 400.0,
-                  child: FadeInAnimation(
+  Widget _diaryItemList(BuildContext context) {
+    return AnimationLimiter(
+      child: ListView.separated(
+        scrollDirection:
+        MediaQuery.of(context).orientation == Orientation.portrait
+            ? Axis.vertical
+            : Axis.horizontal,
+        itemCount: controller.diaryItemVoList.length + 1,
+        physics: const ClampingScrollPhysics(),
+        itemBuilder: (BuildContext context, int index) {
+          if (index == 0) {
+            return _noTasksMessage(context, index);
+          }
+          return AnimationConfiguration.staggeredList(
+            position: index,
+            duration: Duration(milliseconds: 500 + index * 20),
+            child: SlideAnimation(
+              horizontalOffset: 400.0,
+              child: FadeInAnimation(
+                child: Slidable(
+                  key: ValueKey(index),
+                  child: Card(
+                    color: Theme.of(context).primaryColor.withOpacity(.7),
                     child: Container(
-                      color: Colors.green,
-                      margin: EdgeInsets.only(bottom: 10),
-                      height: 100,
+                      height: 150,
                     ),
-                    // child: GestureDetector(
-                    //   onTap: () => displayBottomSheet(context, task),
-                    //   child: TaskTile(task: task),
+                  ),
+                  endActionPane: ActionPane(
+                    motion: const BehindMotion(),
+                    // dismissible: DismissiblePane(
+                    //   onDismissed: () {},
                     // ),
+                    children: [
+                      SlidableAction(
+                        backgroundColor: Colors.blueAccent,
+                        onPressed: (BuildContext context) {
+                          controller.toEdit(index);
+                        },
+                        icon: Icons.edit,
+                        label: "编辑",
+                      ),
+                      SlidableAction(
+                        backgroundColor: Colors.greenAccent,
+                        onPressed: (BuildContext context) {
+                          controller.toEdit(index);
+                        },
+                        icon: Icons.remove_red_eye_rounded,
+                        label: "查看",
+                      ),
+                      SlidableAction(
+                        backgroundColor: Colors.redAccent,
+                        onPressed: (BuildContext context) {  },
+                        icon: Icons.delete,
+                        label: "删除",
+                      ),
+
+                    ],
                   ),
                 ),
-              );
-            }),
-      );
-    }
+                // child: GestureDetector(
+                //   onTap: () => displayBottomSheet(context, task),
+                //   child: TaskTile(task: task),
+                // ),
+              ),
+            ),
+          );
+        },
+        separatorBuilder: (context, index) {
+          return SizedBox(height: 15,);
+        },
+      ),
+    );
   }
   // displayBottomSheet(context, Task task) {
   //   showModalBottomSheet(
@@ -184,30 +249,43 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
   //   );
   // }
 
-  Widget _noTasksMessage(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            MediaQuery.of(context).orientation == Orientation.portrait
-                ? const SizedBox(
-              height: 0,
-            )
-                : const SizedBox(
-              height: 50,
+  Widget _noTasksMessage(BuildContext context, int index) {
+    return AnimationConfiguration.staggeredList(
+      position: index,
+      duration: Duration(milliseconds: 500 + index * 20),
+      child: SlideAnimation(
+        horizontalOffset: 400.0,
+        child: FadeInAnimation(
+          child: Card(
+            color: Colors.grey.withOpacity(.7),
+            child: Container(
+              height: 150,
+              alignment: Alignment.center,
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: "日记+"
+                    ),
+                    TextSpan(text: " "*5),
+                    TextSpan(
+                      text: "日记本+",
+                      recognizer: TapGestureRecognizer()..onTap = () async{
+                        await showCupertinoModalBottomSheet(context: context, builder: (context) {
+                          DiaryAddBinding().dependencies();
+                          return const DiaryAddScreen();
+                        });
+                        // DiaryAddController diaryAddController = Get.find();
+                        // diaryAddController.dispose();
+                      }
+                    )
+                  ],
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
-            // SvgPicture.asset(
-            //   'images/task.svg',
-            //   height: 200,
-            //   color: Theme.of(context).primaryColor.withOpacity(.5),
-            //   semanticsLabel: 'Tasks',
-            // ),
-            const SizedBox(
-              height: 20,
-            ),
-            Text("There Is No Tasks"),
-          ],
+          ),
         ),
       ),
     );

@@ -71,6 +71,13 @@ packages:
       url: "https://mirrors.tuna.tsinghua.edu.cn/dart-pub/"
     source: hosted
     version: "0.1.6+1"
+  badges:
+    dependency: "direct main"
+    description:
+      name: badges
+      url: "https://mirrors.tuna.tsinghua.edu.cn/dart-pub/"
+    source: hosted
+    version: "2.0.2"
   battery_plus:
     dependency: "direct main"
     description:
@@ -298,9 +305,11 @@ packages:
   date_picker_timeline:
     dependency: "direct main"
     description:
-      name: date_picker_timeline
-      url: "https://mirrors.tuna.tsinghua.edu.cn/dart-pub/"
-    source: hosted
+      path: "."
+      ref: "1.0.0"
+      resolved-ref: aaefc442dde4f184eec9087c457af0d34d435aee
+      url: "git@github.com:woshilll/DatePickerTimelineFlutter.git"
+    source: git
     version: "1.2.3"
   dbus:
     dependency: transitive
@@ -522,6 +531,13 @@ packages:
       url: "https://mirrors.tuna.tsinghua.edu.cn/dart-pub/"
     source: hosted
     version: "5.2.0"
+  flutter_slidable:
+    dependency: "direct main"
+    description:
+      name: flutter_slidable
+      url: "https://mirrors.tuna.tsinghua.edu.cn/dart-pub/"
+    source: hosted
+    version: "1.2.0"
   flutter_spinkit:
     dependency: transitive
     description:

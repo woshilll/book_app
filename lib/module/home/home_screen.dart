@@ -19,14 +19,6 @@ class HomeScreen extends GetView<HomeController> {
           title: const Text("主页"),
           centerTitle: true,
           elevation: 0,
-          actions: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(right: 10),
-                child: _managePop(),
-              ),
-            )
-          ]
       ),
       body: _body(context),
     );
@@ -34,35 +26,14 @@ class HomeScreen extends GetView<HomeController> {
 
   Widget _body(context) {
     return GetBuilder<HomeController>(
-      id: 'oldMan',
+      id: 'main',
       builder: (controller) {
         return ScrollConfiguration(
             behavior: NoShadowScrollBehavior(),
             child: StaggeredGrid.count(
-              crossAxisCount: 4,
-              crossAxisSpacing: 4,
-              mainAxisSpacing: 4,
+              crossAxisCount: 1,
               children: controller.tiles,
             ));
-      },
-    );
-  }
-  Widget _managePop() {
-    return PopupMenuButton<String>(
-      itemBuilder: (context) => <PopupMenuItem<String>>[
-        controller.oldMan ? const PopupMenuItem<String>(
-          child: Text("正常"),
-          value: "1",
-        ) :const PopupMenuItem<String>(
-          child: Text("老年人版"),
-          value: "1",
-        )
-      ],
-      offset: const Offset(20, 30),
-      onSelected: (value) {
-        if (value == "1") {
-          controller.changeOldMan();
-        }
       },
     );
   }

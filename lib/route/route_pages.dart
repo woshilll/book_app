@@ -12,6 +12,12 @@ import 'package:book_app/module/book/searchValue/component/search_value_view_bin
 import 'package:book_app/module/book/searchValue/component/search_value_view_screen.dart';
 import 'package:book_app/module/book/searchValue/search_value_binding.dart';
 import 'package:book_app/module/book/searchValue/search_value_screen.dart';
+import 'package:book_app/module/diary/add/diary/diary_add_binding.dart';
+import 'package:book_app/module/diary/add/diary/diary_add_screen.dart';
+import 'package:book_app/module/diary/add/item/diary_item_add_binding.dart';
+import 'package:book_app/module/diary/add/item/diary_item_add_screen.dart';
+import 'package:book_app/module/diary/edit/diary_edit_binding.dart';
+import 'package:book_app/module/diary/edit/diary_edit_screen.dart';
 import 'package:book_app/module/diary/home/diary_home_binding.dart';
 import 'package:book_app/module/diary/home/diary_home_screen.dart';
 import 'package:book_app/module/home/home_binding.dart';
@@ -28,6 +34,7 @@ import 'package:book_app/route/routes.dart';
 import 'package:book_app/splash/splash_binding.dart';
 import 'package:book_app/splash/splash_screen.dart';
 import 'package:get/get.dart';
+
 
 class RoutePages {
   static const initial = Routes.splash;
@@ -119,6 +126,21 @@ class RoutePages {
         name: Routes.diaryHome,
         page: () => const DiaryHomeScreen(),
         binding: DiaryHomeBinding()
+    ),
+    GetPage(
+        name: Routes.diaryEdit,
+        page: () => const DiaryEditScreen(),
+        binding: DiaryEditBinding()
+    ),
+    GetPage(
+        name: Routes.diaryAdd,
+        page: () => const DiaryAddScreen(),
+        binding: DiaryAddBinding()
+    ),
+    GetPage(
+        name: Routes.diaryItemAdd,
+        page: () => const DiaryItemAddScreen(),
+        binding: DiaryItemAddBinding()
     ),
   ];
 }

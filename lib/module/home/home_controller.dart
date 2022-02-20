@@ -26,18 +26,13 @@ import 'component/drag_overlay.dart';
 class HomeController extends GetxController {
 
   List<Menu> menu = [];
-  bool oldMan = false;
   List<Widget> tiles = [];
 
 
   @override
   void onInit() {
     super.onInit();
-    var flag = SaveUtil.getTrue(Constant.oldManTrue);
-    if (flag != null) {
-      oldMan = flag;
-    }
-    oldMan ? oldManVersion() : normal();
+    normal();
   }
 
 
@@ -45,45 +40,25 @@ class HomeController extends GetxController {
   void normal() {
     bool dark = Get.isDarkMode;
     tiles = [
-      item(dark ? Colors.grey : Colors.green, Icons.my_library_books, toast: "小说", route: Routes.bookHome,),
+      item(dark ? Colors.grey : Colors.green, Icons.my_library_books, name: "小说", route: Routes.bookHome,),
+      item(dark ? Colors.grey : Colors.deepOrange, Icons.video_library, name: "电影", route: Routes.movieHome, shouldLogin: true),
+      item(dark ? Colors.grey : Colors.brown, Icons.map, name: "日记", route: Routes.diaryHome, shouldLogin: true),
       item(dark ? Colors.grey : Colors.lightBlue, Icons.send),
-      item(dark ? Colors.grey : Colors.amber, Icons.library_music, toast: "音乐"),
-      item(dark ? Colors.grey : Colors.brown, Icons.map, toast: "日记", route: Routes.diaryHome),
-      item(dark ? Colors.grey : Colors.deepOrange, Icons.video_library, toast: "电影", route: Routes.movieHome, shouldLogin: true),
+      item(dark ? Colors.grey : Colors.amber, Icons.library_music, name: "音乐"),
       item(dark ? Colors.grey : Colors.indigo, Icons.airline_seat_flat),
       item(dark ? Colors.grey : Colors.red, Icons.bluetooth),
       item(dark ? Colors.grey : Colors.pink, Icons.battery_alert),
-      item(dark ? Colors.grey : Colors.purple, Icons.settings, toast: "设置", route: Routes.settingHome),
       item(dark ? Colors.grey : Colors.blue, Icons.radio),
-    ];
-  }
-  void oldManVersion() {
-    bool dark = Get.isDarkMode;
-    tiles = [
-      item(dark ? Colors.grey : Colors.green, Icons.my_library_books, toast: "小说", route: Routes.bookHome,),
-      item(dark ? Colors.grey : Colors.lightBlue, Icons.send),
-      item(dark ? Colors.grey : Colors.amber, Icons.library_music, toast: "音乐"),
-      item(dark ? Colors.grey : Colors.brown, Icons.map, toast: "日记", route: Routes.diaryHome),
-      item(dark ? Colors.grey : Colors.deepOrange, Icons.video_library, toast: "电影", route: Routes.movieHome, shouldLogin: true),
-      item(dark ? Colors.grey : Colors.indigo, Icons.airline_seat_flat),
-      item(dark ? Colors.grey : Colors.red, Icons.bluetooth),
-      item(dark ? Colors.grey : Colors.pink, Icons.battery_alert),
-      item(dark ? Colors.grey : Colors.purple, Icons.settings, toast: "设置", route: Routes.settingHome),
-      item(dark ? Colors.grey : Colors.blue, Icons.radio),
+      item(dark ? Colors.grey : Colors.purple, Icons.settings, name: "设置", route: Routes.settingHome),
     ];
   }
 
-  void changeOldMan() {
-    oldMan = !oldMan;
-    SaveUtil.setTrue(Constant.oldManTrue, isTrue: oldMan);
-    oldMan ? oldManVersion() : normal();
-    update(["oldMan"]);
-  }
 
 
-  Widget item(Color backgroundColor, IconData iconData, {String? toast, String? route, bool shouldLogin = false}) {
+  Widget item(Color backgroundColor, IconData iconData, {String? name, String? route, bool shouldLogin = false}) {
     return Card(
       color: backgroundColor,
+      margin: const EdgeInsets.only(left: 15, right: 15, top: 15),
       child: InkWell(
         onTap: () async {
           if (route != null) {
@@ -95,32 +70,39 @@ class HomeController extends GetxController {
               } else {
                 // 验证token
                 LoginApi.validToken(await DeviceUtil.getId()).then((value) {
-                  Get.toNamed(route);
+                  Get.toNamed(route)?.then((value) {
+                    normal();
+                    update(["main"]);
+                  });
                 });
               }
             } else {
-              Get.toNamed(route);
+              Get.toNamed(route)?.then((value) {
+                normal();
+                update(["main"]);
+              });
             }
           } else {
             EasyLoading.showToast("敬请期待");
           }
 
         },
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(4),
-            child: oldMan ? Text(toast ?? '未命名', style: const TextStyle(color: Colors.white, fontSize: 25),)
-            : Icon(
-              iconData,
-              color: Colors.white,
-              size: 30,
-            ),
+        child: Container(
+          padding: const EdgeInsets.only(left: 15, top: 15, bottom: 15),
+          child: Row(
+            children: [
+              Icon(
+                iconData,
+                color: Colors.white,
+                size: 30,
+              ),
+              const SizedBox(width: 10,),
+              Text(name ?? '待定')
+            ],
           ),
         ),
         onLongPress: () {
-          if (toast != null) {
-            EasyLoading.showToast(toast);
-          }
+          
         },
       ),
     );

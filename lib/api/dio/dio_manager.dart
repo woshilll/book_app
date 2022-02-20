@@ -142,6 +142,7 @@ class DioManager {
           "encryptData": encryptData[0],
           "encryptAes": encryptData[1]
         };
+        Log.i(body);
       }
 
       /// 不同请求方法，不同的请求参数,按实际项目需求分.

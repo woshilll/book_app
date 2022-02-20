@@ -33,9 +33,10 @@ class SettingHomeController extends GetxController {
     update(["setting"]);
   }
 
+
   @override
-  void onInit() async{
-    super.onInit();
+  void onReady() async{
+    super.onReady();
     backgroundColor = Theme.of(context).textTheme.bodyText2!.color;
     textColor = Theme.of(context).textTheme.bodyText1!.color;
     isDarkModel = Get.isDarkMode;
