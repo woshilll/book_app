@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:book_app/model/diary/diary_setting.dart';
 
 class Diary{
@@ -20,7 +22,7 @@ class Diary{
     diaryTag: json["diaryTag"],
     createTime: json["createTime"],
     updateTime: json["updateTime"],
-    diarySetting: DiarySetting.fromJson(json["diarySetting"])
+    diarySetting: json["diarySetting"] == null ? null : DiarySetting.fromJson(json["diarySetting"])
   );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -37,5 +39,13 @@ class Diary{
   @override
   String toString() {
     return 'Diary{id: $id, creator: $creator, receiver: $receiver, diaryName: $diaryName, diaryTag: $diaryTag, createTime: $createTime, updateTime: $updateTime, diarySetting: $diarySetting}';
+  }
+
+  static List<Diary> fromJsonList(json) {
+    List<Diary> res = [];
+    for (var date in jsonDecode(json)) {
+      res.add(Diary.fromJson(date));
+    }
+    return res;
   }
 }

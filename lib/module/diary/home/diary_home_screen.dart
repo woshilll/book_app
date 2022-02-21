@@ -1,4 +1,5 @@
 import 'package:badges/badges.dart';
+import 'package:book_app/api/diary_api.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/module/diary/add/diary/diary_add_binding.dart';
 import 'package:book_app/module/diary/add/diary/diary_add_controller.dart';
@@ -34,6 +35,7 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
 
   @override
   Widget build(BuildContext context) {
+    controller.context = context;
     return Scaffold(
       appBar: AppBar(),
       body: _body(context),
@@ -265,16 +267,16 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
                 TextSpan(
                   children: [
                     TextSpan(
-                      text: "日记+"
+                      text: "日记+",
+                      recognizer: TapGestureRecognizer()..onTap = () async{
+                        await controller.showDiaryList();
+                      }
                     ),
                     TextSpan(text: " "*5),
                     TextSpan(
                       text: "日记本+",
                       recognizer: TapGestureRecognizer()..onTap = () async{
-                        await showCupertinoModalBottomSheet(context: context, builder: (context) {
-                          DiaryAddBinding().dependencies();
-                          return const DiaryAddScreen();
-                        });
+                        controller.toDiaryAdd();
                         // DiaryAddController diaryAddController = Get.find();
                         // diaryAddController.dispose();
                       }

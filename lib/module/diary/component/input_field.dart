@@ -1,4 +1,6 @@
 import 'package:book_app/module/diary/component/input_type.dart';
+import 'package:book_app/module/diary/edit/diary_edit_binding.dart';
+import 'package:book_app/module/diary/edit/diary_edit_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -14,6 +16,7 @@ class InputField extends StatefulWidget {
         this.radioValue = "0",
         this.textInputType,
         this.inputValidator,
+        this.initValue,
       })
       : super(key: key);
   final String label;
@@ -24,6 +27,7 @@ class InputField extends StatefulWidget {
   String? Function(String?)? inputValidator;
   String radioValue;
   final TextInputType? textInputType;
+  String? initValue;
   @override
   _InputFieldState createState() => _InputFieldState();
 }
@@ -54,14 +58,20 @@ class _InputFieldState extends State<InputField> {
         return _inputField(context);
       case InputType.radio:
         return _radio(context);
+      case InputType.richText:
+        DiaryEditBinding().dependencies();
+        return const DiaryEditScreen();
     }
   }
   _inputField(BuildContext context) {
     return TextFormField(
       readOnly: widget.readable,
+      initialValue: widget.initValue,
       controller: widget.controller,
       validator: widget.inputValidator,
       onChanged: widget.onDataChange,
+      maxLines: 3,
+      minLines: 1,
       cursorColor: Theme.of(context).primaryColor,
       keyboardType: widget.textInputType,
       decoration: InputDecoration(

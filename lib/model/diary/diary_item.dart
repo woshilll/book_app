@@ -1,6 +1,7 @@
 class DiaryItem{
   int? id;
   int? diaryId;
+  String? diaryName;
   String? name;
   String? content;
   String? createTime;

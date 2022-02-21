@@ -10,7 +10,12 @@ import 'package:book_app/util/rsa_util.dart';
 class DiaryApi {
   /// 获取每天的日记列表 yyyy-MM-dd
   static Future<List<DiaryItemVo>> getDiaryItemListByDate(String date) async{
-    return DiaryItemVo.fromJsonList(await DioManager.instance.get(url: "/app/diary/list/$date", showLoading: true, params: RsaUtil.getPublicParams()));
+    return DiaryItemVo.fromJsonList(await DioManager.instance.get(url: "/app/diaryItem/list/$date", showLoading: true, params: RsaUtil.getPublicParams()));
+  }
+
+  /// 获取日记本列表
+  static Future<List<Diary>> getDiaryList() async{
+    return Diary.fromJsonList(await DioManager.instance.get(url: "/app/diary/list", showLoading: true, params: RsaUtil.getPublicParams()));
   }
 
   /// 新增日记本
@@ -21,7 +26,7 @@ class DiaryApi {
 
   /// 新增日记
   static Future<void> addDiaryItem(DiaryItem diaryItem) async{
-    await DioManager.instance.post(url: "/app/diary/diaryItem", showLoading: true, body: diaryItem.toJson(), encrypt: true);
+    await DioManager.instance.post(url: "/app/diaryItem", showLoading: true, body: diaryItem.toJson(), encrypt: true);
   }
 
 }

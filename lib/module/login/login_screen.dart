@@ -1,10 +1,5 @@
-import 'package:animated_text_kit/animated_text_kit.dart';
-import 'package:book_app/log/log.dart';
 import 'package:book_app/module/login/login_controller.dart';
-import 'package:book_app/route/routes.dart';
 import 'package:book_app/util/limit_util.dart';
-import 'package:book_app/util/size_fit_util.dart';
-import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -46,7 +41,7 @@ class LoginScreen extends GetView<LoginController> {
               alignment: Alignment.centerLeft,
               margin: const EdgeInsets.only(left: 15),
               child: GestureDetector(
-                child: Icon(Icons.close, color: Colors.white, size: 30,),
+                child: const Icon(Icons.close, color: Colors.white, size: 30,),
                 onTap: () => controller.goBack(false),
               ),
             ),
@@ -55,10 +50,10 @@ class LoginScreen extends GetView<LoginController> {
             height: 50,
             margin: const EdgeInsets.only(left: 15),
             child: DefaultTextStyle(
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 35,
                 color: Colors.white,
-                shadows: const [
+                shadows: [
                   Shadow(
                     blurRadius: 7.0,
                     color: Colors.white,
@@ -71,7 +66,7 @@ class LoginScreen extends GetView<LoginController> {
                 builder: (controller) {
                   return AnimatedOpacity(
                     opacity: controller.welcome, duration: const Duration(seconds: 1),
-                    child: Text("嗨!"),
+                    child: const Text("嗨!"),
                     onEnd: () {
                         controller.textOp = 1;
                         controller.update(["textOp"]);
@@ -85,10 +80,10 @@ class LoginScreen extends GetView<LoginController> {
             margin: const EdgeInsets.only(left: 30, top: 20),
             height: 50,
             child: DefaultTextStyle(
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 25,
                 height: 1,
-                shadows: const [
+                shadows: [
                   Shadow(
                     blurRadius: 7.0,
                     color: Colors.white,
