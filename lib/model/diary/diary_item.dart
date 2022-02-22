@@ -25,4 +25,9 @@ class DiaryItem{
     "createTime": createTime,
     "version": version,
   };
+
+  @override
+  String toString() {
+    return 'DiaryItem{id: $id, diaryId: $diaryId, diaryName: $diaryName, name: $name, content: $content, createTime: $createTime, version: $version}';
+  }
 }

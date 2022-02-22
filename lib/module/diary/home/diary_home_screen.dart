@@ -79,6 +79,7 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
                           SizedBox(width: 10,),
                           Badge(
                             badgeContent: Text("4"),
+                            badgeColor: Colors.deepPurple,
                             child: Text("收",style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
                           ),
                         ],

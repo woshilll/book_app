@@ -2,6 +2,5 @@ enum InputType {
   text,
   radio,
   phone,
-  email,
-  richText
+  email
 }

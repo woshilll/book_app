@@ -5,6 +5,7 @@ import 'package:book_app/api/diary_api.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/model/diary/diary.dart';
 import 'package:book_app/model/diary/diary_item_vo.dart';
+import 'package:book_app/module/diary/add/diary/diary_add_controller.dart';
 import 'package:book_app/module/diary/add/item/diary_item_add_binding.dart';
 import 'package:book_app/module/diary/add/item/diary_item_add_controller.dart';
 import 'package:book_app/module/diary/add/item/diary_item_add_screen.dart';
@@ -67,7 +68,6 @@ class DiaryHomeController extends GetxController {
 
   /// 前往编辑页
   void toEdit(int index) {
-    Get.toNamed(Routes.diaryEdit);
   }
 
   void _getDiaryItemVoList() async {
@@ -181,14 +181,18 @@ class DiaryHomeController extends GetxController {
                                     ],
                                   ),
                                   onTap: () async{
+                                    Navigator.pop(context);
+                                    Get.put<DiaryItemAddController>(DiaryItemAddController());
+                                    DiaryItemAddController diaryItemAddController = Get.find<DiaryItemAddController>();
+                                    diaryItemAddController.initData(true, true, {"diaryId": diaryList[index].id, "diaryName": diaryList[index].diaryName});
                                     await showCupertinoModalBottomSheet(
-                                        context: context,
+                                        context: this.context!,
                                         builder: (context) {
-                                          DiaryItemAddBinding().dependencies();
-                                          DiaryItemAddController diaryItemAddController = Get.find();
-                                          diaryItemAddController.initData(true, true, {"diaryId": diaryList[index].id, "diaryName": diaryList[index].diaryName});
                                           return const DiaryItemAddScreen();
                                         });
+                                    Timer(Duration(seconds: 1), () {
+                                      Get.delete<DiaryItemAddController>();
+                                    });
                                   },
                                   onLongPress: () {},
                                 ),
@@ -237,11 +241,14 @@ class DiaryHomeController extends GetxController {
   }
 
   toDiaryAdd() async {
+    Get.put<DiaryAddController>(DiaryAddController());
     await showCupertinoModalBottomSheet(
         context: context!,
         builder: (context) {
-          DiaryAddBinding().dependencies();
           return const DiaryAddScreen();
         });
+    Timer(Duration(seconds: 1), () {
+      Get.delete<DiaryAddController>();
+    });
   }
 }

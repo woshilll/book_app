@@ -26,8 +26,6 @@ abstract class Routes {
   /// 日记
   // 首页
   static const diaryHome = '/diary/home';
-  // 编辑页
-  static const diaryEdit = '/diary/edit';
   // 日记本新增
   static const diaryAdd = '/diary/add';
   // 日记新增

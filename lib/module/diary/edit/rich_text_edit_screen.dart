@@ -1,3 +1,4 @@
+import 'package:book_app/log/log.dart';
 import 'package:book_app/module/diary/component/quill_theme.dart';
 import 'dart:async';
 import 'dart:io';
@@ -6,68 +7,69 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' hide Text;
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:get/get.dart';
 
-import 'diary_edit_controller.dart';
 
-class DiaryEditScreen extends GetView<DiaryEditController> {
-  const DiaryEditScreen({Key? key}) : super(key: key);
+class RichTextEditScreen extends StatefulWidget {
+  const RichTextEditScreen(this.focusNode, this.quillController, {Key? key,}) : super(key: key);
+  final FocusNode focusNode;
+  final QuillController quillController;
+  @override
+  _RichTextEditScreenState createState() => _RichTextEditScreenState();
 
+
+}
+class _RichTextEditScreenState extends State<RichTextEditScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: RawKeyboardListener(
-        focusNode: FocusNode(),
-        onKey: (event) {
-        },
-        child: _buildWelcomeEditor(context),
-      ),
+
+    return RawKeyboardListener(
+      focusNode: FocusNode(),
+      onKey: (event) {
+      },
+      child: _buildWelcomeEditor(context),
     );
   }
 
   Widget _buildWelcomeEditor(BuildContext context) {
-    var quillEditor = QuillEditor(
-        controller: controller.quillController!,
-        scrollController: ScrollController(),
-        scrollable: true,
-        focusNode: controller.focusNode,
-        autoFocus: true,
-        readOnly: false,
-        placeholder: '',
-        expands: false,
-        padding: EdgeInsets.zero,
-        locale: const Locale('zh', 'CN'),
-        customStyles: QuillTheme.getDefaultStyle(context)
-    );
-    var toolbar = QuillToolbar.basic(
-      controller: controller.quillController!,
-      // provide a callback to enable picking images from device.
-      // if omit, "image" button only allows adding images from url.
-      // same goes for videos.
-      onImagePickCallback: _onImagePickCallback,
-      onVideoPickCallback: _onVideoPickCallback,
-      // uncomment to provide a custom "pick from" dialog.
-      // mediaPickSettingSelector: _selectMediaPickSetting,
-      showAlignmentButtons: true,
-      locale: const Locale('zh', 'CN'),
-      iconTheme: QuillTheme.getIconTheme(context),
-    );
-
-    return SafeArea(
+    return Container(
       child: Column(
-        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        // crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Expanded(
-            flex: 15,
             child: Container(
               padding: const EdgeInsets.only(left: 16, right: 16, top: 10),
-              child: quillEditor,
+              child: QuillEditor(
+                  controller: widget.quillController,
+                  scrollController: ScrollController(),
+                  scrollable: true,
+                  focusNode: widget.focusNode,
+                  autoFocus: false,
+                  readOnly: false,
+                  placeholder: '',
+                  expands: true,
+                  padding: EdgeInsets.zero,
+                  locale: const Locale('zh', 'CN'),
+                  customStyles: QuillTheme.getDefaultStyle(context),
+              ),
             ),
           ),
-          Container(child: toolbar)
+          QuillToolbar.basic(
+            controller: widget.quillController,
+            // provide a callback to enable picking images from device.
+            // if omit, "image" button only allows adding images from url.
+            // same goes for videos.
+            onImagePickCallback: _onImagePickCallback,
+            onVideoPickCallback: _onVideoPickCallback,
+            // uncomment to provide a custom "pick from" dialog.
+            // mediaPickSettingSelector: _selectMediaPickSetting,
+            showAlignmentButtons: true,
+            locale: const Locale('zh', 'CN'),
+            iconTheme: QuillTheme.getIconTheme(context),
+          )
         ],
+      ),
+      decoration: BoxDecoration(
+        border: Border.all(color: Theme.of(context).primaryColor),
+        borderRadius: BorderRadius.circular(10)
       ),
     );
   }
@@ -122,5 +124,4 @@ class DiaryEditScreen extends GetView<DiaryEditController> {
           ),
         ),
       );
-
 }

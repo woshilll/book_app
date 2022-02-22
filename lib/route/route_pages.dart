@@ -16,8 +16,6 @@ import 'package:book_app/module/diary/add/diary/diary_add_binding.dart';
 import 'package:book_app/module/diary/add/diary/diary_add_screen.dart';
 import 'package:book_app/module/diary/add/item/diary_item_add_binding.dart';
 import 'package:book_app/module/diary/add/item/diary_item_add_screen.dart';
-import 'package:book_app/module/diary/edit/diary_edit_binding.dart';
-import 'package:book_app/module/diary/edit/diary_edit_screen.dart';
 import 'package:book_app/module/diary/home/diary_home_binding.dart';
 import 'package:book_app/module/diary/home/diary_home_screen.dart';
 import 'package:book_app/module/home/home_binding.dart';
@@ -126,11 +124,6 @@ class RoutePages {
         name: Routes.diaryHome,
         page: () => const DiaryHomeScreen(),
         binding: DiaryHomeBinding()
-    ),
-    GetPage(
-        name: Routes.diaryEdit,
-        page: () => const DiaryEditScreen(),
-        binding: DiaryEditBinding()
     ),
     GetPage(
         name: Routes.diaryAdd,
