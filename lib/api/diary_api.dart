@@ -29,4 +29,9 @@ class DiaryApi {
     await DioManager.instance.post(url: "/app/diaryItem", showLoading: true, body: diaryItem.toJson(), encrypt: true);
   }
 
+  /// 新增日记
+  static Future<String> diaryItemContent(diaryItemId) async{
+    return await DioManager.instance.get(url: "/app/diaryItem/$diaryItemId", showLoading: true, params: RsaUtil.getPublicParams());
+  }
+
 }

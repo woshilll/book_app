@@ -28,6 +28,8 @@ class DiaryHomeController extends GetxController {
   DateTimeNotify selectedDay = DateTimeNotify();
   bool isSelectMonth = true;
   BuildContext? context;
+  int writeCount = 0;
+  int receiveCount = 0;
 
   @override
   void onInit() {
@@ -59,7 +61,8 @@ class DiaryHomeController extends GetxController {
 
       /// 修改了插件源码 -- 增加了setDateTime方法来修改里面的_currentDate
       datePickerController.setDateTime(selectedDay.date);
-      update(["selectedDateChange"]);
+      update(["selectedDateChange", "noDiaryMessage"]);
+      _getDiaryItemVoList();
       Timer(const Duration(milliseconds: 100), () {
         datePickerController.animateToDate(selectedDay.date);
       });
@@ -73,7 +76,16 @@ class DiaryHomeController extends GetxController {
   void _getDiaryItemVoList() async {
     diaryItemVoList =
         await DiaryApi.getDiaryItemListByDate(selectedDay.toString());
-    update(["diaryItemListRefresh"]);
+    writeCount = 0;
+    receiveCount = 0;
+    for (var vo in diaryItemVoList) {
+      if (vo.isMe!) {
+        writeCount++;
+      } else {
+        receiveCount++;
+      }
+    }
+    update(["diaryItemListRefresh", "countChange"]);
   }
 
   showDiaryList() async {

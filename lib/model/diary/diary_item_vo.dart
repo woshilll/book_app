@@ -6,13 +6,15 @@ class DiaryItemVo{
   String? diaryTag;
   int? diaryId;
   String? fromWho;
+  String? toWho;
   bool? canUpdate;
   int? diaryItemId;
   String? diaryItemName;
   String? diaryItemCreateTime;
+  String? diaryItemContent;
   int? diaryItemVersion;
 
-  DiaryItemVo({this.isMe, this.diaryName, this.diaryTag, this.diaryId, this.fromWho, this.canUpdate, this.diaryItemId, this.diaryItemName, this.diaryItemVersion, this.diaryItemCreateTime});
+  DiaryItemVo({this.isMe, this.diaryName, this.diaryTag, this.diaryId, this.fromWho, this.canUpdate, this.diaryItemId, this.diaryItemName, this.diaryItemVersion, this.diaryItemCreateTime, this.toWho, this.diaryItemContent});
 
   factory DiaryItemVo.fromJson(Map<String, dynamic> json) => DiaryItemVo(
     isMe: json["isMe"],
@@ -25,6 +27,8 @@ class DiaryItemVo{
     diaryItemName: json["diaryItemName"],
     diaryItemVersion: json["diaryItemVersion"],
     diaryItemCreateTime: json["diaryItemCreateTime"],
+    toWho: json["toWho"],
+    diaryItemContent: json["diaryItemContent"],
   );
   static List<DiaryItemVo> fromJsonList(json) {
     List<DiaryItemVo> res = [];

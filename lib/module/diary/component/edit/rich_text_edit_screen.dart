@@ -10,9 +10,10 @@ import 'package:path_provider/path_provider.dart';
 
 
 class RichTextEditScreen extends StatefulWidget {
-  const RichTextEditScreen(this.focusNode, this.quillController, {Key? key,}) : super(key: key);
+  const RichTextEditScreen(this.focusNode, this.quillController, {Key? key, this.readonly = false}) : super(key: key);
   final FocusNode focusNode;
   final QuillController quillController;
+  final bool readonly;
   @override
   _RichTextEditScreenState createState() => _RichTextEditScreenState();
 
@@ -43,7 +44,7 @@ class _RichTextEditScreenState extends State<RichTextEditScreen> {
                   scrollable: true,
                   focusNode: widget.focusNode,
                   autoFocus: false,
-                  readOnly: false,
+                  readOnly: widget.readonly,
                   placeholder: '',
                   expands: true,
                   padding: EdgeInsets.zero,
@@ -52,6 +53,7 @@ class _RichTextEditScreenState extends State<RichTextEditScreen> {
               ),
             ),
           ),
+          if (!widget.readonly)
           QuillToolbar.basic(
             controller: widget.quillController,
             // provide a callback to enable picking images from device.
@@ -68,7 +70,7 @@ class _RichTextEditScreenState extends State<RichTextEditScreen> {
         ],
       ),
       decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).primaryColor),
+        border: Border.all(color: widget.readonly ? Colors.transparent : Theme.of(context).primaryColor),
         borderRadius: BorderRadius.circular(10)
       ),
     );

@@ -1,8 +1,10 @@
+import 'package:book_app/api/login_api.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/module/setting/home/setting_home_controller.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/util/constant.dart';
 import 'package:book_app/util/list_item.dart';
+import 'package:book_app/util/rsa_util.dart';
 import 'package:book_app/util/save_util.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
@@ -97,6 +99,21 @@ class SettingHomeScreen extends GetView<SettingHomeController>{
                 color: Colors.grey[300],
               ),
             ),
+            if (SaveUtil.getString(Constant.token) != null)
+              GestureDetector(
+                child: ListItem(
+                    "登出",
+                    Container(),
+                    controller.backgroundColor,
+                    controller.textColor
+                ),
+                onTap: () async{
+                  await LoginApi.logout();
+                  RsaUtil.serverPublicKey = null;
+                  SaveUtil.remove(Constant.token);
+                  controller.update(["setting"]);
+                },
+              ),
           ],
         );
       },

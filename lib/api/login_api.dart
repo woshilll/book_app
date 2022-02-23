@@ -22,5 +22,9 @@ class LoginApi {
     return await DioManager.instance.post(url: "/login", body: body, params: RsaUtil.getPublicParams(), encrypt: true);
   }
 
+  /// 登出
+  static Future<void> logout() async{
+    await DioManager.instance.put(url: "/login/logout", showLoading: true);
+  }
 
 }

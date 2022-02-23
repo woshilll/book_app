@@ -4,6 +4,7 @@ import 'package:book_app/log/log.dart';
 import 'package:book_app/module/diary/add/diary/diary_add_binding.dart';
 import 'package:book_app/module/diary/add/diary/diary_add_controller.dart';
 import 'package:book_app/module/diary/add/diary/diary_add_screen.dart';
+import 'package:book_app/module/diary/component/diary_item_pre_view.dart';
 import 'package:book_app/module/diary/component/quill_theme.dart';
 import 'package:book_app/module/diary/home/diary_home_controller.dart';
 import 'package:book_app/route/routes.dart';
@@ -48,6 +49,7 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
       child: Column(
         children: [
           GetBuilder<DiaryHomeController>(
+            id: "selectedDateChange",
             builder: (controller) {
               return Row(
                 children: [
@@ -65,24 +67,29 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
                         },
                       ),
                       SizedBox(height: 5,),
-                      Row(
-                        children: [
-                          Text(
-                            '${TimeUtil.getChineseDayDiff(controller.selectedDay.date)}  -  ',
-                            style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          Badge(
-                            badgeContent: Text("3"),
-                            badgeColor: Theme.of(context).primaryColor,
-                            child: Text("写",style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
-                          ),
-                          SizedBox(width: 10,),
-                          Badge(
-                            badgeContent: Text("4"),
-                            badgeColor: Colors.deepPurple,
-                            child: Text("收",style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
+                      GetBuilder<DiaryHomeController>(
+                        id: "countChange",
+                        builder: (controller) {
+                          return Row(
+                            children: [
+                              Text(
+                                '${TimeUtil.getChineseDayDiff(controller.selectedDay.date)}  -  ',
+                                style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              Badge(
+                                badgeContent: Text("${controller.writeCount}"),
+                                badgeColor: Theme.of(context).primaryColor,
+                                child: Text("写",style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+                              ),
+                              SizedBox(width: 10,),
+                              Badge(
+                                badgeContent: Text("${controller.receiveCount}"),
+                                badgeColor: Colors.deepPurple,
+                                child: Text("收",style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          );
+                        },
                       ),
 
                       SizedBox(height: 5,),
@@ -100,30 +107,35 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
   }
 
   Widget _dateBar(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: DatePicker(
-        DateTime(controller.selectedDay.date.year, controller.selectedDay.date.month),
-        controller: controller.datePickerController,
-        initialSelectedDate: controller.selectedDay.date,
-        onDateChange: (newDate) {
-          controller.selectedDay.setDateTime(newDate);
-        },
-        width: 70,
-        height: 100,
-        selectedTextColor: Colors.white,
-        selectionColor: Theme.of(context).primaryColor,
-        dayTextStyle:
-        const TextStyle(color: Colors.black),
-        dateTextStyle: const TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.bold),
-        monthTextStyle:
-        const TextStyle(color: Colors.black),
-        locale: "zh_CN",
-        daysCount: controller.maxDays,
-      ),
+    return GetBuilder<DiaryHomeController>(
+      id: "selectedDateChange",
+      builder: (controller) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          child: DatePicker(
+            DateTime(controller.selectedDay.date.year, controller.selectedDay.date.month),
+            controller: controller.datePickerController,
+            initialSelectedDate: controller.selectedDay.date,
+            onDateChange: (newDate) {
+              controller.selectedDay.setDateTime(newDate);
+            },
+            width: 70,
+            height: 100,
+            selectedTextColor: Colors.white,
+            selectionColor: Theme.of(context).primaryColor,
+            dayTextStyle:
+            const TextStyle(color: Colors.black),
+            dateTextStyle: const TextStyle(
+                color: Colors.black,
+                fontSize: 20,
+                fontWeight: FontWeight.bold),
+            monthTextStyle:
+            const TextStyle(color: Colors.black),
+            locale: "zh_CN",
+            daysCount: controller.maxDays,
+          ),
+        );
+      },
     );
   }
 
@@ -149,8 +161,13 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
         physics: const ClampingScrollPhysics(),
         itemBuilder: (BuildContext context, int index) {
           if (index == 0) {
-            return _noTasksMessage(context, index);
+            return _noDiaryMessage(context, index);
           }
+          String shortName = controller.diaryItemVoList[index - 1].diaryName!;
+          if (shortName.length > 8) {
+            shortName = shortName.substring(0, 8) + "...";
+          }
+          bool isMe = controller.diaryItemVoList[index - 1].isMe!;
           return AnimationConfiguration.staggeredList(
             position: index,
             duration: Duration(milliseconds: 500 + index * 20),
@@ -160,9 +177,84 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
                 child: Slidable(
                   key: ValueKey(index),
                   child: Card(
-                    color: Theme.of(context).primaryColor.withOpacity(.7),
+                    color: isMe ? Theme.of(context).primaryColor.withOpacity(.5) : Colors.deepPurple.withOpacity(.5),
                     child: Container(
-                      height: 150,
+                      // height: 150,
+                      padding: const EdgeInsets.only(left: 15, right: 15, bottom: 8, top: 8),
+                      child: Column(
+                        mainAxisAlignment:
+                        MainAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    shortName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headline2,
+                                  ),
+                                ),
+                              ),
+                              Badge(
+                                toAnimate: false,
+                                shape: BadgeShape.square,
+                                badgeColor: isMe? Colors.deepPurple : Theme.of(context).primaryColor,
+                                borderRadius:
+                                BorderRadius.circular(8),
+                                padding: const EdgeInsets.all(3),
+                                badgeContent: Text(
+                                    controller.diaryItemVoList[index - 1].diaryTag!,
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        height: 1)),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                                "${controller.diaryItemVoList[index - 1].diaryItemName}",
+                              style: Theme.of(context).textTheme.headline6,
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                margin: const EdgeInsets.only(
+                                    top: 4),
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  isMe ? "送达 : ${controller.diaryItemVoList[index - 1].toWho!}" : "接收 : ${controller.diaryItemVoList[index - 1].fromWho!}",
+                                  style: const TextStyle(
+                                      color: Colors.black54,
+                                      fontSize: 14),
+                                ),
+                              ),
+                              Container(
+                                margin: const EdgeInsets.only(
+                                    top: 4),
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  "创于 : ${controller.diaryItemVoList[index - 1].diaryItemCreateTime!}",
+                                  style: const TextStyle(
+                                      color: Colors.black54,
+                                      fontSize: 14),
+                                ),
+                              )
+                            ],
+                          ),
+
+                          const SizedBox(height: 4,)
+                        ],
+                      ),
                     ),
                   ),
                   endActionPane: ActionPane(
@@ -171,6 +263,7 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
                     //   onDismissed: () {},
                     // ),
                     children: [
+                      if (controller.diaryItemVoList[index - 1].canUpdate!)
                       SlidableAction(
                         backgroundColor: Colors.blueAccent,
                         onPressed: (BuildContext context) {
@@ -181,12 +274,13 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
                       ),
                       SlidableAction(
                         backgroundColor: Colors.greenAccent,
-                        onPressed: (BuildContext context) {
-                          controller.toEdit(index);
+                        onPressed: (BuildContext context) async{
+                          await diaryItemPreView(controller.context!, controller.diaryItemVoList[index - 1]);
                         },
                         icon: Icons.remove_red_eye_rounded,
                         label: "查看",
                       ),
+                      if (isMe)
                       SlidableAction(
                         backgroundColor: Colors.redAccent,
                         onPressed: (BuildContext context) {  },
@@ -252,45 +346,54 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
   //   );
   // }
 
-  Widget _noTasksMessage(BuildContext context, int index) {
-    return AnimationConfiguration.staggeredList(
-      position: index,
-      duration: Duration(milliseconds: 500 + index * 20),
-      child: SlideAnimation(
-        horizontalOffset: 400.0,
-        child: FadeInAnimation(
-          child: Card(
-            color: Colors.grey.withOpacity(.7),
-            child: Container(
-              height: 150,
-              alignment: Alignment.center,
-              child: Text.rich(
-                TextSpan(
-                  children: [
+  Widget _noDiaryMessage(BuildContext context, int index) {
+    return GetBuilder<DiaryHomeController>(
+      id: "noDiaryMessage",
+      builder: (controller) {
+        var now = DateTime.now();
+        if (controller.selectedDay.date.isBefore(DateTime(now.year, now.month, now.day))) {
+          return Container();
+        }
+        return AnimationConfiguration.staggeredList(
+          position: index,
+          duration: Duration(milliseconds: 500 + index * 20),
+          child: SlideAnimation(
+            horizontalOffset: 400.0,
+            child: FadeInAnimation(
+              child: Card(
+                color: Colors.grey.withOpacity(.7),
+                child: Container(
+                  height: 150,
+                  alignment: Alignment.center,
+                  child: Text.rich(
                     TextSpan(
-                      text: "日记+",
-                      recognizer: TapGestureRecognizer()..onTap = () async{
-                        await controller.showDiaryList();
-                      }
+                        children: [
+                          TextSpan(
+                              text: "日记+",
+                              recognizer: TapGestureRecognizer()..onTap = () async{
+                                await controller.showDiaryList();
+                              }
+                          ),
+                          TextSpan(text: " "*5),
+                          TextSpan(
+                              text: "日记本+",
+                              recognizer: TapGestureRecognizer()..onTap = () async{
+                                controller.toDiaryAdd();
+                                // DiaryAddController diaryAddController = Get.find();
+                                // diaryAddController.dispose();
+                              }
+                          )
+                        ],
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)
                     ),
-                    TextSpan(text: " "*5),
-                    TextSpan(
-                      text: "日记本+",
-                      recognizer: TapGestureRecognizer()..onTap = () async{
-                        controller.toDiaryAdd();
-                        // DiaryAddController diaryAddController = Get.find();
-                        // diaryAddController.dispose();
-                      }
-                    )
-                  ],
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-                textAlign: TextAlign.center,
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
