@@ -59,6 +59,7 @@ class DiaryItemAddScreen extends GetView<DiaryItemAddController>{
                         ),
                         InputField(
                           label: '名称',
+                          initValue: controller.diaryItem.name,
                           onDataChange: (value) {
                             controller.diaryItem.name = value;
                           },
@@ -82,7 +83,7 @@ class DiaryItemAddScreen extends GetView<DiaryItemAddController>{
                                 height: 5,
                               ),
                               Expanded(
-                                  child: RichTextEditScreen(controller.richTextFocusNode, controller.quillController,)
+                                  child: RichTextEditScreen(controller.richTextFocusNode, controller.quillController!,)
                               )
                             ],
                           ),
@@ -97,17 +98,15 @@ class DiaryItemAddScreen extends GetView<DiaryItemAddController>{
                               alignment: Alignment.center,
                               padding: const EdgeInsets.only(top: 10, bottom: 10),
                               width: MediaQuery.of(context).size.width - 100,
-                              child: const Text("新增", style: TextStyle(fontSize: 20, height: 1),),
+                              child: Text(controller.isAdd ? '新增' : '更新', style: const TextStyle(fontSize: 20, height: 1),),
                             ),
                           ),
                           onTap: () async{
                             if (controller.formKey.currentState!.validate()) {
-                              if (controller.quillController.document.length <= 1) {
+                              if (controller.quillController!.document.length <= 1) {
                                 EasyLoading.showToast("请输入内容");
                               }
-                              controller.diaryItem.content = jsonEncode(controller.quillController.document.toDelta().toJson());
-                              await DiaryApi.addDiaryItem(controller.diaryItem);
-                              Navigator.pop(context);
+                              await controller.saveOrUpdate(context);
                             }
                           },
                           onLongPress: () {},

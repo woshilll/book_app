@@ -69,11 +69,8 @@ class DiaryHomeController extends GetxController {
     });
   }
 
-  /// 前往编辑页
-  void toEdit(int index) {
-  }
 
-  void _getDiaryItemVoList() async {
+  _getDiaryItemVoList() async {
     diaryItemVoList =
         await DiaryApi.getDiaryItemListByDate(selectedDay.toString());
     writeCount = 0;
@@ -196,7 +193,7 @@ class DiaryHomeController extends GetxController {
                                     Navigator.pop(context);
                                     Get.put<DiaryItemAddController>(DiaryItemAddController());
                                     DiaryItemAddController diaryItemAddController = Get.find<DiaryItemAddController>();
-                                    diaryItemAddController.initData(true, true, {"diaryId": diaryList[index].id, "diaryName": diaryList[index].diaryName});
+                                    diaryItemAddController.initData(true, {"diaryId": diaryList[index].id, "diaryName": diaryList[index].diaryName});
                                     await showCupertinoModalBottomSheet(
                                         context: this.context!,
                                         builder: (context) {
@@ -259,8 +256,12 @@ class DiaryHomeController extends GetxController {
         builder: (context) {
           return const DiaryAddScreen();
         });
-    Timer(Duration(seconds: 1), () {
+    Timer(const Duration(seconds: 1), () {
       Get.delete<DiaryAddController>();
     });
+  }
+
+  refreshList() async{
+    await _getDiaryItemVoList();
   }
 }

@@ -24,12 +24,17 @@ class DiaryApi {
   }
 
 
-  /// 新增日记
+  /// 新增日记内容
   static Future<void> addDiaryItem(DiaryItem diaryItem) async{
     await DioManager.instance.post(url: "/app/diaryItem", showLoading: true, body: diaryItem.toJson(), encrypt: true);
   }
 
-  /// 新增日记
+  /// 更新日记内容
+  static Future<void> updateDiaryItem(DiaryItem diaryItem) async{
+    await DioManager.instance.put(url: "/app/diaryItem", showLoading: true, body: diaryItem.toJson(), encrypt: true);
+  }
+
+  /// 查看日记内容
   static Future<String> diaryItemContent(diaryItemId) async{
     return await DioManager.instance.get(url: "/app/diaryItem/$diaryItemId", showLoading: true, params: RsaUtil.getPublicParams());
   }

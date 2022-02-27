@@ -4,7 +4,7 @@ import 'package:book_app/log/log.dart';
 import 'package:book_app/module/diary/add/diary/diary_add_binding.dart';
 import 'package:book_app/module/diary/add/diary/diary_add_controller.dart';
 import 'package:book_app/module/diary/add/diary/diary_add_screen.dart';
-import 'package:book_app/module/diary/component/diary_item_pre_view.dart';
+import 'package:book_app/module/diary/component/diary_item_pre.dart';
 import 'package:book_app/module/diary/component/quill_theme.dart';
 import 'package:book_app/module/diary/home/diary_home_controller.dart';
 import 'package:book_app/route/routes.dart';
@@ -163,134 +163,13 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
           if (index == 0) {
             return _noDiaryMessage(context, index);
           }
-          String shortName = controller.diaryItemVoList[index - 1].diaryName!;
-          if (shortName.length > 8) {
-            shortName = shortName.substring(0, 8) + "...";
-          }
-          bool isMe = controller.diaryItemVoList[index - 1].isMe!;
           return AnimationConfiguration.staggeredList(
             position: index,
             duration: Duration(milliseconds: 500 + index * 20),
             child: SlideAnimation(
               horizontalOffset: 400.0,
               child: FadeInAnimation(
-                child: Slidable(
-                  key: ValueKey(index),
-                  child: Card(
-                    color: isMe ? Theme.of(context).primaryColor.withOpacity(.5) : Colors.deepPurple.withOpacity(.5),
-                    child: Container(
-                      // height: 150,
-                      padding: const EdgeInsets.only(left: 15, right: 15, bottom: 8, top: 8),
-                      child: Column(
-                        mainAxisAlignment:
-                        MainAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    shortName,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headline2,
-                                  ),
-                                ),
-                              ),
-                              Badge(
-                                toAnimate: false,
-                                shape: BadgeShape.square,
-                                badgeColor: isMe? Colors.deepPurple : Theme.of(context).primaryColor,
-                                borderRadius:
-                                BorderRadius.circular(8),
-                                padding: const EdgeInsets.all(3),
-                                badgeContent: Text(
-                                    controller.diaryItemVoList[index - 1].diaryTag!,
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        height: 1)),
-                              ),
-                            ],
-                          ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                                "${controller.diaryItemVoList[index - 1].diaryItemName}",
-                              style: Theme.of(context).textTheme.headline6,
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                margin: const EdgeInsets.only(
-                                    top: 4),
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  isMe ? "送达 : ${controller.diaryItemVoList[index - 1].toWho!}" : "接收 : ${controller.diaryItemVoList[index - 1].fromWho!}",
-                                  style: const TextStyle(
-                                      color: Colors.black54,
-                                      fontSize: 14),
-                                ),
-                              ),
-                              Container(
-                                margin: const EdgeInsets.only(
-                                    top: 4),
-                                alignment: Alignment.centerRight,
-                                child: Text(
-                                  "创于 : ${controller.diaryItemVoList[index - 1].diaryItemCreateTime!}",
-                                  style: const TextStyle(
-                                      color: Colors.black54,
-                                      fontSize: 14),
-                                ),
-                              )
-                            ],
-                          ),
-
-                          const SizedBox(height: 4,)
-                        ],
-                      ),
-                    ),
-                  ),
-                  endActionPane: ActionPane(
-                    motion: const BehindMotion(),
-                    // dismissible: DismissiblePane(
-                    //   onDismissed: () {},
-                    // ),
-                    children: [
-                      if (controller.diaryItemVoList[index - 1].canUpdate!)
-                      SlidableAction(
-                        backgroundColor: Colors.blueAccent,
-                        onPressed: (BuildContext context) {
-                          controller.toEdit(index);
-                        },
-                        icon: Icons.edit,
-                        label: "编辑",
-                      ),
-                      SlidableAction(
-                        backgroundColor: Colors.greenAccent,
-                        onPressed: (BuildContext context) async{
-                          await diaryItemPreView(controller.context!, controller.diaryItemVoList[index - 1]);
-                        },
-                        icon: Icons.remove_red_eye_rounded,
-                        label: "查看",
-                      ),
-                      if (isMe)
-                      SlidableAction(
-                        backgroundColor: Colors.redAccent,
-                        onPressed: (BuildContext context) {  },
-                        icon: Icons.delete,
-                        label: "删除",
-                      ),
-
-                    ],
-                  ),
-                ),
+                child: _diaryItemWidget(context, index),
                 // child: GestureDetector(
                 //   onTap: () => displayBottomSheet(context, task),
                 //   child: TaskTile(task: task),
@@ -300,7 +179,7 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
           );
         },
         separatorBuilder: (context, index) {
-          return SizedBox(height: 15,);
+          return const SizedBox(height: 15,);
         },
       ),
     );
@@ -394,6 +273,133 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
           ),
         );
       },
+    );
+  }
+
+  Widget _diaryItemWidget(BuildContext context, int index) {
+    String shortName = controller.diaryItemVoList[index - 1].diaryName!;
+    if (shortName.length > 8) {
+      shortName = shortName.substring(0, 8) + "...";
+    }
+    bool isMe = controller.diaryItemVoList[index - 1].isMe!;
+    return Slidable(
+      key: ValueKey(index),
+      child: GestureDetector(
+        child: Card(
+          color: isMe ? Theme.of(context).primaryColor.withOpacity(.5) : Colors.deepPurple.withOpacity(.5),
+          child: Container(
+            // height: 150,
+            padding: const EdgeInsets.only(left: 15, right: 15, bottom: 8, top: 8),
+            child: Column(
+              mainAxisAlignment:
+              MainAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          shortName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context)
+                              .textTheme
+                              .headline2,
+                        ),
+                      ),
+                    ),
+                    Badge(
+                      toAnimate: false,
+                      shape: BadgeShape.square,
+                      badgeColor: isMe? Colors.deepPurple : Theme.of(context).primaryColor,
+                      borderRadius:
+                      BorderRadius.circular(8),
+                      padding: const EdgeInsets.all(3),
+                      badgeContent: Text(
+                          controller.diaryItemVoList[index - 1].diaryTag!,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              height: 1)),
+                    ),
+                  ],
+                ),
+                Container(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "${controller.diaryItemVoList[index - 1].diaryItemName}",
+                    style: Theme.of(context).textTheme.headline6,
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment:
+                  MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(
+                          top: 4),
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        isMe ? "送达 : ${controller.diaryItemVoList[index - 1].toWho!}" : "接收 : ${controller.diaryItemVoList[index - 1].fromWho!}",
+                        style: const TextStyle(
+                            color: Colors.black54,
+                            fontSize: 14),
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(
+                          top: 4),
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        "创于 : ${controller.diaryItemVoList[index - 1].diaryItemCreateTime!}",
+                        style: const TextStyle(
+                            color: Colors.black54,
+                            fontSize: 14),
+                      ),
+                    )
+                  ],
+                ),
+
+                const SizedBox(height: 4,)
+              ],
+            ),
+          ),
+        ),
+        onTap: () async{
+          await diaryItemPreView(controller.context!, controller.diaryItemVoList[index - 1]);
+        },
+      ),
+      endActionPane: ActionPane(
+        motion: const BehindMotion(),
+        children: [
+          if (controller.diaryItemVoList[index - 1].canUpdate!)
+            SlidableAction(
+              backgroundColor: Colors.blueAccent,
+              onPressed: (BuildContext context) async{
+                diaryItemPreEdit(context, controller.diaryItemVoList[index - 1]);
+              },
+              icon: Icons.edit,
+              label: "编辑",
+            ),
+          SlidableAction(
+            backgroundColor: Colors.greenAccent,
+            onPressed: (BuildContext context) async{
+              await diaryItemPreView(controller.context!, controller.diaryItemVoList[index - 1]);
+            },
+            icon: Icons.remove_red_eye_rounded,
+            label: "查看",
+          ),
+          if (isMe)
+            SlidableAction(
+              backgroundColor: Colors.redAccent,
+              onPressed: (BuildContext context) {  },
+              icon: Icons.delete,
+              label: "删除",
+            ),
+
+        ],
+      ),
     );
   }
 

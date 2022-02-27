@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:book_app/api/diary_api.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/model/diary/diary_item.dart';
 import 'package:flutter/material.dart';
@@ -12,23 +14,30 @@ class DiaryItemAddController extends GetxController{
   FocusNode diaryNameFocusNode = FocusNode();
   FocusNode diaryItemNameFocusNode = FocusNode();
   FocusNode richTextFocusNode = FocusNode();
-  QuillController quillController =  QuillController(document: Document(), selection: const TextSelection(extentOffset: 0, baseOffset: 0));
+  QuillController? quillController;
   ScrollController scrollController = ScrollController();
   BuildContext? context;
+  bool isAdd = false;
 
-  initData(bool isAdd, bool isEdit,var data) {
+  initData(bool isAdd, var data) {
+    Document document;
     if (isAdd) {
       // 新增
+      this.isAdd = true;
       diaryItem.diaryId = data["diaryId"];
       diaryItem.diaryName = data["diaryName"];
+      document = Document();
     } else {
-      // 修改或查看
+      // 修改
+      this.isAdd = false;
+      diaryItem = data;
+      document = Document.fromJson(jsonDecode(jsonDecode(diaryItem.content!)));
     }
+    quillController  =  QuillController(document: document, selection: const TextSelection(extentOffset: 0, baseOffset: 0));
     richTextFocusNode.addListener(() {
       if (richTextFocusNode.hasFocus) {
-        Log.i(111);
-        Timer(Duration(milliseconds: 300), () {
-          scrollController.animateTo(MediaQuery.of(context!).viewInsets.bottom, duration: Duration(milliseconds: 300), curve: Curves.ease);
+        Timer(const Duration(milliseconds: 300), () {
+          scrollController.animateTo(MediaQuery.of(context!).viewInsets.bottom, duration: const Duration(milliseconds: 300), curve: Curves.ease);
         });
       }
     });
@@ -38,6 +47,16 @@ class DiaryItemAddController extends GetxController{
     diaryItemNameFocusNode.unfocus();
     diaryNameFocusNode.unfocus();
     richTextFocusNode.unfocus();
+  }
+
+  saveOrUpdate(context) async{
+    diaryItem.content = jsonEncode(quillController!.document.toDelta().toJson());
+    if (isAdd) {
+      await DiaryApi.addDiaryItem(diaryItem);
+    } else {
+      await DiaryApi.updateDiaryItem(diaryItem);
+    }
+    Navigator.pop(context, true);
   }
   
 

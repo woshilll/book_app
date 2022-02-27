@@ -9,7 +9,27 @@ class DiaryItemViewScreen extends GetView<DiaryItemViewController>{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: RichTextEditScreen(FocusNode(), controller.quillController!, readonly: true,),
+      body: Container(
+        margin: const EdgeInsets.only(left: 10, right: 10),
+        child: Column(
+          children: [
+            const SizedBox(height: 15,),
+            Container(
+              alignment: Alignment.center,
+              child: Text("${controller.diaryItemVo!.diaryName}", style: Theme.of(context).textTheme.headline1,),
+            ),
+            const SizedBox(height: 15,),
+            Container(
+              alignment: Alignment.center,
+              child: Text("${controller.diaryItemVo!.diaryItemName}", style: Theme.of(context).textTheme.headline3,),
+            ),
+            const SizedBox(height: 15,),
+            Expanded(
+              child: RichTextEditScreen(FocusNode(), controller.quillController!, readonly: true,),
+            )
+          ],
+        ),
+      ),
     );
   }
 

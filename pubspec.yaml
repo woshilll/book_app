@@ -96,6 +96,7 @@ dependencies:
   syncfusion_flutter_datepicker: ^19.4.52
   badges: ^2.0.2
   flutter_slidable: ^1.2.0
+  web_socket_channel: ^2.1.0
 
 
 dev_dependencies:

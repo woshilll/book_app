@@ -31,7 +31,8 @@ class DioManager {
         // 请求基地址
         // baseUrl: "http://192.168.72.192:9898",
         // baseUrl: "http://app.woshilll.top",
-        baseUrl: "http://192.168.31.236:9898",
+        // baseUrl: "http://192.168.31.236:9898",
+        baseUrl: "http://localhost:9898",
         // 连接服务器超时时间，单位是毫秒
         connectTimeout: 60 * 1000,
         // 接收数据的最长时限
