@@ -41,7 +41,7 @@ class DiaryItemAddScreen extends GetView<DiaryItemAddController>{
                       children: [
                         Container(
                           child: Text(
-                            "新建日记",
+                            controller.isAdd ? "新建日记" : "修改日记",
                             style: Theme.of(context).textTheme.headline2,
                           ),
                         ),

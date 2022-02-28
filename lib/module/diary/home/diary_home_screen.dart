@@ -1,35 +1,16 @@
 import 'package:badges/badges.dart';
-import 'package:book_app/api/diary_api.dart';
 import 'package:book_app/log/log.dart';
-import 'package:book_app/module/diary/add/diary/diary_add_binding.dart';
-import 'package:book_app/module/diary/add/diary/diary_add_controller.dart';
-import 'package:book_app/module/diary/add/diary/diary_add_screen.dart';
 import 'package:book_app/module/diary/component/diary_item_pre.dart';
-import 'package:book_app/module/diary/component/quill_theme.dart';
 import 'package:book_app/module/diary/home/diary_home_controller.dart';
-import 'package:book_app/route/routes.dart';
 import 'package:book_app/util/time_util.dart';
 import 'package:date_picker_timeline/date_picker_widget.dart';
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_quill/flutter_quill.dart' hide Text;
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:syncfusion_flutter_datepicker/datepicker.dart';
-import 'package:tuple/tuple.dart';
 import 'package:get/get.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class DiaryHomeScreen extends GetView<DiaryHomeController> {
   const DiaryHomeScreen({Key? key}) : super(key: key);
@@ -393,7 +374,9 @@ class DiaryHomeScreen extends GetView<DiaryHomeController> {
           if (isMe)
             SlidableAction(
               backgroundColor: Colors.redAccent,
-              onPressed: (BuildContext context) {  },
+              onPressed: (BuildContext context) async{
+                await diaryItemPreDelete(controller.context!, controller.diaryItemVoList[index - 1].diaryItemName, controller.diaryItemVoList[index - 1].diaryItemId);
+              },
               icon: Icons.delete,
               label: "删除",
             ),

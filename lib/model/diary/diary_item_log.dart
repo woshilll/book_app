@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class DiaryItemLog{
   int? diaryItemId;
   String? name;
@@ -16,4 +18,12 @@ class DiaryItemLog{
     updateTime: json["updateTime"],
     version: json["version"],
   );
+
+  static List<DiaryItemLog> formJsonList(json) {
+    List<DiaryItemLog> res = [];
+    for (var date in jsonDecode(json)) {
+      res.add(DiaryItemLog.fromJson(date));
+    }
+    return res;
+  }
 }

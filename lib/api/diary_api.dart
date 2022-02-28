@@ -1,6 +1,7 @@
 import 'package:book_app/api/dio/dio_manager.dart';
 import 'package:book_app/model/diary/diary.dart';
 import 'package:book_app/model/diary/diary_item.dart';
+import 'package:book_app/model/diary/diary_item_log.dart';
 import 'package:book_app/model/diary/diary_item_vo.dart';
 import 'package:book_app/model/video/aliyun_play_info.dart';
 import 'package:book_app/model/video/video_index.dart';
@@ -18,9 +19,21 @@ class DiaryApi {
     return Diary.fromJsonList(await DioManager.instance.get(url: "/app/diary/list", showLoading: true, params: RsaUtil.getPublicParams()));
   }
 
+  /// 查看日记本带配置
+  static Future<Diary> getDiaryWithSetting(diaryId) async{
+    return Diary.fromJsonStr(await DioManager.instance.get(url: "/app/diary/$diaryId", showLoading: true, params: RsaUtil.getPublicParams()));
+  }
   /// 新增日记本
   static Future<void> addDiary(Diary diary) async{
     await DioManager.instance.post(url: "/app/diary", showLoading: true, body: diary.toJson(), encrypt: true);
+  }
+  /// 更新日记本
+  static Future<void> updateDiary(Diary diary) async{
+    await DioManager.instance.put(url: "/app/diary", showLoading: true, body: diary.toJson(), encrypt: true);
+  }
+  /// 删除日记本
+  static Future<void> deleteDiary(diaryId) async{
+    await DioManager.instance.delete(url: "/app/diary/$diaryId", showLoading: true,);
   }
 
 
@@ -37,6 +50,16 @@ class DiaryApi {
   /// 查看日记内容
   static Future<String> diaryItemContent(diaryItemId) async{
     return await DioManager.instance.get(url: "/app/diaryItem/$diaryItemId", showLoading: true, params: RsaUtil.getPublicParams());
+  }
+
+  /// 删除日记内容
+  static Future<void> deleteDiaryItem(diaryItemId) async{
+    await DioManager.instance.delete(url: "/app/diaryItem/$diaryItemId", showLoading: true);
+  }
+
+  /// 查看日记内容历史
+  static Future<List<DiaryItemLog>> getDiaryItemLogsByItemId(diaryItemId) async {
+    return DiaryItemLog.formJsonList(await DioManager.instance.get(url: "/app/diaryItemLog/$diaryItemId", showLoading: true, params: RsaUtil.getPublicParams()));
   }
 
 }

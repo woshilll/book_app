@@ -11,7 +11,6 @@ class InputField extends StatefulWidget {
         this.readable = false,
         this.inputType = InputType.text,
         this.onDataChange,
-        this.radioValue = "0",
         this.textInputType,
         this.inputValidator,
         this.initValue,
@@ -24,7 +23,6 @@ class InputField extends StatefulWidget {
   final InputType inputType;
   final Function(String)? onDataChange;
   String? Function(String?)? inputValidator;
-  String radioValue;
   final TextInputType? textInputType;
   String? initValue;
   final FocusNode? focusNode;
@@ -96,24 +94,28 @@ class _InputFieldState extends State<InputField> {
         Text("是: ", style: Theme.of(context).textTheme.bodyText1,),
         Radio(
           value: "1",
-          groupValue: widget.radioValue,
+          groupValue: widget.initValue,
           onChanged: (value) {
-            widget.radioValue = "1";
-            setState(() {
-            });
-            widget.onDataChange!("1");
+            if (!widget.readable) {
+              widget.initValue = "1";
+              setState(() {
+              });
+              widget.onDataChange!("1");
+            }
           },
         ),
         const SizedBox(width: 15,),
         Text("否: ", style: Theme.of(context).textTheme.bodyText1,),
         Radio(
           value: "0",
-          groupValue: widget.radioValue,
+          groupValue: widget.initValue,
           onChanged: (value) {
-            widget.radioValue = "0";
-            setState(() {
-            });
-            widget.onDataChange!("0");
+            if (!widget.readable) {
+              widget.initValue = "0";
+              setState(() {
+              });
+              widget.onDataChange!("0");
+            }
           },
         ),
       ],

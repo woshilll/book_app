@@ -16,7 +16,7 @@ class DiaryAddScreen extends GetView<DiaryAddController> {
     return SafeArea(
       child: SingleChildScrollView(
         child: Container(
-          margin: EdgeInsets.only(top: 15, left: 20, right: 20),
+          margin: const EdgeInsets.only(top: 15, left: 20, right: 20),
           child: Form(
             key: controller.formKey,
             child: Column(
@@ -25,7 +25,7 @@ class DiaryAddScreen extends GetView<DiaryAddController> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "新建日记本",
+                      "${controller.isView ? '查看' : controller.isAdd ? '新建' : '修改'}日记本",
                       style: Theme.of(context).textTheme.headline2,
                     )
                   ],
@@ -35,34 +35,40 @@ class DiaryAddScreen extends GetView<DiaryAddController> {
                 ),
                 InputField(
                   label: '日记名',
+                  initValue: controller.diary!.diaryName,
                   onDataChange: (value) {
-                    controller.diary.diaryName = value;
+                    controller.diary!.diaryName = value;
                   },
                   inputValidator: (value) {
                     return lengthValidator(value, 1, 100);
                   },
+                  readable: controller.isView,
                 ),
                 const SizedBox(
                   height: 20,
                 ),
                 InputField(
                   label: '标签',
+                  initValue: controller.diary!.diaryTag,
                   onDataChange: (value) {
-                    controller.diary.diaryTag = value;
+                    controller.diary!.diaryTag = value;
                   },
                   inputValidator: (value) {
                     return lengthValidator(value, 1, 10);
                   },
+                  readable: controller.isView,
                 ),
                 const SizedBox(
                   height: 20,
                 ),
                 InputField(
                   label: '写给谁',
+                  initValue: controller.diary!.receiver,
                   textInputType: TextInputType.phone,
                   onDataChange: (value) {
-                    controller.diary.receiver = value;
+                    controller.diary!.receiver = value;
                   },
+                  readable: controller.isView,
                   inputType: InputType.phone,
                   inputValidator: phoneValidator,
                 ),
@@ -72,11 +78,13 @@ class DiaryAddScreen extends GetView<DiaryAddController> {
                 InputField(
                   label: '你的邮箱',
                   textInputType: TextInputType.emailAddress,
+                  initValue: controller.diary!.diarySetting?.creatorEmail,
                   onDataChange: (value) {
-                    controller.diary.diarySetting?.creatorEmail = value;
+                    controller.diary!.diarySetting?.creatorEmail = value;
                   },
                   inputType: InputType.email,
                   inputValidator: emailValidator,
+                  readable: controller.isView,
                 ),
                 const SizedBox(
                   height: 20,
@@ -84,11 +92,13 @@ class DiaryAddScreen extends GetView<DiaryAddController> {
                 InputField(
                   label: '写给谁的邮箱',
                   textInputType: TextInputType.emailAddress,
+                  initValue: controller.diary!.diarySetting?.receiverEmail,
                   onDataChange: (value) {
-                    controller.diary.diarySetting?.receiverEmail = value;
+                    controller.diary!.diarySetting?.receiverEmail = value;
                   },
                   inputType: InputType.email,
                   inputValidator: emailValidator,
+                  readable: controller.isView,
                 ),
                 const SizedBox(
                   height: 20,
@@ -101,17 +111,21 @@ class DiaryAddScreen extends GetView<DiaryAddController> {
                         child: InputField(
                           label: '提醒自己',
                           onDataChange: (value) {
-                            controller.diary.diarySetting?.updateRemindCreator = value;
+                            controller.diary!.diarySetting?.updateRemindCreator = value;
                           },
+                          initValue: controller.diary!.diarySetting?.updateRemindCreator,
+                          readable: controller.isView,
                           inputType: InputType.radio,
                         )),
                     SizedBox(
                         width: 165,
                         child: InputField(
                           label: '提醒写给谁',
+                          initValue: controller.diary!.diarySetting?.updateRemindReceiver,
                           onDataChange: (value) {
-                            controller.diary.diarySetting?.updateRemindReceiver = value;
+                            controller.diary!.diarySetting?.updateRemindReceiver = value;
                           },
+                          readable: controller.isView,
                           inputType: InputType.radio,
                         )),
                   ],
@@ -121,20 +135,22 @@ class DiaryAddScreen extends GetView<DiaryAddController> {
                 ),
                 InputField(
                   label: '写给谁可编辑',
+                  initValue: controller.diary!.diarySetting?.receiverCanUpdate,
                   onDataChange: (value) {
-                    controller.diary.diarySetting?.receiverCanUpdate = value;
+                    controller.diary!.diarySetting?.receiverCanUpdate = value;
                   },
+                  readable: controller.isView,
                   inputType: InputType.radio,
                 ),
                 const SizedBox(
                   height: 20,
                 ),
+                if (!controller.isView)
                 ElevatedButton(
-                  child: const Text("新增"),
+                  child: Text(controller.isAdd ? "新增" : "修改"),
                   onPressed: () async{
                     if (controller.formKey.currentState!.validate()) {
-                      await DiaryApi.addDiary(controller.diary);
-                      Navigator.pop(context);
+                      await controller.saveOrUpdate(context);
                     }
                   },
 

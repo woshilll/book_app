@@ -14,16 +14,32 @@ class Diary{
 
   Diary({this.id, this.creator, this.diaryName, this.receiver, this.diaryTag, this.createTime, this.updateTime, this.diarySetting});
 
-  factory Diary.fromJson(Map<String, dynamic> json) => Diary(
-    id: json["id"],
-    creator: json["creator"],
-    receiver: json["receiver"],
-    diaryName: json["diaryName"],
-    diaryTag: json["diaryTag"],
-    createTime: json["createTime"],
-    updateTime: json["updateTime"],
-    diarySetting: json["diarySetting"] == null ? null : DiarySetting.fromJson(json["diarySetting"])
-  );
+  factory Diary.fromJson(json) {
+    return Diary(
+        id: json["id"],
+        creator: json["creator"],
+        receiver: json["receiver"],
+        diaryName: json["diaryName"],
+        diaryTag: json["diaryTag"],
+        createTime: json["createTime"],
+        updateTime: json["updateTime"],
+        diarySetting: json["diarySetting"] == null ? null : DiarySetting.fromJson(json["diarySetting"])
+    );
+  }
+
+  factory Diary.fromJsonStr(jsonStr) {
+    var json = jsonDecode(jsonStr);
+    return Diary(
+        id: json["id"],
+        creator: json["creator"],
+        receiver: json["receiver"],
+        diaryName: json["diaryName"],
+        diaryTag: json["diaryTag"],
+        createTime: json["createTime"],
+        updateTime: json["updateTime"],
+        diarySetting: json["diarySetting"] == null ? null : DiarySetting.fromJson(json["diarySetting"])
+    );
+  }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
     "id": id,

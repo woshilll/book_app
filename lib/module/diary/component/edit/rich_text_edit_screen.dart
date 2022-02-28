@@ -65,6 +65,9 @@ class _RichTextEditScreenState extends State<RichTextEditScreen> {
             // mediaPickSettingSelector: _selectMediaPickSetting,
             showAlignmentButtons: true,
             locale: const Locale('zh', 'CN'),
+            showImageButton: false,
+            showCameraButton: false,
+            showVideoButton: false,
             iconTheme: QuillTheme.getIconTheme(context),
           )
         ],
