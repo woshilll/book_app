@@ -1,25 +1,16 @@
-
-
-import 'dart:collection';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
-
-
 import 'package:book_app/api/dio/dio_manager.dart';
 import 'package:book_app/log/log.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:fast_gbk/fast_gbk.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 class HtmlParseUtil {
+  // ignore: non_constant_identifier_names
   static final List<String> IGNORE_CONTENT_HTML_TAG = ["a", "option", "h1", "h2", "strong", "font", "button", "script"];
 
   static parseChapter(String url) async{

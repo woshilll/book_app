@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/limit_util.dart';
-import 'package:book_app/util/time_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -88,20 +87,19 @@ bottom(context) async {
                                     ),
                                   ),
                                 ),
-                                GestureDetector(
-                                  child: Container(
-                                    alignment: Alignment.centerRight,
-                                    margin: const EdgeInsets.only(right: 15),
-                                    child: const Icon(
-                                      Icons.headset,
-                                      size: 25,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  onTap: () async {
-                                    await controller.play();
-                                  },
-                                )
+                                // GestureDetector(
+                                //   child: Container(
+                                //     alignment: Alignment.centerRight,
+                                //     margin: const EdgeInsets.only(right: 15),
+                                //     child: const Icon(
+                                //       Icons.headset,
+                                //       size: 25,
+                                //       color: Colors.white,
+                                //     ),
+                                //   ),
+                                //   onTap: () async {
+                                //   },
+                                // )
                               ],
                             ),
                           ),

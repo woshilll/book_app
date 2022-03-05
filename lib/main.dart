@@ -32,12 +32,6 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Get.put(AppController());
-    String initRoute = Routes.splash;
-    var splashTrue = SaveUtil.getTrue(Constant.splashTrue);
-    if (splashTrue != null && splashTrue) {
-      // 去默认页
-      initRoute = SaveUtil.getString(Constant.initRoute) ?? Routes.home;
-    }
     return GetBuilder<AppController>(
       id: "fullScreen",
       builder: (controller) {
@@ -46,7 +40,7 @@ class App extends StatelessWidget {
           child: GetMaterialApp(
             debugShowCheckedModeBanner: false,
             enableLog: true,
-            initialRoute: initRoute,
+            initialRoute: Routes.bookHome,
             defaultTransition: Transition.fade,
             getPages: RoutePages.routes,
             initialBinding: AppBinding(),

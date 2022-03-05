@@ -1,13 +1,10 @@
 import 'dart:async';
 
-import 'package:book_app/api/book_api.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/chapter/chapter.dart';
-import 'package:book_app/model/search/search_history.dart';
-import 'package:book_app/model/search/search_result.dart';
 import 'package:book_app/module/book/home/book_home_controller.dart';
 import 'package:book_app/util/html_parse_util.dart';
 import 'package:book_app/util/system_utils.dart';
@@ -15,30 +12,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 class SearchValueController extends GetxController {
-  // late SearchHistory site;
-  // List<SearchResult> searchResults = [];
   InAppWebViewController? webViewController;
-  String? keyword;
   final BookDbProvider _bookDbProvider = BookDbProvider();
   final ChapterDbProvider _chapterDbProvider = ChapterDbProvider();
-  String? site;
   bool showParseButton = false;
   @override
   void onInit() async {
     super.onInit();
     var map = Get.arguments;
-    keyword = map["keyword"];
-    site = map["site"];
-  }
-
-  @override
-  void onReady() async {
-    super.onReady();
-    // searchResults = await BookApi.getSearchResults(site.label, site.site);
-    // update(["result"]);
   }
 
   Widget buildRichText(str, double fontSize, FontWeight fontWeight) {

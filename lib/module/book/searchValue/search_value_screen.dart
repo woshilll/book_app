@@ -6,7 +6,6 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 class SearchValueScreen extends GetView<SearchValueController> {
   const SearchValueScreen({Key? key}) : super(key: key);
@@ -15,6 +14,7 @@ class SearchValueScreen extends GetView<SearchValueController> {
   Widget build(BuildContext context) {
     return WillPopScope(
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         body: Column(
           children: [
             SizedBox(height: MediaQuery.of(context).padding.top,),
@@ -54,7 +54,7 @@ class SearchValueScreen extends GetView<SearchValueController> {
 
   Widget _body(context) {
     return InAppWebView(
-      initialUrlRequest: URLRequest(url: Uri.parse(controller.site!.trArgs([controller.keyword!]))),
+      initialUrlRequest: URLRequest(url: Uri.parse(getSites()[0][1])),
       onWebViewCreated: (webController) {
         controller.webViewController = webController;
       },
@@ -62,25 +62,6 @@ class SearchValueScreen extends GetView<SearchValueController> {
         controller.showParseButton = await _showButton();
         controller.update(["showButton"]);
       },
-      // onWebViewCreated: (WebViewController wController) {
-      //   controller.webViewController = wController;
-      // },
-      // javascriptMode: JavascriptMode.unrestricted,
-      // onPageStarted: (url) {
-      //   Log.i("开始加载 $url");
-      // },
-      // onPageFinished: (url) {
-      //   Log.i("结束加载 $url");
-      // },
-      // onProgress: (p) {
-      //   Log.i(p);
-      // },
-      // navigationDelegate: (request) {
-      //   if (!request.url.startsWith("http")) {
-      //     return NavigationDecision.prevent;
-      //   }
-      //   return NavigationDecision.navigate;
-      // },
     );
   }
 
@@ -93,5 +74,13 @@ class SearchValueScreen extends GetView<SearchValueController> {
       }
     }
     return false;
+  }
+
+  List<List<String>> getSites() {
+    return [
+      ["神马小说", "https://quark.sm.cn/s?q=&from=smor&safe=1"],
+      ["360搜索", "https://m.so.com/s?q="],
+      ["必应搜索", "https://cn.bing.com/search?q="],
+    ];
   }
 }

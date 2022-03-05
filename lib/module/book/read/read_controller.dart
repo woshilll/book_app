@@ -3,9 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:audio_service/audio_service.dart';
 import 'package:battery_plus/battery_plus.dart';
-import 'package:book_app/api/chapter_api.dart';
 import 'package:book_app/app_controller.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/mapper/book_db_provider.dart';
@@ -15,7 +13,6 @@ import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/model/read_page_type.dart';
 import 'package:book_app/module/book/read/component/drawer.dart';
 import 'package:book_app/module/book/readSetting/component/read_setting_config.dart';
-import 'package:book_app/module/home/home_controller.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/channel_utils.dart';
@@ -26,8 +23,8 @@ import 'package:book_app/util/notify/counter_notify.dart';
 import 'package:book_app/util/save_util.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:woshilll_flutter_plugin/woshilll_flutter_plugin.dart';
 import 'component/content_page.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
@@ -55,12 +52,9 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   bool loading = false;
   /// 阅读进度
   int readChapterIndex = 0;
-  // ignore: prefer_typing_uninitialized_variables
-  final scaffoldKey = GlobalKey<ScaffoldState>();
   /// 目录控制器
   ItemScrollController menuController = ItemScrollController();
   ItemPositionsListener menuPositionsListener = ItemPositionsListener.create();
-  double menuBarMove = 0;
   /// 底部类型 1-正常 2-亮度 3-设置
   String bottomType = "1";
   /// 屏幕亮度
@@ -73,7 +67,6 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   ReadSettingConfig readSettingConfig = ReadSettingConfig.defaultConfig();
   /// 字体样式
   late TextStyle contentStyle;
-  late AudioHandler audioHandler;
   /// 是否旋转屏幕
   bool rotateScreen = false;
   /// x轴移动距离
@@ -103,7 +96,6 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   double titleHeight = 0;
   AnimationController? coverController;
   final double paddingWidth = 40;
-  List<Chapter> menuItems = [];
   @override
   void onInit() async{
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -117,7 +109,6 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     batteryLevel = await _battery.batteryLevel;
     var map = Get.arguments;
     book = map["book"];
-    initAudio();
     _batteryListen();
     await _batteryCap();
     _menuListen();
@@ -136,7 +127,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     /// 初始化宽度
     _initSize();
     /// 亮度 放在前面
-    brightness = await ChannelUtils.getBrightness();
+    brightness = await WoshilllFlutterPlugin.getBrightness();
     brightnessTemp = brightness;
     /// 背景色
     readSettingConfig = _getReadSettingConfig();
@@ -454,27 +445,9 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   }
 
   openDrawer() async{
-    menuBarMove = 0;
-    // update(["refreshKey"]);
     Timer(const Duration(milliseconds: 400), () {
-      scaffoldKey.currentState!.openDrawer();
-      Timer(const Duration(milliseconds: 200), () {
-        menuItems = _initItem();
-        update(["loadMenuItems"]);
-      });
+      drawer(context);
     });
-  }
-  List<Chapter> _initItem() {
-    if (controller.pages.isEmpty) {
-      return [];
-    }
-    var chapterId = controller.pages[controller.pageIndex.count].chapterId;
-    List<Chapter> res = [];
-    int index = controller.chapters.indexWhere((element) => element.id == chapterId);
-    for(int i = index; i < controller.chapters.length && i < index + 30; i++) {
-      res.add(controller.chapters[i]);
-    }
-    return res;
   }
   /// 上一章
   preChapter() async{
@@ -524,7 +497,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
 
   setBrightness(double value) async{
     brightness = value;
-    ChannelUtils.setBrightness(value);
+    WoshilllFlutterPlugin.setBrightness(value);
     update(["brightness"]);
   }
 
@@ -589,28 +562,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     ChannelUtils.setConfig(Constant.pluginVolumeFlag, false);
   }
 
-  void initAudio() {
-    AppController homeController = Get.find();
-    audioHandler = homeController.audioHandler;
-  }
 
-  play() async{
-    AppController homeController = Get.find();
-    await audioHandler.pause();
-    await audioHandler.updateQueue([]);
-    // 直接加载一整章的小说
-    int lastIndex = pages.lastIndexWhere((element) => element.chapterId == pages[pageIndex.count].chapterId);
-    for (int i = pageIndex.count; i <= lastIndex; i++) {
-      await audioHandler.addQueueItem(MediaItem(
-          id: pages[pageIndex.count].chapterId.toString(),
-          album: book!.name,
-          title: pages[pageIndex.count].chapterName.toString(),
-          extras: <String, String>{"content": pages[i].content, "type": "1"}
-      ));
-    }
-    await audioHandler.play();
-    homeController.audioProcessingState = AudioProcessingState.error;
-  }
   double _contentWidth() {
   return screenWidth - paddingWidth - screenLeft - screenRight;
   }

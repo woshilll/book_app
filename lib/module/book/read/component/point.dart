@@ -1,4 +1,3 @@
-import 'package:book_app/module/book/read/component/smooth.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

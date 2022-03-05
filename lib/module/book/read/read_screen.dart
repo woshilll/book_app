@@ -10,9 +10,7 @@ import 'package:book_app/module/book/read/component/point.dart';
 import 'package:book_app/module/book/read/component/smooth.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/theme/color.dart';
-import 'package:book_app/util/size_fit_util.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import 'component/custom_drawer.dart';
@@ -28,7 +26,6 @@ class ReadScreen extends GetView<ReadController>{
         id: "refreshKey",
         builder: (controller) {
           return Scaffold(
-            key: controller.scaffoldKey,
             drawerEdgeDragWidth: 0,
             body: Stack(
               children: [
@@ -50,7 +47,6 @@ class ReadScreen extends GetView<ReadController>{
                 _body(context),
               ],
             ),
-            drawer: drawer(),
           );
         },
       ),

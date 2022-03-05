@@ -7,13 +7,9 @@ import android.view.KeyEvent
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugins.GeneratedPluginRegistrant
-import com.ryanheise.audioservice.AudioServicePlugin;
 
 class MainActivity: FlutterActivity() {
     private lateinit var woshilllPlugin: WoshilllPlugin
-    override fun provideFlutterEngine(context: Context): FlutterEngine? {
-        return AudioServicePlugin.getFlutterEngine(context);
-    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

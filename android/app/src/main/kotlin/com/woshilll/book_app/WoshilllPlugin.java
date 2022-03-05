@@ -44,27 +44,13 @@ public class WoshilllPlugin implements MethodChannel.MethodCallHandler {
     public void onMethodCall(@NonNull @NotNull MethodCall call, @NonNull @NotNull MethodChannel.Result result) {
         try {
             switch (call.method) {
-                case "setBrightness":
-                    setBrightness((Double) call.arguments);
-                    break;
                 case "setConfig":
                     configMap.put(call.argument("key"), call.argument("value"));
-                    break;
-                case "getBrightness":
-                    getBrightness(result);
                     break;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * 获取屏幕亮度
-     */
-    private void getBrightness(MethodChannel.Result result) throws Settings.SettingNotFoundException {
-        int res = Settings.System.getInt(activity.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
-        result.success(res / (double) getBrightnessMax());
     }
 
     /**
@@ -102,26 +88,5 @@ public class WoshilllPlugin implements MethodChannel.MethodCallHandler {
             }
         }
         return res;
-    }
-    private void setBrightness(double value) {
-        Window window = activity.getWindow();
-        WindowManager.LayoutParams lp = window.getAttributes();
-        lp.screenBrightness = (float) value;
-        window.setAttributes(lp);
-    }
-
-    /**
-     * 获取最大亮度
-     * @return max
-     */
-    private int getBrightnessMax() {
-        try {
-            Resources system = Resources.getSystem();
-            int resId = system.getIdentifier("config_screenBrightnessSettingMaximum", "integer", "android");
-            if (resId != 0) {
-                return system.getInteger(resId);
-            }
-        }catch (Exception ignore){}
-        return 255;
     }
 }

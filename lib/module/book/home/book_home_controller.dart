@@ -1,20 +1,22 @@
-import 'dart:async';
 import 'dart:io';
 
-import 'package:book_app/api/book_api.dart';
-import 'package:book_app/api/chapter_api.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/chapter/chapter.dart';
+import 'package:book_app/module/book/searchValue/search_value_controller.dart';
+import 'package:book_app/module/book/searchValue/search_value_screen.dart';
 import 'package:book_app/route/routes.dart';
+import 'package:book_app/util/bottom_widget_util.dart';
 import 'package:book_app/util/channel_utils.dart';
 import 'package:book_app/util/font_util.dart';
+import 'package:book_app/util/html_parse_util.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
+import 'package:woshilll_flutter_plugin/woshilll_flutter_plugin.dart';
 
 class BookHomeController extends GetxController {
   static final BookDbProvider _bookDbProvider = BookDbProvider();
@@ -62,7 +64,7 @@ class BookHomeController extends GetxController {
         EasyLoading.showToast("本地小说无章节,请删除");
         return;
       }
-      List<Chapter> chapters = await ChapterApi.parseChapters(selected.url);
+      List<Chapter> chapters = await HtmlParseUtil.parseChapter(selected.url!);
       // 添加章节
       if (chapters.isNotEmpty) {
         for (var element in chapters) {
@@ -74,22 +76,17 @@ class BookHomeController extends GetxController {
     }
     var value = await Get.toNamed(Routes.read, arguments: {"book": selected})!;
     await getBookList();
-    await ChannelUtils.setBrightness(value["brightness"]);
+    await WoshilllFlutterPlugin.setBrightness(value["brightness"]);
   }
 
-  void toSearch() {
-    Get.toNamed(Routes.search)!.then((value) {
-      getBookList();
-    });
+  void toSearch() async{
+    Get.toNamed(Routes.search);
   }
 
   manageChoose(String value) async{
     switch(value) {
       case "1":
         _selectTextFile();
-        break;
-      case "3":
-        Get.toNamed(Routes.settingHome);
         break;
     }
   }

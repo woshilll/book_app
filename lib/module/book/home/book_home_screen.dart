@@ -1,28 +1,20 @@
 import 'dart:io';
 
-import 'package:book_app/log/log.dart';
 import 'package:book_app/module/book/home/book_home_controller.dart';
-import 'package:book_app/route/routes.dart';
 import 'package:book_app/util/bar_util.dart';
 import 'package:book_app/util/no_shadow_scroll_behavior.dart';
-import 'package:book_app/util/size_fit_util.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:book_app/model/book/book.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class BookHomeScreen extends GetView<BookHomeController> {
   const BookHomeScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    SizeFitUtil.initialize(context);
-    ScreenUtil.init(BoxConstraints(maxWidth: MediaQuery.of(context).size.width, maxHeight: MediaQuery.of(context).size.height));
     globalContext = context;
     return Scaffold(
       appBar: AppBar(
@@ -209,10 +201,6 @@ class BookHomeScreen extends GetView<BookHomeController> {
         const PopupMenuItem<String>(
           child: Text("导入"),
           value: "1",
-        ),
-        const PopupMenuItem<String>(
-          child: Text("设置"),
-          value: "3",
         ),
       ],
       offset: const Offset(20, 30),

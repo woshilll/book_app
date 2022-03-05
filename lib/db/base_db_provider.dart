@@ -1,5 +1,4 @@
 import 'package:book_app/db/sql_manager.dart';
-import 'package:book_app/log/log.dart';
 import 'package:book_app/model/base.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:meta/meta.dart';

@@ -1,14 +1,9 @@
-import 'package:book_app/log/log.dart';
 import 'package:book_app/module/book/read/component/content_bottom.dart';
 import 'package:book_app/module/book/read/component/content_top.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/theme/color.dart';
-import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-import 'battery.dart';
 
 Widget content(context, index, ReadController controller) {
   if (controller.pages.isEmpty || controller.pages.length < index) {
