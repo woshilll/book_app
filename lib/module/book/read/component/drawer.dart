@@ -8,8 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import 'custom_drawer.dart';
-ReadController controller = Get.find();
 drawer(context) async{
+  ReadController controller = Get.find();
   int listIndex = controller.chapters.indexWhere((element) => element.id == controller.pages[controller.pageIndex.count].chapterId);
   ScrollController scrollController = ScrollController();
   await Navigator.of(context)
@@ -53,7 +53,7 @@ drawer(context) async{
                                 Expanded(
                                   child: ScrollConfiguration(
                                     behavior: NoShadowScrollBehavior(),
-                                    child: _list(scrollController, listIndex),
+                                    child: _list(controller, scrollController, listIndex),
                                 )
                                 )
                               ],
@@ -82,7 +82,7 @@ drawer(context) async{
   });
 }
 
-Widget _list(ScrollController scrollController, listIndex) {
+Widget _list(ReadController controller, ScrollController scrollController, listIndex) {
   Timer(const Duration(milliseconds: 10), () {
     scrollController.animateTo(41.0 * listIndex, duration: Duration(seconds: listIndex ~/ 100), curve: Curves.linear);
   });

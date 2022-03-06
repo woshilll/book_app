@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 Widget contentBottom(context, index, ReadController controller) {
   return Container(
-    height: controller.screenBottom,
+    height: controller.pageGen.screenBottom,
     width: MediaQuery.of(context).size.width,
     margin: const EdgeInsets.only(bottom: 4),
     child: Row(
@@ -14,7 +14,7 @@ Widget contentBottom(context, index, ReadController controller) {
             margin: const EdgeInsets.only(left: 25),
             child: Text(
               "${controller.pages[index].chapterName}",
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: const TextStyle(fontSize: 12, color: Colors.grey, height: 1),
             ),
           ),
         ),
@@ -22,7 +22,7 @@ Widget contentBottom(context, index, ReadController controller) {
           margin: const EdgeInsets.only(right: 25),
           child: Text(
             "${controller.pages[index].index}/${controller.calThisChapterTotalPage(index)}",
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
+            style: const TextStyle(fontSize: 12, color: Colors.grey, height: 1),
           ),
         )
       ],

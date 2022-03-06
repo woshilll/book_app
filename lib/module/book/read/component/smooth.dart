@@ -1,26 +1,24 @@
+import 'package:another_transformer_page_view/another_transformer_page_view.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'content.dart';
 /// 平滑
-Widget smooth(ReadController controller) {
+Widget smooth({PageTransformer? transformer}) {
   return GetBuilder<ReadController>(
     id: "content",
     builder: (controller) {
       return Listener(
-        child: PageView.builder(
+        child: TransformerPageView(
+          transformer: transformer,
           controller: controller.contentPageController,
           itemCount: controller.pages.length,
           itemBuilder: (context, index) {
             return content(context, index, controller);
           },
           onPageChanged: (index) async {
-            controller.pageIndex.setCount(index);
-            if (index + 30 >= controller.pages.length &&
-                !controller.loading) {
-              await controller.pageChangeListen();
-            }
+            controller.pageIndex.setCount(index!);
           },
         ),
         onPointerDown: (e) {

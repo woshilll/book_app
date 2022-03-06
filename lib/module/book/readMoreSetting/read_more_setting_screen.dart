@@ -132,10 +132,18 @@ class ReadMoreSettingScreen extends GetView<ReadMoreSettingController> {
         return "点击";
       case ReadPageType.smooth:
         return "滑动";
-      case ReadPageType.cover:
-        return "覆盖";
-      case ReadPageType.emulation:
-        return "仿真";
+      case ReadPageType.smooth_1:
+        return "滑动_动画一";
+      case ReadPageType.smooth_2:
+        return "滑动_动画二";
+      case ReadPageType.smooth_3:
+        return "滑动_动画三";
+      case ReadPageType.smooth_4:
+        return "滑动_动画四";
+      case ReadPageType.smooth_5:
+        return "滑动_动画五";
+      case ReadPageType.smooth_6:
+        return "滑动_动画六";
     }
   }
 }

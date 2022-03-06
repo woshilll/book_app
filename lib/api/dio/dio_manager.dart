@@ -10,6 +10,7 @@ class DioManager {
 
   static DioManager getInstance() {
     _instance ??= DioManager._init();
+
     return _instance!;
   }
 

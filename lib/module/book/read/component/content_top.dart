@@ -6,8 +6,8 @@ import 'battery.dart';
 /// 小说名和电池
 Widget contentTop(context, ReadController controller) {
   return SizedBox(
-    height: controller.screenTop,
-    width: controller.screenWidth,
+    height: controller.pageGen.screenTop,
+    width: controller.pageGen.screenWidth,
     child: Container(
       margin: const EdgeInsets.only(top: 10, bottom: 10),
       child: Row(

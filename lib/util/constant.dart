@@ -11,6 +11,8 @@ class Constant {
   static const String readSettingConfig = "read_setting_config";
   /// 登录token
   static const String token = "token";
+  /// 阅读点击类型
+  static const String readType = "read_type";
 
   /// 启动页
   static const String initRoute = "initRoute";

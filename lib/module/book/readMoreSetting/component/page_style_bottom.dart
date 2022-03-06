@@ -5,6 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 pageStyleBottom(context, ReadMoreSettingController controller) {
+  var list = [
+    ["平滑翻页", ReadPageType.smooth],
+    ["平滑翻页_动画一", ReadPageType.smooth_1],
+    ["平滑翻页_动画二", ReadPageType.smooth_2],
+    ["平滑翻页_动画三", ReadPageType.smooth_3],
+    ["平滑翻页_动画四", ReadPageType.smooth_4],
+    ["平滑翻页_动画五", ReadPageType.smooth_5],
+    ["平滑翻页_动画六", ReadPageType.smooth_6],
+    ["点击翻页", ReadPageType.point],
+  ];
   ReadController readController = Get.find();
   showModalBottomSheet(
       context: context,
@@ -12,69 +22,38 @@ pageStyleBottom(context, ReadMoreSettingController controller) {
         return Opacity(
           opacity: .7,
           child: SizedBox(
-            height: 220,
-            child: Column(
-              children: [
-               InkWell(
-                 child:  Container(
-                   height: 50,
-                   alignment: Alignment.center,
-                   child: Text("平滑翻页", style: TextStyle(color: Theme.of(context).textTheme.bodyText1!.color, fontSize: 20),),
-                 ),
-                 onTap: () {
-                   if (readController.readPageType != ReadPageType.smooth) {
-                     readController.setPageType(ReadPageType.smooth);
-                     controller.fresh();
-                     Navigator.of(context).pop();
-                   }
-                 },
-               ),
-                const Divider(
-                  height: 1,
-                  color: Colors.grey,
-                ),
-                InkWell(
-                  child:  Container(
-                    height: 50,
-                    alignment: Alignment.center,
-                    child: Text("点击翻页", style: TextStyle(color: Theme.of(context).textTheme.bodyText1!.color, fontSize: 20),),
-                  ),
-                  onTap: () {
-                    if (readController.readPageType != ReadPageType.point) {
-                      readController.setPageType(ReadPageType.point);
-                      controller.fresh();
-                      Navigator.of(context).pop();
-                    }
-                  },
-                ),
-                const Divider(
-                  height: 1,
-                  color: Colors.grey,
-                ),
-                InkWell(
-                  child:  Container(
-                    height: 50,
-                    alignment: Alignment.center,
-                    child: Text("仿真翻页(未实现)", style: TextStyle(color: Theme.of(context).textTheme.bodyText1!.color, fontSize: 20),),
-                  ),
-                  onTap: () {},
-                ),
-                const Divider(
-                  height: 1,
-                  color: Colors.grey,
-                ),
-                InkWell(
-                  child:  Container(
-                    height: 50,
-                    alignment: Alignment.center,
-                    child: Text("覆盖翻页(未实现)", style: TextStyle(color: Theme.of(context).textTheme.bodyText1!.color, fontSize: 20),),
-                  ),
-                  onTap: () {},
-                ),
-              ],
-            ),
+            height: 51 * list.length + 16,
+            child: ListView.separated(
+                itemBuilder: (context, index) {
+                  return InkWell(
+                    child: Container(
+                      height: 50,
+                      alignment: Alignment.center,
+                      child: Text(
+                        "${list[index][0]}",
+                        style: TextStyle(
+                            color: Theme.of(context).textTheme.bodyText1!.color,
+                            fontSize: 20),
+                      ),
+                    ),
+                    onTap: () {
+                      ReadPageType readPageType = list[index][1] as ReadPageType;
+                      if (readController.readPageType != readPageType) {
+                        readController.setPageType(readPageType);
+                        controller.fresh();
+                        Navigator.of(context).pop();
+                      }
+                    },
+                  );
+                },
+                separatorBuilder: (context, index) {
+                  return const Divider(
+                    height: 1,
+                    color: Colors.grey,
+                  );
+                },
+                itemCount: list.length),
           ),
         );
-      }
-  );
+      });
 }

@@ -26,6 +26,7 @@ abstract class BaseDbProvider {
     isTableExits = await SqlManager.isTableExits(name);
     if (!isTableExits) {
       Database db = await SqlManager.getCurrentDatabase();
+
       return await db.execute(createSql);
     }
   }
@@ -35,6 +36,7 @@ abstract class BaseDbProvider {
     if (!isTableExits) {
       await prepare(tableName(), createTableString());
     }
+
     return await SqlManager.getCurrentDatabase();
   }
 
@@ -45,6 +47,7 @@ abstract class BaseDbProvider {
 
   Future<int> commonInsert(Base base) async {
     Database db = await getDataBase();
+
     return await db.insert(tableName(), base.toJson());
   }
 

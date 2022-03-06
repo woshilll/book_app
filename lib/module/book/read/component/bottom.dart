@@ -306,7 +306,7 @@ Widget _bottomType(ReadController controller) {
                   },
                   onChangeStart: (value) {},
                   onChangeEnd: (value) {
-                    controller.jumpChapter(value.toInt());
+                    controller.jumpChapter(value.toInt(), clearCount: true);
                   },
                 );
               },

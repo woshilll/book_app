@@ -19,7 +19,7 @@ Widget content(context, index, ReadController controller) {
             children: [
               if (controller.pages[index].index == 1)
                 Container(
-                  height: controller.titleHeight,
+                  height: controller.pageGen.titleHeight,
                   alignment: Alignment.centerLeft,
                   child: Text(
                     "${controller.pages[index].chapterName}\n",

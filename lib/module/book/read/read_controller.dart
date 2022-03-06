@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:another_transformer_page_view/another_transformer_page_view.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:book_app/app_controller.dart';
 import 'package:book_app/log/log.dart';
@@ -12,18 +13,17 @@ import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/model/read_page_type.dart';
 import 'package:book_app/module/book/read/component/drawer.dart';
+import 'package:book_app/module/book/read/component/page_gen.dart';
 import 'package:book_app/module/book/readSetting/component/read_setting_config.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/color.dart';
+import 'package:book_app/util/bar_util.dart';
 import 'package:book_app/util/channel_utils.dart';
 import 'package:book_app/util/constant.dart';
-import 'package:book_app/util/font_util.dart';
-import 'package:book_app/util/html_parse_util.dart';
 import 'package:book_app/util/notify/counter_notify.dart';
 import 'package:book_app/util/save_util.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:woshilll_flutter_plugin/woshilll_flutter_plugin.dart';
 import 'component/content_page.dart';
 import 'package:book_app/util/system_utils.dart';
@@ -45,16 +45,11 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   /// 当前阅读页索引
   CounterNotify pageIndex = CounterNotify();
   /// 页面监听
-  PageController contentPageController = PageController();
-  /// 画笔 https://www.jianshu.com/p/f713e5a36da5
-  final TextPainter _painter = TextPainter(textDirection: TextDirection.ltr, locale: WidgetsBinding.instance!.window.locale, textScaleFactor: MediaQuery.of(globalContext).textScaleFactor);
+  IndexController contentPageController = IndexController();
   /// 是否正在加载
-  bool loading = false;
+  // bool loading = false;
   /// 阅读进度
   int readChapterIndex = 0;
-  /// 目录控制器
-  ItemScrollController menuController = ItemScrollController();
-  ItemPositionsListener menuPositionsListener = ItemPositionsListener.create();
   /// 底部类型 1-正常 2-亮度 3-设置
   String bottomType = "1";
   /// 屏幕亮度
@@ -65,8 +60,6 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   List<String> backgroundColors = ReadSettingConfig.getCommonBackgroundColors();
   /// 默认背景色
   ReadSettingConfig readSettingConfig = ReadSettingConfig.defaultConfig();
-  /// 字体样式
-  late TextStyle contentStyle;
   /// 是否旋转屏幕
   bool rotateScreen = false;
   /// x轴移动距离
@@ -85,33 +78,18 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   BatteryState batteryState = BatteryState.unknown;
   /// 阅读方式
   ReadPageType readPageType = ReadPageType.smooth;
-  /// 点击翻页淡入淡出
-  bool pointShow = true;
-  double screenHeight = 0;
-  double screenWidth = 0;
-  double screenLeft = 0;
-  double screenBottom = 0;
-  double screenTop = 0;
-  double screenRight = 0;
-  double titleHeight = 0;
-  AnimationController? coverController;
-  final double paddingWidth = 40;
+  /// 小说页面生成
+  late PageGen pageGen;
   @override
   void onInit() async{
+    readPageType = getReadPageTypeByStr(SaveUtil.getString(Constant.readType));
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     super.onInit();
-    // 覆盖翻页
-    coverController = AnimationController(
-      value: 0,
-      duration: const Duration(milliseconds: 450),
-      vsync: this,
-    );
     batteryLevel = await _battery.batteryLevel;
     var map = Get.arguments;
     book = map["book"];
     _batteryListen();
     await _batteryCap();
-    _menuListen();
     _pageIndexChangeListen();
     ChannelUtils.setConfig(Constant.pluginVolumeFlag, true);
     _volumeChangeListen();
@@ -124,8 +102,6 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   }
 
   initData() async{
-    /// 初始化宽度
-    _initSize();
     /// 亮度 放在前面
     brightness = await WoshilllFlutterPlugin.getBrightness();
     brightnessTemp = brightness;
@@ -134,7 +110,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     if (isDark) {
       readSettingConfig = ReadSettingConfig.defaultDarkConfig(readSettingConfig.fontSize, readSettingConfig.fontHeight);
     }
-    contentStyle = TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: readSettingConfig.fontSize, height: readSettingConfig.fontHeight);
+    pageGen = PageGen(TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: readSettingConfig.fontSize, height: readSettingConfig.fontHeight));
     /// 加载章节
     chapters = await _chapterDbProvider.getChapters(null, book!.id);
     Chapter cur = chapters[0];
@@ -157,91 +133,44 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   }
   /// 将文本转文字页面
   initPage(Chapter chapter, {bool firstInit = false, bool dialog = false, Function? finishFunc, bool canJumpPage = true}) async {
-    if (loading) {
-      return;
-    }
-    loading = true;
+    // if (loading) {
+    //   return;
+    // }
+    // loading = true;
     if (dialog) {
       await EasyLoading.show(maskType: EasyLoadingMaskType.clear);
     }
-    getContent(chapter, dialog).then((value) {
-      initPageWithReturn(chapter).then((list) async{
-        if (list.isNotEmpty && pages.isNotEmpty) {
-          int exist = pages.indexWhere((element) => element.chapterId == list[0].chapterId);
-          if (exist == -1) {
-            pages.addAll(list);
-          }
-        } else {
+    pageGen.genPages(chapter, book!, (List<ContentPage> list) async{
+      if (list.isNotEmpty && pages.isNotEmpty) {
+        int exist = pages.indexWhere((element) => element.chapterId == list[0].chapterId);
+        if (exist == -1) {
           pages.addAll(list);
         }
-        if (finishFunc != null) {
-          finishFunc;
-        }
-        await EasyLoading.dismiss();
-        loading = false;
-        if (canJumpPage){
-          if (firstInit && book!.curPage != null) {
-            _jumpPageIndex(book!.curPage! - 1);
-          } else if (pageIndex.count >= pages.length) {
-            _jumpPageIndex(pages.length - 1);
-          } else {
-            _jumpPageIndex(pageIndex.count);
-          }
-        } else {
-          update(["content"]);
-        }
-      });
-    }).catchError((err) {
-      EasyLoading.dismiss();
-    });
-
-
-  }
-
-
-  /// 获取章节内容
-  Future<String?> getContent(Chapter chapter, showDialog) async{
-    // 查找内容
-    Chapter? temp = await _chapterDbProvider.getChapterById(chapter.id);
-    var content = temp?.content;
-    if ((content == null || content.isEmpty) && book!.type == 1) {
-      // content = await ChapterApi.parseContent(url, showDialog);
-      content = await HtmlParseUtil.parseContent(chapter.url!);
-      // 格式化文本
-      if (content != null) {
-        content = FontUtil.formatContent(content);
-        await _chapterDbProvider.updateContent(chapter.id, content);
+      } else {
+        pages.addAll(list);
       }
-    }
-    // 赋值
-    chapter.content = content;
-    return content;
+      if (finishFunc != null) {
+        finishFunc;
+      }
+      await EasyLoading.dismiss();
+      // loading = false;
+      if (canJumpPage){
+        if (firstInit && book!.curPage != null) {
+          _jumpPageIndex(book!.curPage! - 1, firstInit: firstInit);
+        } else if (pageIndex.count >= pages.length) {
+          _jumpPageIndex(pages.length - 1);
+        } else {
+          _jumpPageIndex(pageIndex.count);
+        }
+      } else {
+        update(["content"]);
+      }
+    });
   }
 
 
 
-  double wordHeight = 0;
-  double wordWith = 0;
-  int maxLines = 0;
 
-  /// 计算词宽和词高
-  _calWordHeightAndWidth() {
-    _painter.text = TextSpan(text: "哈", style: contentStyle);
-    _painter.layout(maxWidth: screenWidth);
-    var cal = _painter.computeLineMetrics()[0];
-    wordHeight = cal.height;
-    wordWith = cal.width;
-  }
-
-  /// 计算标题高度
-  _calTitleHeight() {
-    _painter.text = const TextSpan(text: "哈", style: TextStyle(
-        fontSize: 25,
-        fontWeight: FontWeight.bold));
-    _painter.layout(maxWidth: screenWidth);
-    var cal = _painter.computeLineMetrics()[0];
-    titleHeight = cal.height;
-  }
 
   /// 计算当前章节一共多少页
   calThisChapterTotalPage(index) {
@@ -273,7 +202,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   }
 
   /// 跳转章节
-  jumpChapter(index, {bool pop = true}) async{
+  jumpChapter(index, {bool pop = true, bool clearCount = false}) async{
     Chapter chapter = chapters[index];
     index = pages.indexWhere((element) => chapter.id == element.chapterId);
     if (index >= 0) {
@@ -281,6 +210,9 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       _jumpPageIndex(index);
     } else {
       pages.clear();
+      if (clearCount) {
+        pageIndex.resetCount();
+      }
       bool dialog = (chapter.content == null || chapter.content!.isEmpty);
       await initPage(chapter, dialog: dialog);
     }
@@ -291,12 +223,11 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
 
   /// 下一页
   nextPage() async {
-    if (loading) {
-      return;
-    }
+    // if (loading) {
+    //   return;
+    // }
     int index = pageIndex.count;
     if (index < pages.length - 2) {
-      _pageStartStyle();
       // 有下一页
       _jumpPageIndex(index + 1);
     } else {
@@ -305,7 +236,6 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       var chapterIndex = chapters.indexWhere((element) => element.id == chapterId);
       if (chapterIndex >= 0 && chapterIndex != chapters.length - 1) {
         // 找到下一章
-        _pageStartStyle();
         Chapter next = chapters[chapterIndex + 1];
         initPage(next);
         // 跳转
@@ -313,21 +243,14 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       }
     }
   }
-  _pageStartStyle() {
-    if (readPageType == ReadPageType.point) {
-      pointShow = false;
-      update(["point"]);
-    }
-  }
 
   prePage() async {
-    if (loading) {
-      return;
-    }
+    // if (loading) {
+    //   return;
+    // }
     int index = pageIndex.count;
     if (index > 0) {
       // 有上一页
-      _pageStartStyle();
       pageIndex.setCount(index - 1);
       _prePageStyle();
     } else {
@@ -336,17 +259,14 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       var chapterIndex = chapters.indexWhere((element) => element.id == chapterId);
       if (chapterIndex > 0) {
         // 加载上一页
-        _pageStartStyle();
         EasyLoading.show(maskType: EasyLoadingMaskType.clear);
         Chapter pre = chapters[chapterIndex - 1];
-        getContent(pre, false).then((value) async{
-          initPageWithReturn(pre).then((returnPages) {
-            pages.insertAll(0, returnPages);
-            update(["content"]);
-            pageIndex.setCount(returnPages.length - 1);
-            _prePageStyle();
-            EasyLoading.dismiss();
-          });
+        pageGen.genPages(pre, book!, (returnPages) {
+          pages.insertAll(0, returnPages);
+          update(["content"]);
+          pageIndex.setCount(returnPages.length - 1);
+          _prePageStyle();
+          EasyLoading.dismiss();
         });
 
       }
@@ -354,80 +274,10 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   }
 
   _prePageStyle() {
-    if (readPageType == ReadPageType.smooth) {
-      contentPageController.jumpToPage(pageIndex.count);
-
-    } else if (readPageType == ReadPageType.point) {
-      pointShow = true;
-      update(["point"]);
+    if (readPageType.toString().contains(ReadPageType.smooth.toString())) {
+      contentPageController.move(pageIndex.count);
     }
-  }
-
-  Future<List<ContentPage>> initPageWithReturn(Chapter chapter) async {
-    // chapter.content = await getContent(chapter.id, chapter.url, false);
-    List<ContentPage> list = [];
-    _calWordHeightAndWidth();
-    _calMaxLines(firstPage: true);
-    // String content = FontUtil.alphanumericToFullLength(chapter.content);
-    String content = chapter.content??"";
-    if (content.isEmpty) {
-      list.add(
-          ContentPage("", 1, chapter.id, chapter.name, _contentWidth(), noContent: true));
-      return list;
-    }
-    _painter.text = TextSpan(text: content, style: contentStyle);
-    _painter.maxLines = maxLines;
-    // 统计第一页字符偏移量
-    _painter.layout(maxWidth: _contentWidth());
-    double paintWidth = _painter.width;
-    double paintHeight = _painter.height;
-    int offset =
-        _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
-    // 得到第一页偏移量
-    int i = 1;
-    do {
-      String subContent = content.substring(0, offset);
-      list.add(
-          ContentPage(subContent, i, chapter.id, chapter.name, _contentWidth()));
-      i++;
-      if (i == 2) {
-        _calMaxLines();
-      }
-      content = content.substring(offset);
-      if (content.startsWith("\n")) {
-        content = content.substring(1);
-      }
-      _painter.text = TextSpan(text: content, style: contentStyle);
-      _painter.maxLines = maxLines;
-      _painter.layout(maxWidth: _contentWidth());
-      paintWidth = _painter.width;
-      paintHeight = _painter.height;
-      offset =
-          _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
-    } while (offset < content.characters.length);
-    if (offset > 0) {
-      list.add(
-          ContentPage(content, i, chapter.id, chapter.name, _contentWidth()));
-    }
-    return list;
-  }
-
-  Widget keyboardListen() {
-    return KeyboardListener(
-      focusNode: FocusNode(),
-      child: Container(),
-      onKeyEvent: _keyEvent,
-    );
-  }
-
-  _keyEvent(KeyEvent event) async {
-    // if (event.physicalKey == PhysicalKeyboardKey.audioVolumeDown) {
-    //   // 音量-
-    //   await nextPage();
-    // } else if (event.physicalKey == PhysicalKeyboardKey.audioVolumeUp) {
-    //   // 音量＋
-    //   await prePage();
-    // }
+    update(["content"]);
   }
 
   // 计算进度
@@ -455,14 +305,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       EasyLoading.showToast("没有更多了");
       return;
     }
-    Chapter pre = chapters[readChapterIndex - 1];
-    int index = pages.indexWhere((element) => element.chapterId == pre.id);
-    if (index >= 0) {
-      // 已缓存
-      contentPageController.jumpToPage(index);
-    } else {
-      await jumpChapter(readChapterIndex - 1, pop: false);
-    }
+    await jumpChapter(readChapterIndex - 1, pop: false, clearCount: true);
     readChapterIndex -= 1;
     update(["chapterChange"]);
   }
@@ -473,15 +316,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       EasyLoading.showToast("没有更多了");
       return;
     }
-    await jumpChapter(readChapterIndex + 1, pop: false);
-    // Chapter next = chapters[readChapterIndex + 1];
-    // int index = pages.indexWhere((element) => element.chapterId == next.id);
-    // if (index >= 0) {
-    //   // 已缓存
-    //   contentPageController.jumpToPage(index);
-    // } else {
-    //   await jumpChapter(readChapterIndex + 1, pop: false);
-    // }
+    await jumpChapter(readChapterIndex + 1, pop: false, clearCount: true);
     readChapterIndex += 1;
     update(["chapterChange"]);
   }
@@ -532,7 +367,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
 
   _reload(ReadSettingConfig config) async{
     await EasyLoading.show(maskType: EasyLoadingMaskType.clear);
-    contentStyle = TextStyle(color: hexToColor(config.fontColor), fontSize: config.fontSize, height: config.fontHeight);
+    pageGen.changeContentStyle(TextStyle(color: hexToColor(config.fontColor), fontSize: config.fontSize, height: config.fontHeight));
     int chapterIndex = chapters.indexWhere((element) => pages[pageIndex.count].chapterId == element.id);
     pageIndex.setCount(pages[pageIndex.count].index - 1);
     pages.clear();
@@ -553,30 +388,11 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     SaveUtil.setString(Constant.readSettingConfig, data);
     autoPage?.cancel();
     _batteryTimer?.cancel();
-    if (Platform.isAndroid) {
-      // 以下两行 设置android状态栏为透明的沉浸。写在组件渲染之后，是为了在渲染后进行set赋值，覆盖状态栏，写在渲染之前MaterialApp组件会覆盖掉这个值。
-      SystemUiOverlayStyle systemUiOverlayStyle =
-      const SystemUiOverlayStyle(statusBarColor: Colors.transparent, systemNavigationBarColor: Colors.transparent, systemNavigationBarDividerColor: Colors.transparent);
-      SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
-    }
+    transparentBar();
     ChannelUtils.setConfig(Constant.pluginVolumeFlag, false);
+    SaveUtil.setString(Constant.readType, readPageType.name);
   }
 
-
-  double _contentWidth() {
-  return screenWidth - paddingWidth - screenLeft - screenRight;
-  }
-
-
-  void _calMaxLines({bool firstPage = false}) {
-    double extend = 0;
-    if (firstPage) {
-      extend = titleHeight;
-    }
-    maxLines = (screenHeight -
-        screenTop - screenBottom - extend) ~/
-        wordHeight;
-  }
 
   /// 行高减0.1
   fontHeightSub() async{
@@ -602,30 +418,19 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.landscapeLeft, //全屏时旋转方向，左边
       ]);
-      _swap(true);
+      pageGen.heightWidthSwap(true);
       await _reload(readSettingConfig);
     } else {
       rotateScreen = false;
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
       ]);
-      _swap();
+      pageGen.heightWidthSwap();
       await _reload(readSettingConfig);
     }
     update(["preContent"]);
   }
-  _swap([bool flag = false]) {
-    double temp = screenHeight;
-    screenHeight = screenWidth;
-    screenWidth = temp;
-    if (flag) {
-      screenLeft = screenTop;
-      screenRight = screenTop;
-    } else {
-      screenLeft = 0;
-      screenRight = 0;
-    }
-  }
+
 
   /// 暗色主题
   Future changeDark() async{
@@ -694,7 +499,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
 
   void setPageType(ReadPageType pageType) {
     readPageType = pageType;
-    update(["content"]);
+    update(["preContent"]);
   }
 
   /// 重新加载章节
@@ -703,36 +508,12 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
     int firstIndex = pages.indexWhere((element) => chapterId == element.chapterId);
     pages.removeWhere((element) => element.chapterId == chapterId);
     Chapter chapter = chapters.firstWhere((element) => element.id == chapterId);
-    getContent(chapter, true).then((value) async{
-      List<ContentPage> list = await initPageWithReturn(chapter);
+    pageGen.genPages(chapter, book!, (list) {
       pages.insertAll(firstIndex, list);
       update(["content"]);
     });
-
   }
 
-  double calPaddingLeft(index) {
-    return 0;
-  }
-
-  void _initSize() {
-    _calTitleHeight();
-    screenWidth = MediaQuery.of(context).size.width;
-    screenHeight = MediaQuery.of(context).size.height;
-    screenLeft = MediaQuery.of(context).padding.left;
-    screenRight = MediaQuery.of(context).padding.right;
-    screenBottom = 16;
-    double top = MediaQuery.of(globalContext).padding.top;
-    if (top < 33) {
-      top = 33;
-    }
-    screenTop = top;
-  }
-
-  void _menuListen() {
-    menuPositionsListener.itemPositions.addListener(() {
-    });
-  }
 
   void _pageIndexChangeListen() {
     pageIndex.addListener(() {
@@ -740,15 +521,19 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       if (index < pages.length) {
         _bookDbProvider.updateCurChapter(book!.id, pages[index].chapterId, pages[index].index);
       }
+      if (index + 30 >= pages.length && pages.isNotEmpty) {
+        pageChangeListen();
+      }
     });
   }
 
-  void _jumpPageIndex(int index) {
-    if (readPageType == ReadPageType.smooth) {
-      contentPageController.jumpToPage(index);
-      pageIndex.setCount(index);
+  void _jumpPageIndex(int index, {bool firstInit = false}) {
+    pageIndex.setCount(index);
+    if (readPageType.toString().contains(ReadPageType.smooth.toString())) {
+      contentPageController.move(index, animation: !firstInit);
     }
     update(["content"]);
+
   }
 
   /// 音量物理键变化

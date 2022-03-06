@@ -6,18 +6,13 @@ import 'content.dart';
 
 /// 点击
 Widget point() {
-  ReadController controller = Get.find();
-  if (controller.pages.isEmpty) {
-    return Container();
-  }
   return GetBuilder<ReadController>(
-    id: 'point',
+    id: 'content',
     builder: (controller) {
-      return AnimatedOpacity(
-        opacity: controller.pointShow ? 1 : 0,
-        duration: const Duration(milliseconds: 200),
-        child: content(controller.context, controller.pageIndex, controller),
-      );
+      if (controller.pages.isEmpty) {
+        return Container();
+      }
+      return content(controller.context, controller.pageIndex.count, controller);
     },
   );
 }
