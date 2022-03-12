@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:book_app/model/chapter/chapter.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
 import 'package:book_app/api/dio/dio_manager.dart';
@@ -10,10 +9,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:fast_gbk/fast_gbk.dart';
 
 class HtmlParseUtil {
-  // ignore: non_constant_identifier_names
-  static final List<String> IGNORE_CONTENT_HTML_TAG = ["a", "option", "h1", "h2", "strong", "font", "button", "script"];
-
-  static parseChapter(String url) async{
+  static final List<String> ignoreContentHtmlTag = ["a", "option", "h1", "h2", "strong", "font", "button", "script"];
+  static final RegExp chinese = RegExp(r"[\u4E00-\u9FA5]");
+  static Future<List<Chapter>> parseChapter(String url) async{
     String originUrl = url;
     if (url.contains("m.")) {
       url = url.replaceFirst("m.", "www.");
@@ -115,7 +113,7 @@ class HtmlParseUtil {
     };
   }
 
-  static format(List<Map<String, dynamic>> chapters, String url) {
+  static List<Chapter> format(List<Map<String, dynamic>> chapters, String url) {
     String childUrl = chapters[0]["url"];
     if (childUrl.startsWith("/")) {
       Uri uri = Uri.parse(url);
@@ -128,7 +126,6 @@ class HtmlParseUtil {
     for (var element in chapters) {
       returnChapters.add(Chapter(name: element["name"], url: url + element["url"]));
     }
-    Log.i("章节数 --- ${returnChapters.length}");
     return returnChapters;
   }
 
@@ -141,18 +138,15 @@ class HtmlParseUtil {
       getElement(elements, body!);
       String content = findMaxChineseContent(elements);
       if (content.isEmpty) {
-        EasyLoading.showToast("解析失败");
         return;
       }
-      return formatContent(content);
+      return _formatContent(content);
     } catch(err) {
       Log.e(url);
-      await EasyLoading.showToast("解析失败");
-      // EasyLoading.dismiss();
     }
   }
   static getElement(List<Element> elements, Element parent) {
-    if (IGNORE_CONTENT_HTML_TAG.contains(parent.localName)) {
+    if (ignoreContentHtmlTag.contains(parent.localName)) {
       return;
     }
     if (parent.children.isEmpty && parent.innerHtml.trim().isNotEmpty) {
@@ -177,12 +171,11 @@ class HtmlParseUtil {
   }
 
   static String findMaxChineseContent(List<Element> elements) {
-    var reg = RegExp(r"[\u4E00-\u9FA5]");
     String returnContent = "";
     int max = 0;
     for (var element in elements) {
       var content = element.innerHtml;
-      var allMatch = reg.allMatches(content);
+      var allMatch = chinese.allMatches(content);
       if (allMatch.length > max) {
         returnContent = content;
         max = allMatch.length;
@@ -191,8 +184,9 @@ class HtmlParseUtil {
     return returnContent;
   }
 
-  static formatContent(String content) {
-    return content.replaceAll("&nbsp;", "").replaceAll("<br>", "\n").replaceAll(RegExp(r"<.*>.*|.*</.*>|.*<!.*>"), "").replaceAll(RegExp(r".*(www|http)+.*\n"), "");
+  static _formatContent(String content) {
+    final String preFormat = content.replaceAll("&nbsp;", "").replaceAll("<br>", "\n").replaceAll(RegExp(r"<.*>.*|.*</.*>|.*<!.*>"), "").replaceAll(RegExp(r".*(www|http)+.*\n"), "");
+    return _beautifulFormat(preFormat);
   }
 
   static getFileString(String url, {String? originUrl}) async{
@@ -218,5 +212,23 @@ class HtmlParseUtil {
         rethrow;
       }
     }
+  }
+
+  static _beautifulFormat(String str) {
+    var strList = str.split('\n');
+    List<String> newStr = [];
+    for (var element in strList) {
+      if (element.isEmpty) {
+        continue;
+      }
+      if (chinese.allMatches(element).isEmpty) {
+        continue;
+      }
+      if (element.contains("笔趣阁")) {
+        continue;
+      }
+      newStr.add(element);
+    }
+    return newStr.join('\n').trim();
   }
 }

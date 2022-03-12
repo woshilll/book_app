@@ -2,13 +2,15 @@ import 'package:book_app/log/log.dart';
 import 'package:book_app/model/read_page_type.dart';
 import 'package:book_app/module/book/read/component/bottom.dart';
 import 'package:book_app/module/book/read/component/cover.dart';
-import 'package:book_app/module/book/read/component/drawer.dart';
+import 'package:book_app/module/book/read/component/drawer.dart' as dr;
 import 'package:book_app/module/book/read/component/point.dart';
 import 'package:book_app/module/book/read/component/smooth.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
+import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/transformers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:get/get.dart';
 
 class ReadScreen extends GetView<ReadController>{
@@ -18,33 +20,34 @@ class ReadScreen extends GetView<ReadController>{
   Widget build(BuildContext context) {
     controller.context = context;
     return WillPopScope(
-      child: GetBuilder<ReadController>(
-        id: "refreshKey",
-        builder: (controller) {
-          return Scaffold(
-            drawerEdgeDragWidth: 0,
-            body: Stack(
-              children: [
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  left: 0,
-                  bottom: 0,
-                  child: GetBuilder<ReadController>(
-                    id: "backgroundColor",
-                    builder: (controller) {
-                      return Container(
-                        color: hexToColor(
-                            controller.readSettingConfig.backgroundColor),
-                      );
-                    },
-                  ),
-                ),
-                _body(context),
-              ],
+      child: ZoomDrawer(
+        controller: controller.zoomDrawerController,
+        menuScreen: dr.Drawer(),
+        mainScreen: Stack(
+          children: [
+            Positioned(
+              top: 0,
+              right: 0,
+              left: 0,
+              bottom: 0,
+              child: GetBuilder<ReadController>(
+                id: "backgroundColor",
+                builder: (controller) {
+                  return Container(
+                    color: hexToColor(
+                        controller.readSettingConfig.backgroundColor),
+                  );
+                },
+              ),
             ),
-          );
-        },
+            _body(context),
+          ],
+        ),
+        angle: 0,
+        mainScreenScale: 0,
+        mainScreenTapClose: true,
+        style: DrawerStyle.DefaultStyle,
+        showShadow: true,
       ),
       onWillPop: () async {
         await controller.popRead();
@@ -60,7 +63,15 @@ class ReadScreen extends GetView<ReadController>{
           return GestureDetector(
             child: _content(),
             behavior: HitTestBehavior.opaque,
+            onTap: () {
+              if (controller.zoomDrawerController.isOpen!()) {
+                controller.zoomDrawerController.toggle!.call();
+              }
+            },
             onTapUp: (e) async {
+              if (controller.zoomDrawerController.isOpen!()) {
+                return;
+              }
               if (e.globalPosition.dx < controller.pageGen.screenWidth / 3) {
                 if (controller.readPageType == ReadPageType.point) {
                   await controller.prePage();
@@ -73,6 +84,7 @@ class ReadScreen extends GetView<ReadController>{
                 // }
               } else {
                 // 中间
+                // Get.toNamed(Routes.readBottom);
                 await bottom(context);
               }
             },

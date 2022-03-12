@@ -11,247 +11,237 @@ bottom(context) async {
   // 计算进度
   ReadController controller = Get.find();
   controller.calReadProgress();
-  controller.showStatusBar = false;
-  if (!controller.showStatusBar) {
-    Timer(const Duration(milliseconds: 100), () {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    });
-    controller.showStatusBar = true;
-  }
   controller.bottomType = "1";
-  await Navigator.of(context)
+  Navigator.of(context)
       .push(PageRouteBuilder(
           opaque: false,
           transitionDuration: const Duration(milliseconds: 100),
           pageBuilder: (context, animation, secondaryAnimation) {
-            return AnnotatedRegion<SystemUiOverlayStyle>(
-              value: SystemUiOverlayStyle.light,
-              child: Scaffold(
-                backgroundColor: Colors.transparent,
-                body: GestureDetector(
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        top: 0,
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          color: Colors.transparent,
-                        ),
+            return Scaffold(
+              backgroundColor: Colors.transparent,
+              body: GestureDetector(
+                child: Stack(
+                  children: [
+                    Positioned(
+                      top: 0,
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        color: Colors.transparent,
                       ),
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
+                    ),
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: MediaQuery.of(context).padding.top + 56,
+                        color: Colors.black,
                         child: Container(
-                          height: MediaQuery.of(context).padding.top + 56,
-                          color: Colors.black,
-                          child: Container(
-                            margin: EdgeInsets.only(
-                                top: MediaQuery.of(context).padding.top),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                GestureDetector(
-                                  child: Container(
-                                    margin: const EdgeInsets.only(left: 15),
-                                    alignment: Alignment.centerLeft,
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        GestureDetector(
-                                          child: const Icon(
-                                            Icons.arrow_back_ios,
-                                            size: 25,
-                                            color: Colors.white,
-                                          ),
-                                          onTap: () {
-                                            Navigator.of(context).pop();
-                                            controller.popRead();
-                                          },
+                          margin: EdgeInsets.only(
+                              top: MediaQuery.of(context).padding.top),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              GestureDetector(
+                                child: Container(
+                                  margin: const EdgeInsets.only(left: 15),
+                                  alignment: Alignment.centerLeft,
+                                  child: Row(
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.center,
+                                    children: [
+                                      GestureDetector(
+                                        child: const Icon(
+                                          Icons.arrow_back_ios,
+                                          size: 25,
+                                          color: Colors.white,
                                         ),
-                                        Container(
-                                          margin:
-                                              const EdgeInsets.only(left: 15),
-                                          child: Text(
-                                            "${controller.book!.name!.length > 10 ? controller.book!.name!.substring(0, 10) : controller.book!.name}",
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16),
-                                          ),
-                                        )
-                                      ],
-                                    ),
+                                        onTap: () {
+                                          Navigator.of(context).pop();
+                                          controller.popRead();
+                                        },
+                                      ),
+                                      Container(
+                                        margin:
+                                        const EdgeInsets.only(left: 15),
+                                        child: Text(
+                                          "${controller.book!.name!.length > 10 ? controller.book!.name!.substring(0, 10) : controller.book!.name}",
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16),
+                                        ),
+                                      )
+                                    ],
                                   ),
                                 ),
-                                // GestureDetector(
-                                //   child: Container(
-                                //     alignment: Alignment.centerRight,
-                                //     margin: const EdgeInsets.only(right: 15),
-                                //     child: const Icon(
-                                //       Icons.headset,
-                                //       size: 25,
-                                //       color: Colors.white,
-                                //     ),
-                                //   ),
-                                //   onTap: () async {
-                                //   },
-                                // )
-                              ],
-                            ),
+                              ),
+                              // GestureDetector(
+                              //   child: Container(
+                              //     alignment: Alignment.centerRight,
+                              //     margin: const EdgeInsets.only(right: 15),
+                              //     child: const Icon(
+                              //       Icons.headset,
+                              //       size: 25,
+                              //       color: Colors.white,
+                              //     ),
+                              //   ),
+                              //   onTap: () async {
+                              //   },
+                              // )
+                            ],
                           ),
                         ),
                       ),
-                      Positioned(
-                          bottom: 0,
-                          right: 0,
-                          left: 0,
-                          child: Opacity(
-                            opacity: 1,
-                            child: GestureDetector(
-                              child: Container(
-                                padding: const EdgeInsets.only(bottom: 16),
-                                decoration: const BoxDecoration(
-                                    color: Colors.black,
-                                    borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(4),
-                                        topRight: Radius.circular(4))),
-                                child: Column(
-                                  children: [
-                                    GetBuilder<ReadController>(
-                                      id: 'bottomType',
-                                      builder: (controller) {
-                                        return _bottomType(controller);
-                                      },
-                                    ),
-                                    Container(
-                                      margin: const EdgeInsets.only(
-                                          top: 10, bottom: 10),
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: GestureDetector(
-                                              child: Container(
-                                                alignment: Alignment.center,
-                                                child: Column(
-                                                  children: const [
-                                                    Icon(Icons.library_books,
-                                                        size: 24,
-                                                        color: Colors.white),
-                                                    Text("目录",
-                                                        style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 14))
-                                                  ],
-                                                ),
-                                              ),
-                                              onTap: () async{
-                                                Navigator.of(context).pop();
-                                                await controller.openDrawer();
-                                              },
-                                            ),
-                                          ),
-                                          GetBuilder<ReadController>(
-                                            id: "bottomType",
-                                            builder: (controller) {
-                                              return Expanded(
-                                                flex: 1,
-                                                child: GestureDetector(
-                                                  child: Container(
-                                                    alignment: Alignment.center,
-                                                    child: Column(
-                                                      children: [
-                                                        Icon(Icons.wb_sunny,
-                                                            size: 24,
-                                                            color: controller.bottomType == "2" ? Theme.of(context).primaryColor : Colors.white),
-                                                        Text("亮度",
-                                                            style: TextStyle(
-                                                                color: controller.bottomType == "2" ? Theme.of(context).primaryColor : Colors.white,
-                                                                fontSize: 14))
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  onTap: () {
-                                                    controller
-                                                        .changeBottomType("2");
-                                                  },
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                          GetBuilder<ReadController>(
-                                            id: "bottomType",
-                                            builder: (controller) {
-                                              return Expanded(
-                                                flex: 1,
-                                                child: GestureDetector(
-                                                  child: Container(
-                                                    alignment: Alignment.center,
-                                                    child: Column(
-                                                      children: [
-                                                        Icon(Icons.settings,
-                                                            size: 24,
-                                                            color: controller.bottomType == "3" ? Theme.of(context).primaryColor : Colors.white),
-                                                        Text("设置",
-                                                            style: TextStyle(
-                                                                color: controller.bottomType == "3" ? Theme.of(context).primaryColor : Colors.white,
-                                                                fontSize: 14))
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  onTap: () {
-                                                    controller
-                                                        .changeBottomType("3");
-                                                  },
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              ),
-                              onTap: () {},
-                            ),
-                          )),
-                      GetBuilder<ReadController>(
-                          id: 'bottomType',
-                          builder: (controller) {
-                            if (controller.bottomType == "1") {
-                              return Positioned(
-                                right: 15,
-                                bottom: 150,
-                                child: GestureDetector(
-                                  child: CircleAvatar(
-                                    minRadius: 25,
-                                    backgroundColor:
-                                        Colors.black.withOpacity(.5),
-                                    child: Icon(
-                                      controller.isDark
-                                          ? Icons.wb_sunny
-                                          : Icons.nights_stay,
-                                      size: 25,
-                                      color: Colors.yellowAccent,
-                                    ),
+                    ),
+                    Positioned(
+                        bottom: 0,
+                        right: 0,
+                        left: 0,
+                        child: Opacity(
+                          opacity: 1,
+                          child: GestureDetector(
+                            child: Container(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              decoration: const BoxDecoration(
+                                  color: Colors.black,
+                                  borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(4),
+                                      topRight: Radius.circular(4))),
+                              child: Column(
+                                children: [
+                                  GetBuilder<ReadController>(
+                                    id: 'bottomType',
+                                    builder: (controller) {
+                                      return _bottomType(controller);
+                                    },
                                   ),
-                                  onTap: () => LimitUtil.throttle(
-                                      controller.changeDark,
-                                      durationTime: 1000),
+                                  Container(
+                                    margin: const EdgeInsets.only(
+                                        top: 10, bottom: 10),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          flex: 1,
+                                          child: GestureDetector(
+                                            child: Container(
+                                              alignment: Alignment.center,
+                                              child: Column(
+                                                children: const [
+                                                  Icon(Icons.library_books,
+                                                      size: 24,
+                                                      color: Colors.white),
+                                                  Text("目录",
+                                                      style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 14))
+                                                ],
+                                              ),
+                                            ),
+                                            onTap: () async{
+                                              Navigator.of(context).pop();
+                                              await controller.openDrawer();
+                                            },
+                                          ),
+                                        ),
+                                        GetBuilder<ReadController>(
+                                          id: "bottomType",
+                                          builder: (controller) {
+                                            return Expanded(
+                                              flex: 1,
+                                              child: GestureDetector(
+                                                child: Container(
+                                                  alignment: Alignment.center,
+                                                  child: Column(
+                                                    children: [
+                                                      Icon(Icons.wb_sunny,
+                                                          size: 24,
+                                                          color: controller.bottomType == "2" ? Theme.of(context).primaryColor : Colors.white),
+                                                      Text("亮度",
+                                                          style: TextStyle(
+                                                              color: controller.bottomType == "2" ? Theme.of(context).primaryColor : Colors.white,
+                                                              fontSize: 14))
+                                                    ],
+                                                  ),
+                                                ),
+                                                onTap: () {
+                                                  controller
+                                                      .changeBottomType("2");
+                                                },
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        GetBuilder<ReadController>(
+                                          id: "bottomType",
+                                          builder: (controller) {
+                                            return Expanded(
+                                              flex: 1,
+                                              child: GestureDetector(
+                                                child: Container(
+                                                  alignment: Alignment.center,
+                                                  child: Column(
+                                                    children: [
+                                                      Icon(Icons.settings,
+                                                          size: 24,
+                                                          color: controller.bottomType == "3" ? Theme.of(context).primaryColor : Colors.white),
+                                                      Text("设置",
+                                                          style: TextStyle(
+                                                              color: controller.bottomType == "3" ? Theme.of(context).primaryColor : Colors.white,
+                                                              fontSize: 14))
+                                                    ],
+                                                  ),
+                                                ),
+                                                onTap: () {
+                                                  controller
+                                                      .changeBottomType("3");
+                                                },
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                            onTap: () {},
+                          ),
+                        )),
+                    GetBuilder<ReadController>(
+                        id: 'bottomType',
+                        builder: (controller) {
+                          if (controller.bottomType == "1") {
+                            return Positioned(
+                              right: 15,
+                              bottom: 150,
+                              child: GestureDetector(
+                                child: CircleAvatar(
+                                  minRadius: 25,
+                                  backgroundColor:
+                                  Colors.black.withOpacity(.5),
+                                  child: Icon(
+                                    controller.isDark
+                                        ? Icons.wb_sunny
+                                        : Icons.nights_stay,
+                                    size: 25,
+                                    color: Colors.yellowAccent,
+                                  ),
                                 ),
-                              );
-                            }
-                            return Container();
-                          })
-                    ],
-                  ),
-                  onTap: () => Navigator.of(context).pop(),
+                                onTap: () => LimitUtil.throttle(
+                                    controller.changeDark,
+                                    durationTime: 1000),
+                              ),
+                            );
+                          }
+                          return Container();
+                        })
+                  ],
                 ),
+                onTap: () => Navigator.of(context).pop(),
               ),
             );
           },
@@ -262,10 +252,7 @@ bottom(context) async {
                   value: SystemUiOverlayStyle.light, child: child),
             );
           }
-          ))
-      .then((value) {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-  });
+          ));
 }
 
 Widget _bottomType(ReadController controller) {

@@ -64,6 +64,8 @@ dependencies:
     git:
       url: git@github.com:woshilll/woshilll_flutter_plugin.git
   another_transformer_page_view: ^1.1.0
+  flutter_zoom_drawer: ^2.3.1+1
+  draggable_scrollbar: ^0.1.0
 
 dev_dependencies:
   flutter_test:

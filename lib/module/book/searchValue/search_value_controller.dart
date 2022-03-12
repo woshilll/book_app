@@ -83,12 +83,12 @@ class SearchValueController extends GetxController {
       var chapters = await HtmlParseUtil.parseChapter(url);
       final Book book = Book(url: url, name: await webViewController!.getTitle());
       var bookId = await _bookDbProvider.commonInsert(book);
-      chapters.forEach((Chapter e) {
+      for (var e in chapters) {
         e.bookId = bookId;
-      });
+      }
       await _chapterDbProvider.commonBatchInsert(chapters);
-      EasyLoading.dismiss();
-      EasyLoading.showToast("解析完成");
+      await EasyLoading.dismiss();
+      EasyLoading.showToast("解析完成, 共 ${chapters.length} 章节");
     } catch(err) {
       Log.e(err);
       EasyLoading.dismiss();

@@ -1,12 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-import 'dart:math';
 
 import 'package:another_transformer_page_view/another_transformer_page_view.dart';
 import 'package:battery_plus/battery_plus.dart';
-import 'package:book_app/app_controller.dart';
-import 'package:book_app/log/log.dart';
 import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
@@ -24,13 +20,14 @@ import 'package:book_app/util/notify/counter_notify.dart';
 import 'package:book_app/util/save_util.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:woshilll_flutter_plugin/woshilll_flutter_plugin.dart';
 import 'component/content_page.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class ReadController extends GetxController with SingleGetTickerProviderMixin {
+class ReadController extends GetxController {
   /// 数据库
   static final ChapterDbProvider _chapterDbProvider = ChapterDbProvider();
   static final BookDbProvider _bookDbProvider = BookDbProvider();
@@ -46,8 +43,6 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   CounterNotify pageIndex = CounterNotify();
   /// 页面监听
   IndexController contentPageController = IndexController();
-  /// 是否正在加载
-  // bool loading = false;
   /// 阅读进度
   int readChapterIndex = 0;
   /// 底部类型 1-正常 2-亮度 3-设置
@@ -68,8 +63,6 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   bool isDark = Get.isDarkMode;
   /// 自动翻页
   Timer? autoPage;
-  /// 是否展示顶部状态栏
-  bool showStatusBar = false;
   /// 电池
   final Battery _battery = Battery();
   /// 电池容量
@@ -80,6 +73,8 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   ReadPageType readPageType = ReadPageType.smooth;
   /// 小说页面生成
   late PageGen pageGen;
+  ZoomDrawerController zoomDrawerController = ZoomDrawerController();
+  bool loading = false;
   @override
   void onInit() async{
     readPageType = getReadPageTypeByStr(SaveUtil.getString(Constant.readType));
@@ -133,10 +128,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   }
   /// 将文本转文字页面
   initPage(Chapter chapter, {bool firstInit = false, bool dialog = false, Function? finishFunc, bool canJumpPage = true}) async {
-    // if (loading) {
-    //   return;
-    // }
-    // loading = true;
+    loading = true;
     if (dialog) {
       await EasyLoading.show(maskType: EasyLoadingMaskType.clear);
     }
@@ -153,10 +145,9 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
         finishFunc;
       }
       await EasyLoading.dismiss();
-      // loading = false;
       if (canJumpPage){
         if (firstInit && book!.curPage != null) {
-          _jumpPageIndex(book!.curPage! - 1, firstInit: firstInit);
+          _jumpPageIndex(book!.curPage! - 1);
         } else if (pageIndex.count >= pages.length) {
           _jumpPageIndex(pages.length - 1);
         } else {
@@ -165,6 +156,12 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
       } else {
         update(["content"]);
       }
+      if (firstInit) {
+        update(["drawer"]);
+      }
+      loading = false;
+    }).catchError((onError) {
+      loading = false;
     });
   }
 
@@ -179,7 +176,10 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   }
 
   /// 页面变化监听
-  Future pageChangeListen() async{
+  _pageChangeListen() async{
+    if (loading) {
+      return;
+    }
     var chapterId = pages[pages.length - 1].chapterId;
     int index = chapters.indexWhere((element) => element.id == chapterId);
     if (index == chapters.length - 1) {
@@ -223,9 +223,6 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
 
   /// 下一页
   nextPage() async {
-    // if (loading) {
-    //   return;
-    // }
     int index = pageIndex.count;
     if (index < pages.length - 2) {
       // 有下一页
@@ -238,16 +235,11 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
         // 找到下一章
         Chapter next = chapters[chapterIndex + 1];
         initPage(next);
-        // 跳转
-        // _nextPageStyle(index);
       }
     }
   }
 
   prePage() async {
-    // if (loading) {
-    //   return;
-    // }
     int index = pageIndex.count;
     if (index > 0) {
       // 有上一页
@@ -275,7 +267,7 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
 
   _prePageStyle() {
     if (readPageType.toString().contains(ReadPageType.smooth.toString())) {
-      contentPageController.move(pageIndex.count);
+      contentPageController.move(pageIndex.count, animation: false);
     }
     update(["content"]);
   }
@@ -295,9 +287,8 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
   }
 
   openDrawer() async{
-    Timer(const Duration(milliseconds: 400), () {
-      drawer(context);
-    });
+    zoomDrawerController.toggle?.call();
+    Future.delayed(Duration(milliseconds: 400), () {update(["drawer"]);});
   }
   /// 上一章
   preChapter() async{
@@ -522,18 +513,17 @@ class ReadController extends GetxController with SingleGetTickerProviderMixin {
         _bookDbProvider.updateCurChapter(book!.id, pages[index].chapterId, pages[index].index);
       }
       if (index + 30 >= pages.length && pages.isNotEmpty) {
-        pageChangeListen();
+        _pageChangeListen();
       }
     });
   }
 
-  void _jumpPageIndex(int index, {bool firstInit = false}) {
+  void _jumpPageIndex(int index) {
     pageIndex.setCount(index);
     if (readPageType.toString().contains(ReadPageType.smooth.toString())) {
-      contentPageController.move(index, animation: !firstInit);
+      contentPageController.move(index, animation: false);
     }
     update(["content"]);
-
   }
 
   /// 音量物理键变化

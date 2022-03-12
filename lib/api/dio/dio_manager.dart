@@ -15,13 +15,7 @@ class DioManager {
   }
 
   DioManager._init() {
-    _dio ??= Dio(BaseOptions(
-        baseUrl: "http://localhost:9898",
-        // 连接服务器超时时间，单位是毫秒
-        connectTimeout: 60 * 1000,
-        // 接收数据的最长时限
-        receiveTimeout: 60 * 1000,
-    ));
+    _dio ??= Dio();
   }
 
   Future download(url, savePath, {Function(int, int)? onProgress, CancelToken? cancelToken}) async{
