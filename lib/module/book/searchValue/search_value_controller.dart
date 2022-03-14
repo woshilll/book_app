@@ -80,8 +80,11 @@ class SearchValueController extends GetxController {
         return;
       }
       await EasyLoading.show(status: "解析中...", maskType: EasyLoadingMaskType.clear);
-      var chapters = await HtmlParseUtil.parseChapter(url);
-      final Book book = Book(url: url, name: await webViewController!.getTitle());
+      String? img;
+      var chapters = await HtmlParseUtil.parseChapter(url, img: (imgUrl) {
+        img = imgUrl;
+      });
+      final Book book = Book(url: url, name: await webViewController!.getTitle(), indexImg: img);
       var bookId = await _bookDbProvider.commonInsert(book);
       for (var e in chapters) {
         e.bookId = bookId;

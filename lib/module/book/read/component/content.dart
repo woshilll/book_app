@@ -26,7 +26,9 @@ Widget content(context, index, ReadController controller) {
                     style: TextStyle(
                         color: hexToColor(controller.readSettingConfig.fontColor),
                         fontSize: 25,
-                        fontWeight: FontWeight.bold),
+                        fontWeight: FontWeight.bold,
+                        fontFamily: "fangSong"
+                    ),
                     maxLines: 1,
                     textScaleFactor: MediaQuery.of(context).textScaleFactor,
                     overflow: TextOverflow.ellipsis,
@@ -40,7 +42,8 @@ Widget content(context, index, ReadController controller) {
                   style: TextStyle(
                     color: hexToColor(controller.readSettingConfig.fontColor),
                     fontSize: controller.readSettingConfig.fontSize,
-                    height: controller.readSettingConfig.fontHeight
+                    height: controller.readSettingConfig.fontHeight,
+                    fontFamily: "fangSong",
                   )),
             ],
           ),

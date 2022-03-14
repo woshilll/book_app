@@ -19,10 +19,8 @@ _getContent(Chapter chapter, Book book) async{
   if ((content == null || content.isEmpty) && book.type == 1) {
     content = await HtmlParseUtil.parseContent(chapter.url!);
     // 格式化文本
-    if (content != null) {
-      content = FontUtil.formatContent(content);
-      await _chapterDbProvider.updateContent(chapter.id, content);
-    }
+    content = FontUtil.formatContent(content);
+    await _chapterDbProvider.updateContent(chapter.id, content);
   }
   // 赋值
   chapter.content = content;

@@ -1,17 +1,12 @@
-import 'dart:io';
-
 import 'package:book_app/model/chapter/chapter.dart';
-import 'package:html/parser.dart' show parse;
+import 'package:html/parser.dart';
 import 'package:html/dom.dart';
 import 'package:book_app/api/dio/dio_manager.dart';
 import 'package:book_app/log/log.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:fast_gbk/fast_gbk.dart';
-
+final RegExp chinese = RegExp(r"[\u4E00-\u9FA5]");
 class HtmlParseUtil {
   static final List<String> ignoreContentHtmlTag = ["a", "option", "h1", "h2", "strong", "font", "button", "script"];
-  static final RegExp chinese = RegExp(r"[\u4E00-\u9FA5]");
-  static Future<List<Chapter>> parseChapter(String url) async{
+  static Future<List<Chapter>> parseChapter(String url, {Function(String? url)? img}) async{
     String originUrl = url;
     if (url.contains("m.")) {
       url = url.replaceFirst("m.", "www.");
@@ -21,6 +16,16 @@ class HtmlParseUtil {
     }
     Document document = parse(await getFileString(url, originUrl: originUrl));
     var body = document.body;
+    if (img != null) {
+      var imgs = document.getElementsByTagName("img");
+      if (imgs.isNotEmpty) {
+        String? _uri = imgs.first.attributes['src'];
+        if (_uri != null && _uri.startsWith("/")) {
+          _uri = Uri.parse(url).origin + _uri;
+        }
+        img(_uri);
+      }
+    }
     var aTags = body?.getElementsByTagName("a");
     Map<String, List<Map<String, dynamic>>> parseMap = {};
     int index = 0;
@@ -130,19 +135,36 @@ class HtmlParseUtil {
   }
 
 
-  static parseContent(String url) async{
+  static Future<String> parseContent(String url, {String? originPageId}) async{
     try {
-      Document document = parse(await getFileString(url));
+      var html = await getFileString(url);
+      Document document = parse(html);
       var body = document.body;
       List<Element> elements = [];
       getElement(elements, body!);
-      String content = findMaxChineseContent(elements);
-      if (content.isEmpty) {
-        return;
+      Element? contentElement = findMaxChineseElement(elements);
+      if (contentElement == null) {
+        return "";
       }
-      return _formatContent(content);
+      // 有没有下一页
+      String content = contentElement.innerHtml;
+      for (var a in contentElement.getElementsByTagName("a")) {
+        if (a.text.contains("下一页")) {
+          String? nextPageUrl = a.attributes["href"];
+          nextPageUrl = url.substring(0, url.lastIndexOf("/")) + nextPageUrl!.substring(nextPageUrl.lastIndexOf('/'));
+          originPageId ??= url.substring(url.lastIndexOf('/') + 1).split(".")[0];
+          String nextPageId = nextPageUrl.substring(nextPageUrl.lastIndexOf('/') + 1).split(".")[0];
+          if (!nextPageId.contains(originPageId)) {
+            break;
+          }
+          content += await parseContent(nextPageUrl, originPageId: originPageId);
+          break;
+        }
+      }
+      return _beautifulFormat(_beautyUnknownTag(_beautyNotes(_beautyScript(_beautyBrAndP(_trim(content))))));
     } catch(err) {
-      Log.e(url);
+      Log.e(err);
+      return "";
     }
   }
   static getElement(List<Element> elements, Element parent) {
@@ -170,65 +192,71 @@ class HtmlParseUtil {
     }
   }
 
-  static String findMaxChineseContent(List<Element> elements) {
-    String returnContent = "";
+  static Element? findMaxChineseElement(List<Element> elements) {
+    Element? returnElement;
     int max = 0;
     for (var element in elements) {
       var content = element.innerHtml;
       var allMatch = chinese.allMatches(content);
       if (allMatch.length > max) {
-        returnContent = content;
+        returnElement = element;
         max = allMatch.length;
       }
     }
-    return returnContent;
+    return returnElement;
   }
 
-  static _formatContent(String content) {
-    final String preFormat = content.replaceAll("&nbsp;", "").replaceAll("<br>", "\n").replaceAll(RegExp(r"<.*>.*|.*</.*>|.*<!.*>"), "").replaceAll(RegExp(r".*(www|http)+.*\n"), "");
-    return _beautifulFormat(preFormat);
-  }
 
   static getFileString(String url, {String? originUrl}) async{
-    File file = File(await getFilePath(url, originUrl: originUrl));
-    try {
-      return file.readAsStringSync();
-    } catch(err) {
-      String res = gbk.decode(file.readAsBytesSync());
-      return res;
-    }
+    return await getString(url, originUrl: originUrl);
   }
-  static getFilePath(String url, {String? originUrl}) async{
-    var dir = await getExternalStorageDirectory();
-    String filePath = "${dir!.path}/book/temp.txt";
+  static Future<String?> getString(String url, {String? originUrl}) async{
     try {
-      await DioManager.instance.download(url, filePath);
-      return filePath;
+      var response = await DioManager.dio!.get(url);
+      return response.data;
     } catch(err) {
       if (originUrl != null) {
-        await DioManager.instance.download(originUrl, filePath);
-        return filePath;
-      } else {
-        rethrow;
+        var response = await DioManager.dio!.get(originUrl);
+        return response.data;
       }
     }
+    return null;
   }
+}
 
-  static _beautifulFormat(String str) {
-    var strList = str.split('\n');
-    List<String> newStr = [];
-    for (var element in strList) {
-      if (element.isEmpty) {
-        continue;
-      }
-      if (chinese.allMatches(element).isEmpty) {
-        continue;
-      }
-      if (element.contains("笔趣阁")) {
-        continue;
-      }
-      newStr.add(element);
+String _trim(String text) {
+  return text.replaceAll("&nbsp;", "").replaceAll(" ", "");
+}
+String _beautyBrAndP(String text) {
+  return text.replaceAll("<br>", "\n")
+      .replaceAll("<p>", "").replaceAll("</p>", "")
+    .replaceAll(RegExp(r"<div.*>"), "")
+    .replaceAll("</div>", "")
+  ;
+}
+String _beautyScript(String text) {
+  return text.replaceAll(RegExp(r"<[a-zA-Z]+.*?>([\s\S]*?)</[a-zA-Z]+.*?>"), "");
+}
+String _beautyNotes(String text) {
+  return text.replaceAll(RegExp(r"<!.*>"), "");
+}
+String _beautyUnknownTag(String text) {
+  return text.replaceAll(RegExp(r"<\.*>|<.*>"), "");
+}
+String _beautifulFormat(String str) {
+  var strList = str.split('\n');
+  List<String> newStr = [];
+  for (var element in strList) {
+    if (element.isEmpty) {
+      continue;
     }
-    return newStr.join('\n').trim();
+    if (chinese.allMatches(element).isEmpty) {
+      continue;
+    }
+    if (element.contains("笔趣阁")) {
+      continue;
+    }
+    newStr.add(element);
   }
+  return newStr.join('\n').trim();
 }

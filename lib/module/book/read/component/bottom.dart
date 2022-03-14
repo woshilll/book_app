@@ -498,7 +498,9 @@ List<Widget> _colors(ReadController controller) {
           borderRadius: const BorderRadius.all(Radius.circular(8)),
           border: Border.all(color: Colors.white)),
     ),
-    onTap: () => controller.setBackGroundColor("#FFF2E2"),
+    onTap: () async{
+      await controller.resetReadSetting();
+    },
   ));
   list.add(GestureDetector(
     child: Container(

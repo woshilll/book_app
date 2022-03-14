@@ -53,7 +53,7 @@ class SearchValueScreen extends GetView<SearchValueController> {
 
   Widget _body(context) {
     return InAppWebView(
-      initialUrlRequest: URLRequest(url: Uri.parse(getSites()[0][1])),
+      initialUrlRequest: URLRequest(url: Uri.parse(getSites()[1][1])),
       onWebViewCreated: (webController) {
         controller.webViewController = webController;
       },

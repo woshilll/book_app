@@ -5,15 +5,10 @@ import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/chapter/chapter.dart';
-import 'package:book_app/module/book/searchValue/search_value_controller.dart';
-import 'package:book_app/module/book/searchValue/search_value_screen.dart';
 import 'package:book_app/route/routes.dart';
-import 'package:book_app/util/bottom_widget_util.dart';
-import 'package:book_app/util/channel_utils.dart';
 import 'package:book_app/util/font_util.dart';
 import 'package:book_app/util/html_parse_util.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:woshilll_flutter_plugin/woshilll_flutter_plugin.dart';
@@ -23,9 +18,10 @@ class BookHomeController extends GetxController {
   static final ChapterDbProvider _chapterDbProvider = ChapterDbProvider();
   List<Book> books = [];
   List<Book> localBooks = [];
+
   @override
-  void onInit() async{
-    super.onInit();
+  void onReady() async{
+    super.onReady();
     await getBookList();
   }
 
@@ -39,10 +35,6 @@ class BookHomeController extends GetxController {
     }
     books.removeWhere((element) => element.type == 2);
     update(['bookList']);
-  }
-  insertBook() async {
-    await _bookDbProvider.commonInsert(Book(name: '伏天氏', author: '净无痕', indexImg: 'https://www.biqooge.com/files/article/image/0/1/1s.jpg', url: 'https://www.biqooge.com/0_1/',));
-    await getBookList();
   }
   deleteBook(Book book) async {
     // 数据库删除
@@ -74,9 +66,9 @@ class BookHomeController extends GetxController {
       }
       selected.chapters = [];
     }
-    var value = await Get.toNamed(Routes.read, arguments: {"book": selected})!;
+    await Get.toNamed(Routes.read, arguments: {"book": selected})!;
     await getBookList();
-    await WoshilllFlutterPlugin.setBrightness(value["brightness"]);
+    await WoshilllFlutterPlugin.setBrightnessDefault();
   }
 
   void toSearch() async{

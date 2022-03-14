@@ -21,4 +21,6 @@ class DioManager {
   Future download(url, savePath, {Function(int, int)? onProgress, CancelToken? cancelToken}) async{
     return await _dio?.download(url, savePath, onReceiveProgress: onProgress, cancelToken: cancelToken);
   }
+
+  static Dio? get dio => _dio;
 }

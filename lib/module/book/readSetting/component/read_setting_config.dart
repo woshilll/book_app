@@ -11,7 +11,7 @@ class ReadSettingConfig extends Base{
   ReadSettingConfig(this.backgroundColor, this.fontSize, this.fontColor, this.fontHeight);
 
   static ReadSettingConfig defaultConfig() {
-    return ReadSettingConfig("#FFF2E2", 20, "#000000", 1.8);
+    return ReadSettingConfig("#FFF2E2", 20, "#000000", 2.5);
   }
 
   static ReadSettingConfig defaultDarkConfig(fontSize, fontHeight) {

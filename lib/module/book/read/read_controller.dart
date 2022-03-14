@@ -49,8 +49,6 @@ class ReadController extends GetxController {
   String bottomType = "1";
   /// 屏幕亮度
   double brightness = 0;
-  /// 最初屏幕亮度变量
-  double brightnessTemp = 0;
   /// 背景色
   List<String> backgroundColors = ReadSettingConfig.getCommonBackgroundColors();
   /// 默认背景色
@@ -99,13 +97,13 @@ class ReadController extends GetxController {
   initData() async{
     /// 亮度 放在前面
     brightness = await WoshilllFlutterPlugin.getBrightness();
-    brightnessTemp = brightness;
     /// 背景色
     readSettingConfig = _getReadSettingConfig();
+    update(["backgroundColor"]);
     if (isDark) {
       readSettingConfig = ReadSettingConfig.defaultDarkConfig(readSettingConfig.fontSize, readSettingConfig.fontHeight);
     }
-    pageGen = PageGen(TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: readSettingConfig.fontSize, height: readSettingConfig.fontHeight));
+    pageGen = PageGen(TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: readSettingConfig.fontSize, height: readSettingConfig.fontHeight, fontFamily: "fangSong"));
     /// 加载章节
     chapters = await _chapterDbProvider.getChapters(null, book!.id);
     Chapter cur = chapters[0];
@@ -192,9 +190,8 @@ class ReadController extends GetxController {
 
   /// 页面返回监听
   popRead() async{
-    ReadController controller = Get.find();
-    Get.back(result: {"brightness": brightnessTemp});
-    if (controller.rotateScreen) {
+    Get.back();
+    if (rotateScreen) {
       SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
       ]);
@@ -203,6 +200,7 @@ class ReadController extends GetxController {
 
   /// 跳转章节
   jumpChapter(index, {bool pop = true, bool clearCount = false}) async{
+    loading = true;
     Chapter chapter = chapters[index];
     index = pages.indexWhere((element) => chapter.id == element.chapterId);
     if (index >= 0) {
@@ -219,6 +217,7 @@ class ReadController extends GetxController {
     if (pop) {
       Navigator.of(context).pop();
     }
+    loading = false;
   }
 
   /// 下一页
@@ -288,7 +287,7 @@ class ReadController extends GetxController {
 
   openDrawer() async{
     zoomDrawerController.toggle?.call();
-    Future.delayed(Duration(milliseconds: 400), () {update(["drawer"]);});
+    Future.delayed(const Duration(milliseconds: 400), () {update(["drawer"]);});
   }
   /// 上一章
   preChapter() async{
@@ -347,23 +346,24 @@ class ReadController extends GetxController {
       ReadSettingConfig config = value["config"];
       if (config.fontSize != readSettingConfig.fontSize) {
         // 需要重新加载
-        await _reload(config);
+        readSettingConfig.fontSize = config.fontSize;
+        await _reload();
       }
-      double fontHeight = readSettingConfig.fontHeight;
       readSettingConfig = value["config"];
-      readSettingConfig.fontHeight = fontHeight;
-      update(["backgroundColor", "content"]);
+      update(["backgroundColor"]);
     }
   }
 
-  _reload(ReadSettingConfig config) async{
+  _reload() async{
+    loading = true;
     await EasyLoading.show(maskType: EasyLoadingMaskType.clear);
-    pageGen.changeContentStyle(TextStyle(color: hexToColor(config.fontColor), fontSize: config.fontSize, height: config.fontHeight));
+    pageGen.changeContentStyle(TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: readSettingConfig.fontSize, height: readSettingConfig.fontHeight, fontFamily: "fangSong"));
     int chapterIndex = chapters.indexWhere((element) => pages[pageIndex.count].chapterId == element.id);
     pageIndex.setCount(pages[pageIndex.count].index - 1);
     pages.clear();
     await jumpChapter(chapterIndex, pop: false);
     await EasyLoading.dismiss();
+    loading = false;
   }
 
   @override
@@ -389,15 +389,15 @@ class ReadController extends GetxController {
   fontHeightSub() async{
     if (readSettingConfig.fontHeight > 1) {
       readSettingConfig.fontHeight = readSettingConfig.fontHeight - 0.1;
-      await _reload(readSettingConfig);
+      await _reload();
       update(["content"]);
     }
   }
   /// 行高加0.1
   fontHeightAdd() async{
-    if (readSettingConfig.fontHeight < 3) {
+    if (readSettingConfig.fontHeight < 3.5) {
       readSettingConfig.fontHeight = readSettingConfig.fontHeight + 0.1;
-      await _reload(readSettingConfig);
+      await _reload();
       update(["content"]);
     }
   }
@@ -410,14 +410,14 @@ class ReadController extends GetxController {
         DeviceOrientation.landscapeLeft, //全屏时旋转方向，左边
       ]);
       pageGen.heightWidthSwap(true);
-      await _reload(readSettingConfig);
+      await _reload();
     } else {
       rotateScreen = false;
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
       ]);
       pageGen.heightWidthSwap();
-      await _reload(readSettingConfig);
+      await _reload();
     }
     update(["preContent"]);
   }
@@ -539,6 +539,12 @@ class ReadController extends GetxController {
           }
       }
     });
+  }
+
+  /// 重置设置
+  resetReadSetting() async{
+    readSettingConfig = ReadSettingConfig.defaultConfig();
+    await _reload();
   }
 
 }
