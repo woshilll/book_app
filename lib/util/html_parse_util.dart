@@ -1,29 +1,30 @@
+import 'dart:convert';
+
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:html/parser.dart';
 import 'package:html/dom.dart';
-import 'package:book_app/api/dio/dio_manager.dart';
+import 'package:book_app/api/http_manager.dart';
 import 'package:book_app/log/log.dart';
+import 'package:fast_gbk/fast_gbk.dart';
 final RegExp chinese = RegExp(r"[\u4E00-\u9FA5]");
 class HtmlParseUtil {
   static final List<String> ignoreContentHtmlTag = ["a", "option", "h1", "h2", "strong", "font", "button", "script"];
   static Future<List<Chapter>> parseChapter(String url, {Function(String? url)? img}) async{
-    String originUrl = url;
-    if (url.contains("m.")) {
-      url = url.replaceFirst("m.", "www.");
-    }
-    if (url.contains("all.html")) {
-      url = url.replaceAll("all.html", "");
-    }
-    Document document = parse(await getFileString(url, originUrl: originUrl));
+    Document document = parse(await getFileString(url));
     var body = document.body;
     if (img != null) {
       var imgs = document.getElementsByTagName("img");
       if (imgs.isNotEmpty) {
-        String? _uri = imgs.first.attributes['src'];
-        if (_uri != null && _uri.startsWith("/")) {
-          _uri = Uri.parse(url).origin + _uri;
+        for (var imgE in imgs) {
+          String? _uri = imgE.attributes['src'];
+          if (_uri != null && (_uri.endsWith("jpg") || _uri.endsWith("jpeg") || _uri.endsWith("png"))) {
+            if (_uri.startsWith("/")) {
+              _uri = Uri.parse(url).origin + _uri;
+            }
+            img(_uri);
+            break;
+          }
         }
-        img(_uri);
       }
     }
     var aTags = body?.getElementsByTagName("a");
@@ -157,7 +158,8 @@ class HtmlParseUtil {
           if (!nextPageId.contains(originPageId)) {
             break;
           }
-          content += await parseContent(nextPageUrl, originPageId: originPageId);
+          var nextPageContent = await parseContent(nextPageUrl, originPageId: originPageId);
+          content += nextPageContent;
           break;
         }
       }
@@ -207,20 +209,38 @@ class HtmlParseUtil {
   }
 
 
-  static getFileString(String url, {String? originUrl}) async{
-    return await getString(url, originUrl: originUrl);
+  static getFileString(String url) async{
+    return await getString(url);
   }
-  static Future<String?> getString(String url, {String? originUrl}) async{
-    try {
-      var response = await DioManager.dio!.get(url);
-      return response.data;
-    } catch(err) {
-      if (originUrl != null) {
-        var response = await DioManager.dio!.get(originUrl);
-        return response.data;
-      }
+  static Future<String?> getString(String url) async{
+    var request = await HttpManager.httpClient!.getUrl(Uri.parse(url));
+    var response = await request.close();
+    List<List<int>> dataBytes = await response.toList();
+    return decodeToStr(dataBytes);
+  }
+
+  static String decodeToStr(List<List<int>> dataBytes) {
+    try{
+      return utf8Decode(dataBytes);
+    }catch(_) {
+      return gbkDecode(dataBytes);
     }
-    return null;
+  }
+
+  static String utf8Decode(List<List<int>> dataBytes) {
+    var strList = [];
+    for (var element in dataBytes) {
+      strList.add(utf8.decode(element));
+    }
+    return strList.join("");
+  }
+
+  static String gbkDecode(List<List<int>> dataBytes) {
+    var strList = [];
+    for (var element in dataBytes) {
+      strList.add(gbk.decode(element));
+    }
+    return strList.join("");
   }
 }
 
