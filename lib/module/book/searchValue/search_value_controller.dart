@@ -4,11 +4,8 @@ import 'package:book_app/log/log.dart';
 import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
-import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/module/book/home/book_home_controller.dart';
 import 'package:book_app/util/html_parse_util.dart';
-import 'package:book_app/util/system_utils.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
@@ -18,50 +15,25 @@ class SearchValueController extends GetxController {
   final BookDbProvider _bookDbProvider = BookDbProvider();
   final ChapterDbProvider _chapterDbProvider = ChapterDbProvider();
   bool showParseButton = false;
-  @override
-  void onInit() async {
-    super.onInit();
-    var map = Get.arguments;
-  }
+  double loadProcess = 0;
+  bool showLoadProcess = false;
+  int siteIndex = 0;
 
-  Widget buildRichText(str, double fontSize, FontWeight fontWeight) {
-    List<ValueFormat> lines = [];
-    int index = 0;
-    while (index + 7 < str.length) {
-      index = str.indexOf("<strong>");
-      if (index == -1) {
-        lines.add(ValueFormat(str, false));
-        break;
-      }
-      String content = str.substring(0, index);
-      if (content.isNotEmpty) {
-        lines.add(ValueFormat(content, false));
-      }
-      str = str.substring(index + 8);
-      index = str.indexOf("</strong>");
-      String content2 = str.substring(0, index);
-      lines.add(ValueFormat(content2, true));
-      str = str.substring(index + 9);
-    }
-    if (str.isNotEmpty) {
-      lines.add(ValueFormat(str, false));
-    }
-    return Text.rich(TextSpan(
-        children: List.generate(lines.length, (i) {
-      if (lines[i].red) {
-        return TextSpan(
-            text: lines[i].content, style: TextStyle(color: Colors.red, fontSize: fontSize, fontWeight: fontWeight));
-      }
-      return TextSpan(
-        text: lines[i].content,
-        style: TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: Theme.of(globalContext).textTheme.bodyText1!.color)
-      );
-    })));
-  }
+  List<List<String>> sites =  [
+      ["神马小说", "https://quark.sm.cn/s?q=&from=smor&safe=1"],
+      ["360搜索", "https://m.so.com/s?q="],
+      ["必应搜索", "https://cn.bing.com/search?q="],
+    ];
 
   pop() async{
     if (webViewController != null) {
       if (await webViewController!.canGoBack()) {
+        for (int i = 0; i < sites.length; i++) {
+          if (sites[i][1].contains((await webViewController!.getUrl())!.origin)) {
+            Get.back();
+            break;
+          }
+        }
         webViewController!.goBack();
       } else {
         Get.back();

@@ -17,6 +17,46 @@ class SearchValueScreen extends GetView<SearchValueController> {
         body: Column(
           children: [
             SizedBox(height: MediaQuery.of(context).padding.top,),
+            SizedBox(
+              height: 56,
+              child: GetBuilder<SearchValueController>(
+                id: "siteBar",
+                builder: (controller) {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: controller.sites.map<Widget>((e) {
+                      int index = controller.sites.indexOf(e);
+                      return GestureDetector(
+                        child: Container(
+                          alignment: Alignment.center,
+                          child: Text(e[0], style: TextStyle(color: index == controller.siteIndex ? Theme.of(context).primaryColor : Theme.of(context).textTheme.bodyText1!.color),),
+                        ),
+                        onTap: () {
+                          if (controller.siteIndex != index) {
+                            controller.siteIndex = index;
+                            controller.webViewController!.loadUrl(urlRequest: URLRequest(url: Uri.parse(controller.sites[index][1])));
+                            controller.update(["siteBar"]);
+                          }
+
+                        },
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
+            ),
+            GetBuilder<SearchValueController>(
+              id: "loadProcess",
+              builder: (controller) {
+                if (!controller.showLoadProcess) {
+                  return Container();
+                }
+                return LinearProgressIndicator(
+                  value: controller.loadProcess,
+                  minHeight: 3,
+                );
+              },
+            ),
             Expanded(
               child: _body(context),
             )
@@ -53,13 +93,23 @@ class SearchValueScreen extends GetView<SearchValueController> {
 
   Widget _body(context) {
     return InAppWebView(
-      initialUrlRequest: URLRequest(url: Uri.parse(getSites()[1][1])),
+      initialUrlRequest: URLRequest(url: Uri.parse(controller.sites[controller.siteIndex][1])),
       onWebViewCreated: (webController) {
         controller.webViewController = webController;
       },
       onLoadStop: (x, y) async{
         controller.showParseButton = await _showButton();
-        controller.update(["showButton"]);
+        controller.showLoadProcess = false;
+        controller.update(["showButton", "loadProcess"]);
+      },
+      onProgressChanged: (x, y) {
+        controller.loadProcess = y / 100;
+        controller.update(["loadProcess"]);
+      },
+      onLoadStart: (x, y) {
+        controller.showLoadProcess = true;
+        controller.loadProcess = 0;
+        controller.update(["loadProcess"]);
       },
     );
   }
@@ -75,11 +125,5 @@ class SearchValueScreen extends GetView<SearchValueController> {
     return false;
   }
 
-  List<List<String>> getSites() {
-    return [
-      ["神马小说", "https://quark.sm.cn/s?q=&from=smor&safe=1"],
-      ["360搜索", "https://m.so.com/s?q="],
-      ["必应搜索", "https://cn.bing.com/search?q="],
-    ];
-  }
+
 }
