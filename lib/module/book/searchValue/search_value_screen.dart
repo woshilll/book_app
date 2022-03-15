@@ -1,10 +1,12 @@
 import 'package:book_app/log/log.dart';
 import 'package:book_app/module/book/searchValue/search_value_controller.dart';
 import 'package:book_app/route/routes.dart';
+import 'package:book_app/theme/color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:marquee/marquee.dart';
 
 class SearchValueScreen extends GetView<SearchValueController> {
   const SearchValueScreen({Key? key}) : super(key: key);
@@ -43,6 +45,20 @@ class SearchValueScreen extends GetView<SearchValueController> {
                     }).toList(),
                   );
                 },
+              ),
+            ),
+            Divider(
+              height: 1,
+              color: Colors.grey[200],
+            ),
+            SizedBox(
+              width: MediaQuery.of(context).size.width,
+              height: 30,
+              // padding: const EdgeInsets.only(left: 15, right: 15),
+              child: Marquee(
+                text: "有关小说搜索 - 1.建议关键字后加(笔趣阁) 2.在你点击的网站里建议选择有\"目录\"、\"电脑\"字样的网站进行解析,也可直接在含有全部章节的页面进行解析",
+                style: TextStyle(color: hexToColor("#E6A23C"), height: 1),
+                blankSpace: 20.0,
               ),
             ),
             GetBuilder<SearchValueController>(
