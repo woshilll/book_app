@@ -27,10 +27,12 @@ class HtmlParseUtil {
         }
       }
     }
-    var aTags = body?.getElementsByTagName("a");
+    List res = await _getChapterAllTags(body!, url);
+    var aTags = res[1];
+    url = res[0];
     Map<String, List<Map<String, dynamic>>> parseMap = {};
     int index = 0;
-    for (int i = 0; i < aTags!.length; i++) {
+    for (int i = 0; i < aTags.length; i++) {
       var aTag = aTags[i];
       Map<String, dynamic> chapter = {};
       if (!aTag.attributes.containsKey("href")) {
@@ -210,10 +212,13 @@ class HtmlParseUtil {
 
 
   static getFileString(String url) async{
+    Log.i("发起请求 --- $url");
     return await getString(url);
   }
   static Future<String?> getString(String url) async{
     var request = await HttpManager.httpClient!.getUrl(Uri.parse(url));
+    request.headers.add("Accept", "text/html;charset=UTF-8");
+    request.headers.add("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/96.0.4664.110");
     var response = await request.close();
     List<List<int>> dataBytes = await response.toList();
     return decodeToStr(dataBytes);
@@ -227,20 +232,39 @@ class HtmlParseUtil {
     }
   }
 
-  static String utf8Decode(List<List<int>> dataBytes) {
-    var strList = [];
-    for (var element in dataBytes) {
-      strList.add(utf8.decode(element));
+  static String utf8Decode(List<List<int>> dataBytesList) {
+    List<int> dataBytes = [];
+    for (var value in dataBytesList) {
+      dataBytes.addAll(value);
     }
-    return strList.join("");
+    return utf8.decode(dataBytes);
   }
 
-  static String gbkDecode(List<List<int>> dataBytes) {
-    var strList = [];
-    for (var element in dataBytes) {
-      strList.add(gbk.decode(element));
+  static String gbkDecode(List<List<int>> dataBytesList) {
+    List<int> dataBytes = [];
+    for (var value in dataBytesList) {
+      dataBytes.addAll(value);
     }
-    return strList.join("");
+    return gbk.decode(dataBytes);
+  }
+
+  /// 获取所有的章节
+  static Future<List<dynamic>> _getChapterAllTags(Element body, String url) async{
+    var aTags = body.getElementsByTagName("a");
+    for (var a in aTags) {
+      if (a.text.contains("章节列表") || a.text.contains("目录") || a.text.contains("电脑版")) {
+        String? fullUrl = a.attributes["href"];
+        if (fullUrl != null) {
+          if (fullUrl.startsWith("/")) {
+            fullUrl = Uri.parse(url).origin + fullUrl;
+          }
+          var html = await getFileString(fullUrl);
+          Document document = parse(html);
+          return [fullUrl, document.body!.getElementsByTagName("a")];
+        }
+      }
+    }
+    return [url, body.getElementsByTagName("a")];
   }
 }
 
