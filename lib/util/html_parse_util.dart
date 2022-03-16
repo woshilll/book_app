@@ -1,12 +1,14 @@
 import 'dart:convert';
 
 import 'package:book_app/model/chapter/chapter.dart';
+import 'package:book_app/util/content_fliter.dart';
 import 'package:html/parser.dart';
 import 'package:html/dom.dart';
 import 'package:book_app/api/http_manager.dart';
 import 'package:book_app/log/log.dart';
 import 'package:fast_gbk/fast_gbk.dart';
 final RegExp chinese = RegExp(r"[\u4E00-\u9FA5]");
+final RegExp contentFilter = contentFilterRegExp();
 class HtmlParseUtil {
   static final List<String> ignoreContentHtmlTag = ["a", "option", "h1", "h2", "strong", "font", "button", "script"];
   static Future<List<Chapter>> parseChapter(String url, {Function(String? url)? img}) async{
@@ -297,7 +299,7 @@ String _beautifulFormat(String str) {
     if (chinese.allMatches(element).isEmpty) {
       continue;
     }
-    if (element.contains("笔趣阁")) {
+    if (element.contains(contentFilter)) {
       continue;
     }
     newStr.add(element);
