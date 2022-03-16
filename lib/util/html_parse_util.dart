@@ -9,6 +9,7 @@ import 'package:book_app/log/log.dart';
 import 'package:fast_gbk/fast_gbk.dart';
 final RegExp chinese = RegExp(r"[\u4E00-\u9FA5]");
 final RegExp contentFilter = contentFilterRegExp();
+final RegExp nextPageReg = RegExp("下(.{1})页");
 class HtmlParseUtil {
   static final List<String> ignoreContentHtmlTag = ["a", "option", "h1", "h2", "strong", "font", "button", "script"];
   static Future<List<Chapter>> parseChapter(String url, {Function(String? url)? img}) async{
@@ -154,7 +155,7 @@ class HtmlParseUtil {
       // 有没有下一页
       String content = contentElement.innerHtml;
       for (var a in contentElement.getElementsByTagName("a")) {
-        if (a.text.contains("下一页")) {
+        if (a.text.contains(nextPageReg)) {
           String? nextPageUrl = a.attributes["href"];
           nextPageUrl = url.substring(0, url.lastIndexOf("/")) + nextPageUrl!.substring(nextPageUrl.lastIndexOf('/'));
           originPageId ??= url.substring(url.lastIndexOf('/') + 1).split(".")[0];
