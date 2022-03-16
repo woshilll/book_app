@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:book_app/module/book/read/component/battery.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/limit_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
+import 'package:share_plus/share_plus.dart';
 
 bottom(context) async {
   // 计算进度
@@ -32,67 +35,83 @@ bottom(context) async {
                       ),
                     ),
                     Positioned(
+                        top: 0,
+                        right: 0,
+                        left: 0,
+                        child: Container(
+                          height: MediaQuery.of(context).padding.top,
+                          color: Colors.black,
+                        )
+                    ),
+                    Positioned(
                       top: 0,
+                      right: 0,
+                      child: Container(
+                        height: MediaQuery.of(context).padding.top,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(top: 10, bottom: 10, right: 15),
+                        child: battery(),
+                      )
+                    ),
+                    Positioned(
+                      top: MediaQuery.of(context).padding.top,
                       left: 0,
                       right: 0,
                       child: Container(
-                        height: MediaQuery.of(context).padding.top + 56,
+                        height: 56,
                         color: Colors.black,
-                        child: Container(
-                          margin: EdgeInsets.only(
-                              top: MediaQuery.of(context).padding.top),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              GestureDetector(
-                                child: Container(
-                                  margin: const EdgeInsets.only(left: 15),
-                                  alignment: Alignment.centerLeft,
-                                  child: Row(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.center,
-                                    children: [
-                                      GestureDetector(
-                                        child: const Icon(
-                                          Icons.arrow_back_ios,
-                                          size: 25,
-                                          color: Colors.white,
-                                        ),
-                                        onTap: () {
-                                          Navigator.of(context).pop();
-                                          controller.popRead();
-                                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            GestureDetector(
+                              child: Container(
+                                margin: const EdgeInsets.only(left: 15),
+                                alignment: Alignment.centerLeft,
+                                child: Row(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.center,
+                                  children: [
+                                    GestureDetector(
+                                      child: const Icon(
+                                        Icons.arrow_back_ios,
+                                        size: 25,
+                                        color: Colors.white,
                                       ),
-                                      Container(
-                                        margin:
-                                        const EdgeInsets.only(left: 15),
-                                        child: Text(
-                                          "${controller.book!.name!.length > 10 ? controller.book!.name!.substring(0, 10) : controller.book!.name}",
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16),
-                                        ),
-                                      )
-                                    ],
-                                  ),
+                                      onTap: () {
+                                        Navigator.of(context).pop();
+                                        controller.popRead();
+                                      },
+                                    ),
+                                    Container(
+                                      margin:
+                                      const EdgeInsets.only(left: 15),
+                                      child: Text(
+                                        "${controller.book!.name!.length > 10 ? controller.book!.name!.substring(0, 10) : controller.book!.name}",
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16),
+                                      ),
+                                    )
+                                  ],
                                 ),
                               ),
-                              // GestureDetector(
-                              //   child: Container(
-                              //     alignment: Alignment.centerRight,
-                              //     margin: const EdgeInsets.only(right: 15),
-                              //     child: const Icon(
-                              //       Icons.headset,
-                              //       size: 25,
-                              //       color: Colors.white,
-                              //     ),
-                              //   ),
-                              //   onTap: () async {
-                              //   },
-                              // )
-                            ],
-                          ),
+                            ),
+                            GestureDetector(
+                              child: Container(
+                                alignment: Alignment.centerRight,
+                                margin: const EdgeInsets.only(right: 15),
+                                child: const Icon(
+                                  Icons.share_outlined,
+                                  size: 25,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              onTap: () async {
+                                await _share(controller);
+                              },
+                            )
+                          ],
                         ),
                       ),
                     ),
@@ -253,6 +272,64 @@ bottom(context) async {
             );
           }
           ));
+}
+
+/// 分享
+_share(ReadController controller) async{
+  Get.bottomSheet(
+    Card(
+      color: Colors.black,
+      child: SizedBox(
+        height: 152,
+        child: Column(
+          children: [
+            Container(
+              height: 50,
+              alignment: Alignment.center,
+              child: const Text("分享", style: TextStyle(height: 1, fontSize: 14),),
+            ),
+            Divider(
+              height: 1,
+              color: Colors.grey[200],
+            ),
+            InkWell(
+              child: Container(
+                height: 50,
+                alignment: Alignment.center,
+                child: const Text("分享链接", style: TextStyle(height: 1, fontSize: 14),),
+              ),
+              onTap: () {
+                if (controller.book!.type == 2) {
+                  EasyLoading.showToast("本地书籍, 无法分享链接");
+                  return;
+                }
+                Share.share("woshilll:${controller.book!.url}");
+              },
+            ),
+            Divider(
+              height: 1,
+              color: Colors.grey[200],
+            ),
+            InkWell(
+              child: Container(
+                height: 50,
+                alignment: Alignment.center,
+                child: const Text("分享文件", style: TextStyle(height: 1, fontSize: 14),),
+              ),
+              onTap: () {
+                if (controller.book!.type == 1) {
+                  EasyLoading.showToast("网络书籍, 无法分享文件");
+                  return;
+                }
+                Share.shareFiles([controller.book!.url!]);
+              },
+            )
+          ],
+        ),
+      ),
+    )
+  );
+  // Share.share("woshilll:${controller.book!.url}");
 }
 
 Widget _bottomType(ReadController controller) {

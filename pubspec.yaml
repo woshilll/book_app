@@ -67,6 +67,7 @@ dependencies:
   flutter_zoom_drawer: ^2.3.1+1
   draggable_scrollbar: ^0.1.0
   marquee: ^2.2.1
+  share_plus: ^4.0.1
 
 dev_dependencies:
   flutter_test:
