@@ -1,19 +1,12 @@
-import 'dart:async';
-
-import 'package:book_app/log/log.dart';
 import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
-import 'package:book_app/model/book/book.dart';
 import 'package:book_app/module/book/home/book_home_controller.dart';
-import 'package:book_app/util/html_parse_util.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:book_app/util/parse_book.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 
 class SearchValueController extends GetxController {
   InAppWebViewController? webViewController;
-  final BookDbProvider _bookDbProvider = BookDbProvider();
-  final ChapterDbProvider _chapterDbProvider = ChapterDbProvider();
   bool showParseButton = false;
   double loadProcess = 0;
   bool showLoadProcess = false;
@@ -44,32 +37,7 @@ class SearchValueController extends GetxController {
   }
 
   parse() async{
-    try {
-      String url = (await webViewController!.getUrl())!.toString();
-      dynamic count = await _bookDbProvider.getBookCount(url);
-      if (count > 0) {
-        EasyLoading.showToast("小说已存在书架");
-        return;
-      }
-      await EasyLoading.show(status: "解析中...", maskType: EasyLoadingMaskType.clear);
-      String? img;
-      var chapters = await HtmlParseUtil.parseChapter(url, img: (imgUrl) {
-        img = imgUrl;
-      });
-      final Book book = Book(url: url, name: await webViewController!.getTitle(), indexImg: img);
-      var bookId = await _bookDbProvider.commonInsert(book);
-      for (var e in chapters) {
-        e.bookId = bookId;
-      }
-      await _chapterDbProvider.commonBatchInsert(chapters);
-      await EasyLoading.dismiss();
-      EasyLoading.showToast("解析完成, 共 ${chapters.length} 章节");
-    } catch(err) {
-      Log.e(err);
-      EasyLoading.dismiss();
-      EasyLoading.showToast("解析失败");
-    }
-
+    await parseBook((await webViewController!.getTitle())!, (await webViewController!.getUrl())!.toString());
   }
 
   @override
