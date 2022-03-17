@@ -12,7 +12,7 @@ final RegExp contentFilter = contentFilterRegExp();
 final RegExp nextPageReg = RegExp("下(.{1})页");
 class HtmlParseUtil {
   static final List<String> ignoreContentHtmlTag = ["a", "option", "h1", "h2", "strong", "font", "button", "script"];
-  static Future<List<Chapter>> parseChapter(String url, {Function(String? url)? img}) async{
+  static Future<List<dynamic>> parseChapter(String url, {Function(String? url)? img, bool isShare = false}) async{
     Document document = parse(await getFileString(url));
     var body = document.body;
     if (img != null) {
@@ -30,7 +30,7 @@ class HtmlParseUtil {
         }
       }
     }
-    List res = await _getChapterAllTags(body!, url);
+    List res = await _getChapterAllTags(body!, url, isShare: isShare);
     var aTags = res[1];
     url = res[0];
     Map<String, List<Map<String, dynamic>>> parseMap = {};
@@ -74,7 +74,7 @@ class HtmlParseUtil {
       }
     });
     List<Map<String, dynamic>> trueChapters = parseMap[maxKey]!;
-    return format(trueChapters, url);
+    return [url, format(trueChapters, url)];
   }
   static bool skip(String url) {
     return url.endsWith("/") || url.endsWith(".php") || url.endsWith(".js") || url.endsWith(".css");
@@ -252,18 +252,20 @@ class HtmlParseUtil {
   }
 
   /// 获取所有的章节
-  static Future<List<dynamic>> _getChapterAllTags(Element body, String url) async{
+  static Future<List<dynamic>> _getChapterAllTags(Element body, String url, {bool isShare = false}) async{
     var aTags = body.getElementsByTagName("a");
-    for (var a in aTags) {
-      if (a.text.contains("章节列表") || a.text.contains("目录") || a.text.contains("电脑版")) {
-        String? fullUrl = a.attributes["href"];
-        if (fullUrl != null) {
-          if (fullUrl.startsWith("/")) {
-            fullUrl = Uri.parse(url).origin + fullUrl;
+    if (!isShare) {
+      for (var a in aTags) {
+        if (a.text.contains("章节列表") || a.text.contains("目录") || a.text.contains("电脑版")) {
+          String? fullUrl = a.attributes["href"];
+          if (fullUrl != null) {
+            if (fullUrl.startsWith("/")) {
+              fullUrl = Uri.parse(url).origin + fullUrl;
+            }
+            var html = await getFileString(fullUrl);
+            Document document = parse(html);
+            return [fullUrl, document.body!.getElementsByTagName("a")];
           }
-          var html = await getFileString(fullUrl);
-          Document document = parse(html);
-          return [fullUrl, document.body!.getElementsByTagName("a")];
         }
       }
     }

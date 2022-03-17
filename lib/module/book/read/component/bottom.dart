@@ -303,7 +303,7 @@ _share(ReadController controller) async{
                   EasyLoading.showToast("本地书籍, 无法分享链接");
                   return;
                 }
-                Share.share("woshilll:${controller.book!.url}");
+                Share.share("woshilll*#*${controller.book!.name}*#*${controller.book!.url}");
               },
             ),
             Divider(
