@@ -1,5 +1,4 @@
 import 'package:book_app/db/base_db_provider.dart';
-import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -49,7 +48,7 @@ class ChapterDbProvider extends BaseDbProvider {
   /// 获取章节列表详情
   Future<List<Chapter>> getChapters(startId, bookId) async {
     Database db = await getDataBase();
-    List<Map<String, dynamic>> maps = await db.rawQuery("select $columnId, $columnName, $columnUrl from $name where $columnBookId = ? ${startId == null ? '' : 'id >= $startId' } order by $columnId asc", [bookId]);
+    List<Map<String, dynamic>> maps = await db.rawQuery("select $columnId, $columnName, $columnUrl from $name where $columnBookId = ? ${startId == null ? '' : 'and id >= $startId' } order by $columnId asc", [bookId]);
     List<Chapter> list = [];
     for (var element in maps) {
       list.add(Chapter.fromJson(element));
@@ -93,5 +92,20 @@ class ChapterDbProvider extends BaseDbProvider {
       return null;
     }
     return Chapter.fromJson(maps[0]);
+  }
+
+  Future<int?> getUnCacheCount(int id) async{
+    Database db = await getDataBase();
+    return Sqflite.firstIntValue(await db.rawQuery("select count(*) from $name where $columnBookId = ? and ($columnContent is null or trim($columnContent) = '')", [id]));
+  }
+
+  Future<List<Chapter>> getChaptersWithContent(int bookId) async{
+    Database db = await getDataBase();
+    List<Map<String, dynamic>> maps = await db.rawQuery("select $columnId, $columnName, $columnContent, $columnUrl from $name where $columnBookId = ? order by $columnId asc", [bookId]);
+    List<Chapter> list = [];
+    for (var element in maps) {
+      list.add(Chapter.fromJson(element));
+    }
+    return list;
   }
 }

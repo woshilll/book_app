@@ -6,7 +6,6 @@ import 'package:book_app/util/no_shadow_scroll_behavior.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:book_app/model/book/book.dart';
 
@@ -139,7 +138,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
         return Card(
           child: Container(
             alignment: Alignment.center,
-            child: Text("${controller.books[index].type == 2 ? '本地书籍' : '无封面'}\n\n${controller.books[index].name}", textAlign: TextAlign.center,),
+            child: Text("无封面\n\n${controller.books[index].name}", textAlign: TextAlign.center,),
             decoration: const BoxDecoration(
                 borderRadius: BorderRadius.all(Radius.circular(4)),
             ),
@@ -233,7 +232,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
                   ),
                   itemBuilder: (context, index) {
                     return Container(
-                      child: const FaIcon(FontAwesomeIcons.bookOpen),
+                      child: const Icon(Icons.menu_book_outlined),
                       alignment: Alignment.center,
                       decoration: const BoxDecoration(
                           borderRadius: BorderRadius.all(Radius.circular(4)),
@@ -287,7 +286,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
                       children: [
                         Container(
                           margin: const EdgeInsets.only(left: 15, right: 15),
-                          child: const FaIcon(FontAwesomeIcons.bookOpen, color: Colors.black,),
+                          child: const Icon(Icons.menu_book_outlined, color: Colors.black,),
                         ),
                         Expanded(
                           child: Column(
@@ -295,7 +294,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
                             children: [
                               Container(
                                 alignment: Alignment.centerLeft,
-                                child: Text("${controller.localBooks[index].name}", style: const TextStyle(color: Colors.black, fontSize: 14),),
+                                child: Text("${controller.localBooks[index].name}", style: const TextStyle(color: Colors.black, fontSize: 14), maxLines: 1,),
                               ),
                               Container(
                                 alignment: Alignment.centerLeft,

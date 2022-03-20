@@ -1,18 +1,24 @@
 import 'dart:io';
 
+import 'package:book_app/app_controller.dart';
+import 'package:book_app/di.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
+import 'package:book_app/model/book_with_chapters.dart';
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/route/routes.dart';
+import 'package:book_app/util/channel_utils.dart';
 import 'package:book_app/util/font_util.dart';
+import 'package:book_app/util/html_parse_util.dart';
 import 'package:book_app/util/parse_book.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:woshilll_flutter_plugin/woshilll_flutter_plugin.dart';
 
 class BookHomeController extends GetxController with WidgetsBindingObserver{
@@ -20,6 +26,13 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
   static final ChapterDbProvider _chapterDbProvider = ChapterDbProvider();
   List<Book> books = [];
   List<Book> localBooks = [];
+  final List<BookWithChapters> _bookDownloads = [];
+  final RegExp chapterMatch = RegExp(r"^第.*章|^\d+$");
+  @override
+  void onInit() {
+    super.onInit();
+    _listen();
+  }
 
   @override
   void onReady() async{
@@ -32,11 +45,11 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
     localBooks.clear();
     books = await _bookDbProvider.getBooks();
     for (var book in books) {
-      if (book.type == 2) {
+      if (book.type != 1) {
         localBooks.add(book);
       }
     }
-    books.removeWhere((element) => element.type == 2);
+    books.removeWhere((element) => element.type != 1);
     update(['bookList']);
   }
   deleteBook(Book book) async {
@@ -80,6 +93,14 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
 
   _selectTextFile() async{
     try {
+      var permission = Permission.storage;
+
+      if (!await permission.status.isGranted) {
+        var status = await permission.request();
+        if (!status.isGranted) {
+          return;
+        }
+      }
       FilePickerResult? result = await FilePicker.platform.pickFiles(
           type: FileType.custom,
           allowedExtensions: ["txt"]
@@ -93,38 +114,9 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
         String? filePath = file.path;
         File bookFile = File(filePath!);
         List<String> lines = await bookFile.readAsLines();
-        List<Chapter> chapters = [];
-        String content = "";
-        Chapter chapter = Chapter();
-        RegExp chapterMatch = RegExp(r"^第.*章|^\d+$");
-        for (var line in lines) {
-          if (chapterMatch.hasMatch(line)) {
-            if (chapter.name == null) {
-              chapter.name = line;
-              content = "";
-            } else {
-              chapter.content = FontUtil.formatContent(content);
-              chapters.add(chapter);
-              chapter = Chapter(name: line);
-              content = "";
-            }
-          } else {
-            content = content + line + "\n";
-          }
-        }
-        chapter.content = FontUtil.formatContent(content);
-        chapters.add(chapter);
-        Book book = Book(type: 2);
-        book.name = fileName;
-        book.url = filePath;
-        int bookId = await _bookDbProvider.commonInsert(book);
-        for (Chapter item in chapters) {
-          item.bookId = bookId;
-          item.url = "";
-        }
-        await _chapterDbProvider.commonBatchInsert(chapters);
-        EasyLoading.showToast("添加成功");
-        getBookList();
+        parseBookText(lines, fileName, filePath: filePath).then((value) => {
+          getBookList()
+        });
       }
     } catch(err) {
       EasyLoading.showToast("解析失败");
@@ -212,5 +204,119 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
         });
       }
     }
+  }
+
+  downloadBook(int bookId, int chapterId) async {
+    int index = _bookDownloads.indexWhere((element) => element.book.id == bookId);
+    if (index >= 0) {
+      EasyLoading.showToast("已在下载队列中");
+      return;
+    }
+    Book? book = await _bookDbProvider.getBookById(bookId);
+    List<Chapter> chapters = await _chapterDbProvider.getChapters(chapterId, bookId);
+    if (book == null) {
+      EasyLoading.showToast("小说不存在");
+      return;
+    }
+    if (chapters.isEmpty) {
+      EasyLoading.showToast("无章节可缓存");
+      return;
+    }
+    BookWithChapters bookWithChapters = BookWithChapters(book, chapters);
+    _bookDownloads.add(bookWithChapters);
+    _downloadBook(bookWithChapters);
+  }
+
+  _downloadBook(BookWithChapters bookWithChapters) async{
+    for (var chapter in bookWithChapters.chapters) {
+      if (bookWithChapters.interruptDownload) {
+        /// 中断下载
+        bookWithChapters.dispose();
+        _bookDownloads.removeWhere((element) => element.book.id == bookWithChapters.book.id);
+        break;
+      }
+      var _chapter = await _chapterDbProvider.getChapterById(chapter.id);
+      if (_chapter != null && _chapter.content != null &&_chapter.content!.isNotEmpty) {
+        bookWithChapters.downloadChaptersAdd(chapter);
+        continue;
+      }
+      String content = await HtmlParseUtil.parseContent(chapter.url!);
+      if (content.isEmpty) {
+        // 下载失败
+        continue;
+      }
+      Log.i("小说 -${bookWithChapters.book.id}- 章节 -${chapter.id}- 下载完成");
+      _chapterDbProvider.updateContent(chapter.id, content);
+      bookWithChapters.downloadChaptersAdd(chapter);
+      await Future.delayed(const Duration(milliseconds: 1000), (){});
+    }
+    bookWithChapters.downloadComplete(true);
+  }
+
+  BookWithChapters? getBookWithChapters(int bookId) {
+    var index = _bookDownloads.indexWhere((element) => element.book.id == bookId);
+    if (index == -1) {
+      return null;
+    }
+    return _bookDownloads[index];
+  }
+
+  Future parseBookText(List<String> lines, String fileName, {String? filePath}) async{
+
+    List<Chapter> chapters = [];
+    String content = "";
+    Chapter chapter = Chapter();
+    for (var line in lines) {
+      if (chapterMatch.hasMatch(line)) {
+        if (chapter.name == null) {
+          chapter.name = line;
+          content = "";
+        } else {
+          chapter.content = FontUtil.formatContent(content);
+          chapters.add(chapter);
+          chapter = Chapter(name: line);
+          content = "";
+        }
+      } else {
+        content = content + line + "\n";
+      }
+    }
+    chapter.content = FontUtil.formatContent(content);
+    chapters.add(chapter);
+    Book book = Book(type: filePath == null ? 3 : 2);
+    book.name = fileName;
+    book.url = filePath ?? "";
+    int bookId = await _bookDbProvider.commonInsert(book);
+    for (Chapter item in chapters) {
+      item.bookId = bookId;
+      item.url = "";
+    }
+    await _chapterDbProvider.commonBatchInsert(chapters);
+    EasyLoading.showToast("添加成功");
+  }
+
+  _listen() {
+    ChannelUtils.methodChannel.setMethodCallHandler((call) async{
+      switch (call.method) {
+        case 'bookPath':
+          Future.delayed(const Duration(milliseconds: 500), () async{
+            var path = call.arguments;
+            if (path != null) {
+              String? name = path["name"];
+              String? content = path["content"];
+              if (name != null && content != null) {
+                try{
+                  parseBookText(content.split("\n"), name).then((value) {
+                    BookHomeController homeController = Get.find();
+                    homeController.getBookList();
+                  });
+                }catch(e) {
+                  EasyLoading.showToast("解析失败");
+                }
+              }
+            }
+          });
+      }
+    });
   }
 }
