@@ -63,6 +63,15 @@ public class WoshilllPlugin implements MethodChannel.MethodCallHandler {
     }
 
     /**
+     * 发送小说解析
+     *
+     * @param book 小说对象
+     */
+    public void sendBookPath(Map book) {
+        channel.invokeMethod("bookPath", book);
+    }
+
+    /**
      * 获取配置信息 有默认值
      *
      * @param key

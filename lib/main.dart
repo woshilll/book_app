@@ -1,6 +1,3 @@
-import 'dart:io';
-import 'dart:ui';
-
 import 'package:book_app/app_binding.dart';
 import 'package:book_app/app_controller.dart';
 import 'package:book_app/di.dart';
@@ -9,11 +6,7 @@ import 'package:book_app/route/route_pages.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/theme.dart';
 import 'package:book_app/util/bar_util.dart';
-import 'package:book_app/util/constant.dart';
-import 'package:book_app/util/save_util.dart';
-import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
@@ -45,7 +38,7 @@ class App extends StatelessWidget {
             getPages: RoutePages.routes,
             initialBinding: AppBinding(),
             smartManagement: SmartManagement.keepFactory,
-            title: '小小说',
+            title: '轻阅读',
             locale: LangService.locale,
             fallbackLocale: LangService.fallbackLocale,
             translations: LangService(),

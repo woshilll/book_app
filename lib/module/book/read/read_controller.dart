@@ -1,13 +1,17 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:another_transformer_page_view/another_transformer_page_view.dart';
 import 'package:battery_plus/battery_plus.dart';
+import 'package:book_app/log/log.dart';
 import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
+import 'package:book_app/model/book_with_chapters.dart';
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/model/read_page_type.dart';
+import 'package:book_app/module/book/home/book_home_controller.dart';
 import 'package:book_app/module/book/read/component/drawer.dart';
 import 'package:book_app/module/book/read/component/page_gen.dart';
 import 'package:book_app/module/book/readSetting/component/read_setting_config.dart';
@@ -16,11 +20,15 @@ import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/bar_util.dart';
 import 'package:book_app/util/channel_utils.dart';
 import 'package:book_app/util/constant.dart';
+import 'package:book_app/util/dialog_build.dart';
+import 'package:book_app/util/html_parse_util.dart';
 import 'package:book_app/util/notify/counter_notify.dart';
+import 'package:book_app/util/path_util.dart';
 import 'package:book_app/util/save_util.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:woshilll_flutter_plugin/woshilll_flutter_plugin.dart';
 import 'component/content_page.dart';
 import 'package:book_app/util/system_utils.dart';
@@ -73,6 +81,7 @@ class ReadController extends GetxController {
   late PageGen pageGen;
   ZoomDrawerController zoomDrawerController = ZoomDrawerController();
   bool loading = false;
+  BookWithChapters? bookWithChapters;
   @override
   void onInit() async{
     readPageType = getReadPageTypeByStr(SaveUtil.getString(Constant.readType));
@@ -382,6 +391,7 @@ class ReadController extends GetxController {
     transparentBar();
     ChannelUtils.setConfig(Constant.pluginVolumeFlag, false);
     SaveUtil.setString(Constant.readType, readPageType.name);
+    bookWithChapters?.dispose();
   }
 
 
@@ -495,6 +505,7 @@ class ReadController extends GetxController {
 
   /// 重新加载章节
   reloadPage() async{
+    await EasyLoading.show(status: "加载中", maskType: EasyLoadingMaskType.clear);
     var chapterId = pages[pageIndex.count].chapterId;
     int firstIndex = pages.indexWhere((element) => chapterId == element.chapterId);
     pages.removeWhere((element) => element.chapterId == chapterId);
@@ -502,7 +513,9 @@ class ReadController extends GetxController {
     pageGen.genPages(chapter, book!, (list) {
       pages.insertAll(firstIndex, list);
       update(["content"]);
+      EasyLoading.dismiss();
     });
+    EasyLoading.dismiss();
   }
 
 
@@ -547,6 +560,80 @@ class ReadController extends GetxController {
     await _reload();
   }
 
+  /// 重新载入章节
+  reDownload() async {
+    if (book!.type != 1) {
+      EasyLoading.showToast("本地章节无法重载");
+      return;
+    }
+    Get.dialog(
+      DialogBuild("重载章节", const Text("该操作会重新从网络上下载该资源, 请确认"), confirmFunction: () async{
+        Get.back();
+        await EasyLoading.show(status: "重载中...", maskType: EasyLoadingMaskType.clear);
+        var chapterId = pages[pageIndex.count].chapterId;
+        var chapter = chapters.firstWhere((element) => element.id == chapterId);
+        chapter.content = await HtmlParseUtil.parseContent(chapter.url!);
+        await _chapterDbProvider.updateContent(chapter.id, chapter.content);
+        reloadPage();
+      },)
+    );
+
+  }
+
+  /// 下载数据
+  downloadBook(bool fromHead) async{
+    if (book!.type != 1) {
+      EasyLoading.showToast("本地章节无法缓存");
+      return;
+    }
+    // 是否已全部缓存
+    int? count = await _chapterDbProvider.getUnCacheCount(book!.id!);
+    if (count == null || count == 0) {
+      EasyLoading.showToast("已全部缓存");
+      return;
+    }
+    BookHomeController homeController = Get.find();
+    if (fromHead) {
+      homeController.downloadBook(book!.id!, chapters[0].id!);
+    } else {
+      homeController.downloadBook(book!.id!, pages[pageIndex.count].chapterId!);
+    }
+  }
+
+  getBookWithChapters() {
+    BookHomeController homeController = Get.find();
+    bookWithChapters = homeController.getBookWithChapters(book!.id!);
+  }
+
+  /// 导出为本地书籍
+  exportBook() async{
+    String path = await PathUtil.getSavePath("books");
+    Log.i("$path/${book!.name}.txt");
+    File file = File("$path/${book!.name}.txt");
+    if (file.existsSync()) {
+      /// 已存在
+      Get.dialog(
+        DialogBuild("文件已存在", const Text("文件已存在, 是否覆盖?"), confirmFunction: () async{
+          Get.back();
+          file.writeAsStringSync(await _createBookText());
+          EasyLoading.showToast("已保存");
+        },)
+      );
+      return;
+    }
+    file.createSync();
+    file.writeAsStringSync(await _createBookText());
+    EasyLoading.showToast("已保存");
+  }
+  Future<String> _createBookText() async{
+    List<Chapter> chaptersWithContent = await _chapterDbProvider.getChaptersWithContent(book!.id!);
+    List<String?> chapterStrList = [];
+    for (var chapter in chaptersWithContent) {
+      chapterStrList.add(chapter.name);
+      chapterStrList.add(chapter.content);
+    }
+    return chapterStrList.join("\n");
+  }
 }
 
 
