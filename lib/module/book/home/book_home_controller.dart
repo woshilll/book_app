@@ -299,23 +299,20 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
     ChannelUtils.methodChannel.setMethodCallHandler((call) async{
       switch (call.method) {
         case 'bookPath':
-          Future.delayed(const Duration(milliseconds: 500), () async{
-            var path = call.arguments;
-            if (path != null) {
-              String? name = path["name"];
-              String? content = path["content"];
-              if (name != null && content != null) {
-                try{
-                  parseBookText(content.split("\n"), name).then((value) {
-                    BookHomeController homeController = Get.find();
-                    homeController.getBookList();
-                  });
-                }catch(e) {
-                  EasyLoading.showToast("解析失败");
-                }
-              }
-            }
-          });
+          parseBookWithShare(call);
+      }
+    });
+  }
+
+  parseBookWithShare(MethodCall call) {
+    Future.delayed(const Duration(milliseconds: 500), () async{
+      var path = call.arguments;
+      if (path != null) {
+        String? name = path["name"];
+        String? content = path["content"];
+        if (name != null && content != null) {
+          parseBookByShare(name, content);
+        }
       }
     });
   }

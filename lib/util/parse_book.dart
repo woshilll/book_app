@@ -3,6 +3,8 @@ import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
 import 'package:book_app/module/book/home/book_home_controller.dart';
+import 'package:book_app/util/dialog_build.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
@@ -41,4 +43,34 @@ parseBook(String bookName, String bookUrl, {bool isShare = false}) async {
     EasyLoading.dismiss();
     EasyLoading.showToast("解析失败");
   }
+}
+
+parseBookByShare(String bookName, String content) async{
+  Get.dialog(
+      DialogBuild(
+          "分享小说",
+          Text.rich(
+            TextSpan(
+              text: "是否解析来自其它APP分享的小说",
+              children: [
+                TextSpan(text: bookName, style: const TextStyle(color: Colors.lightBlueAccent))
+              ],
+              style: const TextStyle(color: Colors.black, fontSize: 14)
+            )
+          ),
+        confirmFunction: () {
+            try {
+              Future.delayed(const Duration(milliseconds: 500), () {
+                BookHomeController bookHomeController = Get.find();
+                bookHomeController.parseBookText(content.split("\n"), bookName).then((value) {
+                  bookHomeController.getBookList();
+                });
+              });
+              Get.back();
+            } catch(e) {
+              EasyLoading.showToast("解析失败");
+            }
+        },
+      )
+  );
 }

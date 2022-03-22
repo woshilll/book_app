@@ -12,7 +12,6 @@ import 'package:book_app/model/book_with_chapters.dart';
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/model/read_page_type.dart';
 import 'package:book_app/module/book/home/book_home_controller.dart';
-import 'package:book_app/module/book/read/component/drawer.dart';
 import 'package:book_app/module/book/read/component/page_gen.dart';
 import 'package:book_app/module/book/readSetting/component/read_setting_config.dart';
 import 'package:book_app/route/routes.dart';
@@ -28,7 +27,6 @@ import 'package:book_app/util/save_util.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:woshilll_flutter_plugin/woshilll_flutter_plugin.dart';
 import 'component/content_page.dart';
 import 'package:book_app/util/system_utils.dart';
@@ -550,6 +548,10 @@ class ReadController extends GetxController {
           } else {
             prePage();
           }
+          break;
+        case 'bookPath':
+          BookHomeController homeController = Get.find();
+          homeController.parseBookWithShare(call);
       }
     });
   }
