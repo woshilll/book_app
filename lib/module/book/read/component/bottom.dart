@@ -8,9 +8,9 @@ import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/bottom_bar_build.dart';
 import 'package:book_app/util/limit_util.dart';
 import 'package:book_app/util/path_util.dart';
+import 'package:book_app/util/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -315,7 +315,7 @@ _share(ReadController controller) async {
   Get.bottomSheet(BottomBarBuild("分享", [
     BottomBarBuildItem("分享链接", () {
       if (controller.book!.type != 1) {
-        EasyLoading.showToast("本地书籍, 无法分享链接");
+        Toast.toast(toast: "本地书籍, 无法分享链接");
         return;
       }
       Share.share(
@@ -329,7 +329,7 @@ _share(ReadController controller) async {
         if (file.existsSync()) {
           Share.shareFiles([filePath]);
         } else {
-          EasyLoading.showToast("请先导出, 再分享");
+          Toast.toast(toast: "请先导出, 再分享");
         }
         return;
       }

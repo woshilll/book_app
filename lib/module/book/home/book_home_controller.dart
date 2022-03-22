@@ -13,10 +13,10 @@ import 'package:book_app/util/channel_utils.dart';
 import 'package:book_app/util/font_util.dart';
 import 'package:book_app/util/html_parse_util.dart';
 import 'package:book_app/util/parse_book.dart';
+import 'package:book_app/util/toast.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:woshilll_flutter_plugin/woshilll_flutter_plugin.dart';
@@ -69,7 +69,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
       // 没有内容
       // 发起请求获取
       if (selected.type != 1) {
-        EasyLoading.showToast("本地小说无章节,请删除");
+        Toast.toast(toast: "本地小说无章节,请删除");
         return;
       }
     }
@@ -119,7 +119,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
         });
       }
     } catch(err) {
-      EasyLoading.showToast("解析失败");
+      Toast.toast(toast: "解析失败");
     }
   }
 
@@ -209,17 +209,17 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
   downloadBook(int bookId, int chapterId) async {
     int index = _bookDownloads.indexWhere((element) => element.book.id == bookId);
     if (index >= 0) {
-      EasyLoading.showToast("已在下载队列中");
+      Toast.toast(toast: "已在下载队列中");
       return;
     }
     Book? book = await _bookDbProvider.getBookById(bookId);
     List<Chapter> chapters = await _chapterDbProvider.getChapters(chapterId, bookId);
     if (book == null) {
-      EasyLoading.showToast("小说不存在");
+      Toast.toast(toast: "小说不存在");
       return;
     }
     if (chapters.isEmpty) {
-      EasyLoading.showToast("无章节可缓存");
+      Toast.toast(toast: "无章节可缓存");
       return;
     }
     BookWithChapters bookWithChapters = BookWithChapters(book, chapters);
@@ -292,7 +292,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
       item.url = "";
     }
     await _chapterDbProvider.commonBatchInsert(chapters);
-    EasyLoading.showToast("添加成功");
+    Toast.toast(toast: "添加成功");
   }
 
   _listen() {

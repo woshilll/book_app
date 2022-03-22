@@ -1,7 +1,7 @@
 import 'package:book_app/module/book/searchValue/search_value_controller.dart';
 import 'package:book_app/theme/color.dart';
+import 'package:book_app/util/toast.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 import 'package:marquee/marquee.dart';
@@ -93,7 +93,7 @@ class SearchValueScreen extends GetView<SearchValueController> {
                   await controller.parse();
                 },
                 onLongPress: () {
-                  EasyLoading.showToast("解析小说");
+                  Toast.toast(toast: "解析小说");
                 },
               );
             }
