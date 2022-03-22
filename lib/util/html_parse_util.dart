@@ -130,9 +130,12 @@ class HtmlParseUtil {
     if (childUrl.startsWith("/")) {
       Uri uri = Uri.parse(url);
       url = uri.origin;
-    }
-    if (childUrl.startsWith("http") || childUrl.startsWith("www")) {
+    } else if (childUrl.startsWith("http") || childUrl.startsWith("www")) {
       url = "";
+    } else {
+      if (!url.endsWith("/")) {
+        url = url.substring(0, url.lastIndexOf("/") + 1);
+      }
     }
     List<Chapter> returnChapters = [];
     for (var element in chapters) {
