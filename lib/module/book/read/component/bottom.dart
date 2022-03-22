@@ -103,9 +103,7 @@ bottom(context) async {
                             return Positioned(
                               bottom: 20,
                               right: 20,
-                              child: Column(
-                                children: _actions(controller),
-                              ),
+                              child: _actions(controller),
                             );
                           }
                           return Container();
@@ -248,7 +246,19 @@ bottom(context) async {
       }));
 }
 
-List<Widget> _actions(ReadController controller) {
+Widget _actions(ReadController controller) {
+  if (controller.rotateScreen) {
+    return Row(
+      children: _actionsItems(controller),
+    );
+  } else {
+    return Column(
+      children: _actionsItems(controller),
+    );
+  }
+}
+
+List<Widget> _actionsItems(ReadController controller) {
   return [
     GestureDetector(
       child: CircleAvatar(
@@ -264,6 +274,7 @@ List<Widget> _actions(ReadController controller) {
     ),
     const SizedBox(
       height: 20,
+      width: 20,
     ),
     GestureDetector(
       child: CircleAvatar(
@@ -281,6 +292,7 @@ List<Widget> _actions(ReadController controller) {
     ),
     const SizedBox(
       height: 20,
+      width: 20,
     ),
     GestureDetector(
       child: CircleAvatar(
