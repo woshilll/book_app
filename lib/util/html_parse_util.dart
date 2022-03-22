@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/util/content_fliter.dart';
+import 'package:book_app/util/random_user_agent.dart';
 import 'package:html/parser.dart';
 import 'package:html/dom.dart';
 import 'package:book_app/api/http_manager.dart';
@@ -219,9 +220,11 @@ class HtmlParseUtil {
     return await getString(url);
   }
   static Future<String?> getString(String url) async{
-    var request = await HttpManager.httpClient!.getUrl(Uri.parse(url));
+    var client = HttpManager.httpClient!;
+    var request = await client.getUrl(Uri.parse(url));
+    request.headers.remove("User-Agent", "Dart/2.16 (dart:io)");
     request.headers.add("Accept", "text/html;charset=UTF-8");
-    request.headers.add("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/96.0.4664.110");
+    request.headers.add("User-Agent", randomUserAgent());
     var response = await request.close();
     List<List<int>> dataBytes = await response.toList();
     return decodeToStr(dataBytes);
