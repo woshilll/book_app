@@ -20,6 +20,8 @@ import 'package:book_app/util/bar_util.dart';
 import 'package:book_app/util/channel_utils.dart';
 import 'package:book_app/util/constant.dart';
 import 'package:book_app/util/dialog_build.dart';
+import 'package:book_app/util/font_util.dart';
+import 'package:book_app/util/future_do.dart';
 import 'package:book_app/util/html_parse_util.dart';
 import 'package:book_app/util/notify/counter_notify.dart';
 import 'package:book_app/util/path_util.dart';
@@ -98,7 +100,7 @@ class ReadController extends GetxController {
   @override
   onReady() async{
     super.onReady();
-    initData();
+    FutureDo.doAfterExecutor300(() => initData());
   }
 
   initData() async{
@@ -574,7 +576,7 @@ class ReadController extends GetxController {
         Toast.toastL(toast: "重载中...");
         var chapterId = pages[pageIndex.count].chapterId;
         var chapter = chapters.firstWhere((element) => element.id == chapterId);
-        chapter.content = await HtmlParseUtil.parseContent(chapter.url!);
+        chapter.content = FontUtil.formatContent(await HtmlParseUtil.parseContent(chapter.url!));
         await _chapterDbProvider.updateContent(chapter.id, chapter.content);
         reloadPage();
       },)

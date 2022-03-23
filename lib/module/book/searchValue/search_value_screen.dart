@@ -1,5 +1,6 @@
 import 'package:book_app/module/book/searchValue/search_value_controller.dart';
 import 'package:book_app/theme/color.dart';
+import 'package:book_app/util/future_do.dart';
 import 'package:book_app/util/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -32,10 +33,17 @@ class SearchValueScreen extends GetView<SearchValueController> {
                           child: Text(e[0], style: TextStyle(color: index == controller.siteIndex ? Theme.of(context).primaryColor : Theme.of(context).textTheme.bodyText1!.color),),
                         ),
                         onTap: () {
-                          if (controller.siteIndex != index) {
-                            controller.siteIndex = index;
-                            controller.webViewController!.loadUrl(urlRequest: URLRequest(url: Uri.parse(controller.sites[index][1])));
-                            controller.update(["siteBar"]);
+                          if (controller.siteIndex != index && controller.showWebView) {
+                            FutureDo.doAfterExecutor300(() {
+                              controller.showWebView = true;
+                              controller.update(["webView"]);
+                            }
+                            , preExecutor: () {
+                              controller.siteIndex = index;
+                              controller.showWebView = false;
+                              controller.webViewController!.loadUrl(urlRequest: URLRequest(url: Uri.parse(controller.sites[index][1])));
+                              controller.update(["siteBar", "webView"]);
+                            });
                           }
 
                         },
@@ -72,7 +80,7 @@ class SearchValueScreen extends GetView<SearchValueController> {
               },
             ),
             Expanded(
-              child: _body(context),
+              child: _body(),
             )
           ],
         ),
@@ -108,25 +116,34 @@ class SearchValueScreen extends GetView<SearchValueController> {
     );
   }
 
-  Widget _body(context) {
-    return InAppWebView(
-      initialUrlRequest: URLRequest(url: Uri.parse(controller.sites[controller.siteIndex][1])),
-      onWebViewCreated: (webController) {
-        controller.webViewController = webController;
-      },
-      onLoadStop: (x, y) async{
-        controller.showParseButton = await _showButton();
-        controller.showLoadProcess = false;
-        controller.update(["showButton", "loadProcess"]);
-      },
-      onProgressChanged: (x, y) {
-        controller.loadProcess = y / 100;
-        controller.update(["loadProcess"]);
-      },
-      onLoadStart: (x, y) {
-        controller.showLoadProcess = true;
-        controller.loadProcess = 0;
-        controller.update(["loadProcess"]);
+  Widget _body() {
+    return GetBuilder<SearchValueController>(
+      id: "webView",
+      builder: (controller) {
+        if (controller.showWebView) {
+          return InAppWebView(
+            initialUrlRequest: URLRequest(url: Uri.parse(controller.sites[controller.siteIndex][1])),
+            onWebViewCreated: (webController) {
+              controller.webViewController = webController;
+            },
+            onLoadStop: (x, y) async{
+              controller.showParseButton = await _showButton();
+              controller.showLoadProcess = false;
+              controller.update(["showButton", "loadProcess"]);
+            },
+            onProgressChanged: (x, y) {
+              controller.loadProcess = y / 100;
+              controller.update(["loadProcess"]);
+            },
+            onLoadStart: (x, y) {
+              controller.showLoadProcess = true;
+              controller.loadProcess = 0;
+              controller.update(["loadProcess"]);
+            },
+          );
+        } else {
+          return Container();
+        }
       },
     );
   }

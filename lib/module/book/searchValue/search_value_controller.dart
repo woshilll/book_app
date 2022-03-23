@@ -1,6 +1,5 @@
-import 'package:book_app/mapper/book_db_provider.dart';
-import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/module/book/home/book_home_controller.dart';
+import 'package:book_app/util/future_do.dart';
 import 'package:book_app/util/parse_book.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
@@ -11,6 +10,7 @@ class SearchValueController extends GetxController {
   double loadProcess = 0;
   bool showLoadProcess = false;
   int siteIndex = 0;
+  bool showWebView = false;
 
   List<List<String>> sites =  [
       ["神马小说", "https://quark.sm.cn/s?q=&from=smor&safe=1"],
@@ -23,7 +23,10 @@ class SearchValueController extends GetxController {
       if (await webViewController!.canGoBack()) {
         for (int i = 0; i < sites.length; i++) {
           if (sites[i][1].contains((await webViewController!.getUrl())!.origin)) {
-            Get.back();
+            FutureDo.doAfterExecutor300(() => Get.back(), preExecutor: () {
+              showWebView = false;
+              update(["webView"]);
+            });
             break;
           }
         }
@@ -46,11 +49,10 @@ class SearchValueController extends GetxController {
     BookHomeController bookHomeController = Get.find();
     bookHomeController.getBookList();
   }
-}
 
-class ValueFormat {
-  String content;
-  bool red;
-
-  ValueFormat(this.content, this.red);
+  @override
+  void onReady() {
+    super.onReady();
+    FutureDo.doAfterExecutor300(() => update(["webView"]), preExecutor: () => showWebView = true);
+  }
 }

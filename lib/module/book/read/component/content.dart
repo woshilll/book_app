@@ -16,8 +16,7 @@ Widget content(context, index, ReadController controller) {
         child: SizedBox(
           width: controller.pages[index].width,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: controller.rotateScreen ? CrossAxisAlignment.start : CrossAxisAlignment.center,
             children: [
               if (controller.pages[index].index == 1)
                 Container(

@@ -17,8 +17,7 @@ class Toast {
   /// 长吐司
   static void toastLWithDismiss(Future Function() executor, {String toast = "加载中..."}) async{
     EasyLoading.show(status: toast, maskType: EasyLoadingMaskType.clear);
-    await executor();
-    cancel();
+    executor().then((value) => cancel()).catchError((_) => cancel());
   }
 
   /// 取消吐司

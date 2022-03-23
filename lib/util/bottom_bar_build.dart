@@ -1,3 +1,4 @@
+import 'package:book_app/util/bar_util.dart';
 import 'package:flutter/material.dart';
 
 class BottomBarBuild extends StatelessWidget {
@@ -8,10 +9,11 @@ class BottomBarBuild extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    transparentBar();
     return Card(
       color: backgroundColor,
       child: SizedBox(
-        height: (items.length + 1) * 50 + items.length * 1,
+        height: (items.length + 1) * 50 + items.length * 1 + MediaQuery.of(context).padding.bottom,
         child: ListView.separated(
           physics: const NeverScrollableScrollPhysics(),
           cacheExtent: (items.length + 1) * 50 + items.length * 1,
@@ -33,6 +35,11 @@ class BottomBarBuild extends StatelessWidget {
               onTap: () {
                 items[index - 1].function();
               },
+              onLongPress: () {
+                if (items[index - 1].longFunction != null) {
+                  items[index - 1].longFunction!();
+                }
+              },
             );
           },
           separatorBuilder: (context, index) {
@@ -50,9 +57,10 @@ class BottomBarBuild extends StatelessWidget {
 class BottomBarBuildItem {
   final String title;
   final Function function;
+  final Function? longFunction;
   final Widget? titleWidget;
   bool _useWidget = false;
-  BottomBarBuildItem(this.title, this.function, {this.titleWidget}) {
+  BottomBarBuildItem(this.title, this.function, {this.titleWidget, this.longFunction}) {
     if (titleWidget != null) {
       _useWidget = true;
     }
