@@ -8,11 +8,10 @@
 4. 暗色
 5. 自定义背景和文本颜色
 
-## 准备
+## 演示
 
-1. 尽量解析全部章节
-2. 可将书架小说分享，避免搜索失败情况
-3. 对于一些解码乱码的问题
+### 视频
+<video src="https://github.com/woshilll/woshilll_files/blob/6a7eed912f83e5c3346518b50724bdfacf29db7d/book_app/book.mp4?raw=true" width="360px" height="720px" controls="controls"></video>
 
 ## 更新历史
 
