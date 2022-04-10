@@ -54,6 +54,7 @@ class Drawer extends GetView<ReadController> {
                             child: Text(
                               "${controller.chapters[index]
                                   .name}",
+                              maxLines: 2,
                               style:
                               controller.pages.isEmpty ? null : controller.pages[controller.pageIndex.count].chapterId ==
                                   controller.chapters[index].id

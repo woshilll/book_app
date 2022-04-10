@@ -1,3 +1,4 @@
+import 'package:book_app/log/log.dart';
 import 'package:book_app/module/book/searchValue/search_value_controller.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/future_do.dart';
@@ -123,7 +124,20 @@ class SearchValueScreen extends GetView<SearchValueController> {
         if (controller.showWebView) {
           return InAppWebView(
             initialUrlRequest: URLRequest(url: Uri.parse(controller.sites[controller.siteIndex][1])),
-            onWebViewCreated: (webController) {
+            // initialOptions: InAppWebViewGroupOptions(
+            //     android: AndroidInAppWebViewOptions(
+            //       useHybridComposition: true,
+            //     ),
+            //     ),
+            onWebViewCreated: (webController) async{
+              // webController.setOptions(options: InAppWebViewGroupOptions(
+              //   crossPlatform: InAppWebViewOptions(
+              //   useShouldOverrideUrlLoading: true,
+              // ),
+              //     android: AndroidInAppWebViewOptions(
+              //       useHybridComposition: true,
+              //     )));
+              FocusNode().requestFocus();
               controller.webViewController = webController;
             },
             onLoadStop: (x, y) async{

@@ -246,6 +246,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
         continue;
       }
       Log.i("小说 -${bookWithChapters.book.id}- 章节 -${chapter.id}- 下载完成");
+      content = FontUtil.formatContent(content);
       _chapterDbProvider.updateContent(chapter.id, content);
       bookWithChapters.downloadChaptersAdd(chapter);
       await Future.delayed(const Duration(milliseconds: 1000), (){});
