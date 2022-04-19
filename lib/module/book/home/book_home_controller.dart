@@ -1,7 +1,6 @@
 import 'dart:io';
+import 'dart:isolate';
 
-import 'package:book_app/app_controller.dart';
-import 'package:book_app/di.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
@@ -15,6 +14,7 @@ import 'package:book_app/util/html_parse_util.dart';
 import 'package:book_app/util/parse_book.dart';
 import 'package:book_app/util/toast.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -27,10 +27,14 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
   List<Book> books = [];
   List<Book> localBooks = [];
   final List<BookWithChapters> _bookDownloads = [];
-  final RegExp chapterMatch = RegExp(r"^第.*章|^\d+$");
+  static final RegExp chapterMatch = RegExp(r"^第.*章|^\d+$");
+  late final ReceivePort mainIsolateReceivePort;
+  bool parseNow = false;
+  double parseProcess = 0;
   @override
   void onInit() {
     super.onInit();
+    mainIsolateReceivePort = ReceivePort();
     _listen();
   }
 
@@ -114,9 +118,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
         String? filePath = file.path;
         File bookFile = File(filePath!);
         List<String> lines = await bookFile.readAsLines();
-        parseBookText(lines, fileName, filePath: filePath).then((value) => {
-          getBookList()
-        });
+        parseBookText(lines, fileName, filePath: filePath);
       }
     } catch(err) {
       Toast.toast(toast: "解析失败");
@@ -263,37 +265,74 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
   }
 
   Future parseBookText(List<String> lines, String fileName, {String? filePath}) async{
-
-    List<Chapter> chapters = [];
-    String content = "";
-    Chapter chapter = Chapter();
-    for (var line in lines) {
-      if (chapterMatch.hasMatch(line)) {
-        if (chapter.name == null) {
-          chapter.name = line;
-          content = "";
-        } else {
-          chapter.content = FontUtil.formatContent(content);
-          chapters.add(chapter);
-          chapter = Chapter(name: line);
-          content = "";
+    if (parseNow) {
+      Toast.toast(toast: "正在解析书籍，请稍后");
+      return;
+    }
+    parseNow = true;
+    update(["parseProcess"]);
+    compute(_parseBookText, {"lines": lines, "fileName": fileName, "filePath": filePath, "sendPort": mainIsolateReceivePort.sendPort}).then((value) async{
+      if (value != null) {
+        var book = value[0];
+        var chapters = value[1];
+        var bookId = await _bookDbProvider.commonInsert(book);
+        for (Chapter item in chapters) {
+          item.url = "";
+          item.bookId = bookId;
         }
+        await _chapterDbProvider.commonBatchInsert(chapters);
+        Toast.toast(toast: "添加成功");
+        getBookList();
       } else {
-        content = content + line + "\n";
+        Toast.toast(toast: "解析失败");
       }
+      parseNow = false;
+      parseProcess = 0;
+      update(["parseProcess"]);
+    });
+  }
+
+  static _parseBookText(data) async{
+    try {
+      List<String> lines = data["lines"];
+      String fileName = data["fileName"];
+      String? filePath = data["filePath"];
+      SendPort sendPort = data["sendPort"];
+      List<Chapter> chapters = [];
+      String content = "";
+      Chapter chapter = Chapter();
+      for (int i = 0; i < lines.length; i++) {
+        if (i % 100 == 0) {
+          sendPort.send(i * 100 / lines.length);
+        }
+        var line = lines[i].trim();
+        if (line == "") {
+          continue;
+        }
+        if (chapterMatch.hasMatch(line)) {
+          if (chapter.name == null) {
+            chapter.name = line;
+            content = "";
+          } else {
+            chapter.content = FontUtil.formatContent(content);
+            chapters.add(chapter);
+            chapter = Chapter(name: line);
+            content = "";
+          }
+        } else {
+          content = content + line + "\n";
+        }
+      }
+      chapter.content = FontUtil.formatContent(content);
+      chapters.add(chapter);
+      Book book = Book(type: filePath == null ? 3 : 2);
+      book.name = fileName;
+      book.url = filePath ?? "";
+      return [book, chapters];
+    } catch(e) {
+      Log.i(e);
+      return null;
     }
-    chapter.content = FontUtil.formatContent(content);
-    chapters.add(chapter);
-    Book book = Book(type: filePath == null ? 3 : 2);
-    book.name = fileName;
-    book.url = filePath ?? "";
-    int bookId = await _bookDbProvider.commonInsert(book);
-    for (Chapter item in chapters) {
-      item.bookId = bookId;
-      item.url = "";
-    }
-    await _chapterDbProvider.commonBatchInsert(chapters);
-    Toast.toast(toast: "添加成功");
   }
 
   _listen() {
@@ -301,6 +340,12 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
       switch (call.method) {
         case 'bookPath':
           parseBookWithShare(call);
+      }
+    });
+    mainIsolateReceivePort.listen((message) {
+      if (message is double) {
+        parseProcess = message;
+        update(["parseProcess"]);
       }
     });
   }

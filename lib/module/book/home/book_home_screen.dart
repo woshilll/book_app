@@ -32,6 +32,16 @@ class BookHomeScreen extends GetView<BookHomeController> {
         ],
       ),
       body: _body(context),
+      floatingActionButton: GetBuilder<BookHomeController>(
+        id: "parseProcess",
+        builder: (controller) {
+          if (controller.parseNow) {
+            return FloatingActionButton(onPressed: null, child: Text("${controller.parseProcess.toStringAsFixed(2)}%", style: const TextStyle(color: Colors.white),),);
+          } else {
+            return Container();
+          }
+        },
+      ),
     );
   }
   Widget _body(context) {

@@ -58,17 +58,11 @@ parseBookByShare(String bookName, String content) async{
             )
           ),
         confirmFunction: () {
-            try {
-              Future.delayed(const Duration(milliseconds: 500), () {
-                BookHomeController bookHomeController = Get.find();
-                bookHomeController.parseBookText(content.split("\n"), bookName).then((value) {
-                  bookHomeController.getBookList();
-                });
-              });
-              Get.back();
-            } catch(e) {
-              Toast.toast(toast: "解析失败");
-            }
+          Get.back();
+          Future.delayed(const Duration(milliseconds: 500), () {
+            BookHomeController bookHomeController = Get.find();
+            bookHomeController.parseBookText(content.split("\n"), bookName);
+          });
         },
       )
   );
