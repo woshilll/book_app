@@ -112,7 +112,7 @@ class ReadController extends GetxController {
     if (isDark) {
       readSettingConfig = ReadSettingConfig.defaultDarkConfig(readSettingConfig.fontSize, readSettingConfig.fontHeight);
     }
-    pageGen = PageGen(TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: readSettingConfig.fontSize, height: readSettingConfig.fontHeight, fontFamily: "fangSong"));
+    pageGen = PageGen(TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: readSettingConfig.fontSize, height: readSettingConfig.fontHeight, fontFamily: FontUtil.getFontFamily()));
     /// 加载章节
     chapters = await _chapterDbProvider.getChapters(null, book!.id);
     Chapter cur = chapters[0];
@@ -366,7 +366,7 @@ class ReadController extends GetxController {
   _reload() async{
     loading = true;
     Toast.toastL();
-    pageGen.changeContentStyle(TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: readSettingConfig.fontSize, height: readSettingConfig.fontHeight, fontFamily: "fangSong"));
+    pageGen.changeContentStyle(TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: readSettingConfig.fontSize, height: readSettingConfig.fontHeight, fontFamily: FontUtil.getFontFamily()));
     int chapterIndex = chapters.indexWhere((element) => pages[pageIndex.count].chapterId == element.id);
     pageIndex.setCount(pages[pageIndex.count].index - 1);
     pages.clear();

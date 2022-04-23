@@ -52,7 +52,6 @@ dependencies:
   permission_handler: ^8.3.0
   flutter_inappwebview: ^5.3.2
   fast_gbk: ^1.0.0
-  html: ^0.15.0
   woshilll_flutter_plugin:
     git:
       url: git@github.com:woshilll/woshilll_flutter_plugin.git
@@ -101,9 +100,9 @@ flutter:
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/assets-and-images/#from-packages
   fonts:
-    - family: fangSong
+    - family: KaiTi
       fonts:
-        - asset: lib/resource/font/仿宋_GB2312.ttf
+        - asset: lib/resource/font/KaiTi.ttf
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
   # "family" key with the font family name, and a "fonts" key with a

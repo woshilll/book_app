@@ -54,4 +54,8 @@ class FontUtil {
     }
     return list.join();
   }
+
+  static String getFontFamily() {
+    return "KaiTi";
+  }
 }
