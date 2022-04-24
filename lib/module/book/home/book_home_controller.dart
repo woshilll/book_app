@@ -83,14 +83,13 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
     await WoshilllFlutterPlugin.setBrightnessDefault();
   }
 
-  void toSearch() async{
-    Get.toNamed(Routes.search);
-  }
-
   manageChoose(String value) async{
     switch(value) {
       case "1":
         _selectTextFile();
+        break;
+      case "2":
+        Get.snackbar("提示", "通过复制的链接, 打开APP后会自动识别", colorText: Colors.black);
         break;
     }
   }
@@ -150,6 +149,10 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
     if (_pasteData != null) {
       String? _pasteText = _pasteData.text;
       if (_pasteText != null && _pasteText.isNotEmpty) {
+        if (_pasteText.isURL) {
+          _parse(_pasteText);
+          return;
+        }
         var _pastes = _pasteText.split("*#*");
         if (_pastes.length != 3) {
           return;
@@ -163,49 +166,54 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
         if (!_pastes.last.isURL) {
           return;
         }
-        Future.delayed(const Duration(milliseconds: 500), () {
-          Get.dialog(
-              AlertDialog(
-                title: const Text("小说解析"),
-                titlePadding: const EdgeInsets.all(10),
-                titleTextStyle: const TextStyle(color: Colors.black87, fontSize: 16),
-                content: Text.rich(
-                  TextSpan(
-                      text: "是否解析分享的小说 ",
-                      children: [
-                        TextSpan(
-                            text: _pastes[1],
-                            style: const TextStyle(color: Colors.lightBlue)
-                        ),
-                      ]
-                  ),
-                ),
-                contentPadding: const EdgeInsets.all(10),
-                //中间显示内容的文本样式
-                contentTextStyle: const TextStyle(color: Colors.black54, fontSize: 14),
-                actions: [
-                  ElevatedButton(
-                    child: const Text("取消"),
-                    onPressed: () {
-                      Get.back();
-                    },
-                  ),
-                  ElevatedButton(
-                    child: const Text("确定"),
-                    onPressed: () async{
-                      Get.back();
-                      await parseBook(_pastes[1], _pastes.last, isShare: true);
-                    },
-                  )
-                ],
-              ),
-              transitionDuration: const Duration(milliseconds: 200)
-          ).then((value) {
-            Clipboard.setData(const ClipboardData(text: ""));
-          });
-        });
+        _parse(_pastes.last, bookName: _pastes[1]);
       }
     }
+  }
+
+  _parse(String url, {String? bookName}) {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      Get.dialog(
+          AlertDialog(
+            title: const Text("小说解析"),
+            titlePadding: const EdgeInsets.all(10),
+            titleTextStyle: const TextStyle(color: Colors.black87, fontSize: 16),
+            content: Text.rich(
+              TextSpan(
+                  text: "是否解析${bookName == null ? '复制的链接' : '分享的小说'} ",
+                  children: [
+                    TextSpan(
+                        text: bookName ?? url,
+                        style: const TextStyle(color: Colors.lightBlue)
+                    ),
+                  ]
+              ),
+            ),
+            contentPadding: const EdgeInsets.all(10),
+            //中间显示内容的文本样式
+            contentTextStyle: const TextStyle(color: Colors.black54, fontSize: 14),
+            actions: [
+              ElevatedButton(
+                child: const Text("取消"),
+                onPressed: () {
+                  Get.back();
+                },
+              ),
+              ElevatedButton(
+                child: const Text("确定"),
+                onPressed: () async{
+                  bookName ??= "网络小说";
+                  Get.back();
+                  await parseBook(bookName!, url, isShare: true);
+                },
+              )
+            ],
+          ),
+          transitionDuration: const Duration(milliseconds: 200)
+      ).then((value) {
+        Clipboard.setData(const ClipboardData(text: ""));
+      });
+    });
   }
 
   downloadBook(int bookId, int chapterId) async {
@@ -242,7 +250,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
         bookWithChapters.downloadChaptersAdd(chapter);
         continue;
       }
-      String content = await HtmlParseUtil.parseContent(chapter.url!);
+      String content = await HtmlParseUtil.parseContent(chapter.name!, chapter.url!);
       if (content.isEmpty) {
         // 下载失败
         continue;

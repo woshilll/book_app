@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 class BottomBarBuild extends StatelessWidget {
   final String title;
   final Color backgroundColor;
+  final Color titleColor;
   final List<BottomBarBuildItem> items;
-  const BottomBarBuild(this.title, this.items, {Key? key, this.backgroundColor = Colors.black}) : super(key: key);
+  const BottomBarBuild(this.title, this.items, {Key? key, this.backgroundColor = Colors.black, this.titleColor = Colors.white}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +24,7 @@ class BottomBarBuild extends StatelessWidget {
               return Container(
                 height: 50,
                 alignment: Alignment.center,
-                child: Text(title, style: const TextStyle(height: 1, fontSize: 14),),
+                child: Text(title, style: TextStyle(height: 1, fontSize: 14, color: titleColor),),
               );
             }
             return InkWell(

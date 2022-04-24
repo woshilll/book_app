@@ -50,7 +50,6 @@ dependencies:
   file_picker: ^4.2.0
   battery_plus: ^2.0.1
   permission_handler: ^8.3.0
-  flutter_inappwebview: ^5.3.2
   fast_gbk: ^1.0.0
   woshilll_flutter_plugin:
     git:
@@ -58,7 +57,6 @@ dependencies:
   another_transformer_page_view: ^1.1.0
   flutter_zoom_drawer: ^2.3.1+1
   draggable_scrollbar: ^0.1.0
-  marquee: ^2.2.1
   share_plus: ^4.0.1
   path_provider: ^2.0.9
 

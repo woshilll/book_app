@@ -5,8 +5,8 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 class Toast {
 
   /// 吐司
-  static void toast({String toast = "加载中..."}) {
-    EasyLoading.showToast(toast);
+  static void toast({String toast = "加载中...", Duration? duration}) {
+    EasyLoading.showToast(toast, duration: duration);
   }
 
   /// 长吐司

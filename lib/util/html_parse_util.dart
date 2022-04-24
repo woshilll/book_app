@@ -145,7 +145,7 @@ class HtmlParseUtil {
   }
 
 
-  static Future<String> parseContent(String url, {String? originPageId}) async{
+  static Future<String> parseContent(String chapterName, String url, {String? originPageId}) async{
     try {
       var html = await getFileString(url);
       Document document = parse(html);
@@ -167,12 +167,12 @@ class HtmlParseUtil {
           if (!nextPageId.contains(originPageId)) {
             break;
           }
-          var nextPageContent = await parseContent(nextPageUrl, originPageId: originPageId);
+          var nextPageContent = await parseContent(chapterName, nextPageUrl, originPageId: originPageId);
           content += nextPageContent;
           break;
         }
       }
-      return _beautifulFormat(_beautyUnknownTag(_beautyNotes(_beautyScript(_beautyBrAndP(_trim(content))))));
+      return _removeChapterName(chapterName, _beautifulFormat(_beautyUnknownTag(_beautyNotes(_beautyScript(_beautyBrAndP(_trim(content)))))));
     } catch(err) {
       Log.e(err);
       return "";
@@ -276,6 +276,11 @@ class HtmlParseUtil {
       }
     }
     return [url, body.getElementsByTagName("a")];
+  }
+
+  static String _removeChapterName(String chapterName, String beautifulFormat) {
+    chapterName = chapterName.replaceAll(" ", "");
+    return beautifulFormat.replaceAll(RegExp(".*$chapterName.*"), "");
   }
 }
 

@@ -50,7 +50,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
         GetBuilder<BookHomeController>(
           id: 'bookList',
           builder: (controller) {
-            int count = controller.books.length + (controller.localBooks.isEmpty ? 0 : 1) + 1;
+            int count = controller.books.length + (controller.localBooks.isEmpty ? 0 : 1);
             return Container(
               margin: const EdgeInsets.only(left: 25, right: 25, top: 15),
               child: ScrollConfiguration(
@@ -69,9 +69,6 @@ class BookHomeScreen extends GetView<BookHomeController> {
                           return _localWidget(context);
                         }
                         index = index - 1;
-                      }
-                      if (index == controller.books.length) {
-                        return _addBookWidget(context);
                       }
                       return Column(
                         children: [
@@ -92,24 +89,6 @@ class BookHomeScreen extends GetView<BookHomeController> {
           },
         )
       ],
-    );
-  }
-  Widget _addBookWidget(context) {
-    return GestureDetector(
-      child: Column(
-        children: [
-          Expanded(child: Card(
-            child: const Center(
-              child: Icon(Icons.search, color: Color(0xFFBDBDBD), size: 30,),
-            ),
-            color: Colors.grey[200],
-          )),
-          const Text("搜索", style: TextStyle(fontSize: 12))
-        ],
-      ),
-      onTap: () {
-        controller.toSearch();
-      },
     );
   }
   Widget _bookImageWidget(context, index) {
@@ -177,8 +156,12 @@ class BookHomeScreen extends GetView<BookHomeController> {
     return PopupMenuButton<String>(
       itemBuilder: (context) => <PopupMenuItem<String>>[
         const PopupMenuItem<String>(
-          child: Text("导入"),
+          child: Text("本地导入"),
           value: "1",
+        ),
+        const PopupMenuItem<String>(
+          child: Text("导入选项"),
+          value: "2",
         ),
       ],
       offset: const Offset(20, 30),
@@ -253,7 +236,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
              children: [
                Container(
                  margin: const EdgeInsets.only(left: 15, right: 15),
-                 child: const Icon(Icons.menu_book_outlined, color: Colors.white,),
+                 child: const Icon(Icons.menu_book_outlined, color: Colors.black,),
                ),
                Expanded(
                  child: Column(
@@ -261,7 +244,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
                    children: [
                      Container(
                        alignment: Alignment.centerLeft,
-                       child: Text("${e.name}", style: const TextStyle(color: Colors.white, fontSize: 14), maxLines: 1,),
+                       child: Text("${e.name}", style: const TextStyle(color: Colors.black, fontSize: 14), maxLines: 1,),
                      ),
                      Container(
                        alignment: Alignment.centerLeft,
@@ -273,7 +256,9 @@ class BookHomeScreen extends GetView<BookHomeController> {
              ],
            )
          );
-       }).toList()
+       }).toList(),
+      backgroundColor: Colors.white,
+      titleColor: Colors.black,
     );
   }
 

@@ -6,8 +6,6 @@ import 'package:book_app/module/book/readSetting/read_setting_binding.dart';
 import 'package:book_app/module/book/readSetting/read_setting_screen.dart';
 import 'package:book_app/module/book/read/read_binding.dart';
 import 'package:book_app/module/book/read/read_screen.dart';
-import 'package:book_app/module/book/searchValue/search_value_binding.dart';
-import 'package:book_app/module/book/searchValue/search_value_screen.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:get/get.dart';
 
@@ -35,19 +33,5 @@ class RoutePages {
         page: () => ReadMoreSettingScreen(),
         binding: ReadMoreSettingBinding()
     ),
-    GetPage(
-        name: Routes.search,
-        page: () => const SearchValueScreen(),
-        binding: SearchValueBinding()
-    ),
-
-
-
-
-
-
-
-
-
   ];
 }

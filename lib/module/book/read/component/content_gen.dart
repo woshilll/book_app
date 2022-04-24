@@ -17,7 +17,7 @@ _getContent(Chapter chapter, Book book) async{
   Chapter? temp = await _chapterDbProvider.getChapterById(chapter.id);
   var content = temp?.content;
   if ((content == null || content.isEmpty) && book.type == 1) {
-    content = await HtmlParseUtil.parseContent(chapter.url!);
+    content = await HtmlParseUtil.parseContent(chapter.name!, chapter.url!);
     // 格式化文本
     content = FontUtil.formatContent(content);
     await _chapterDbProvider.updateContent(chapter.id, content);

@@ -8,6 +8,5 @@ abstract class Routes {
   static const read = '/book/read';
   static const readSetting = '/book/read/setting';
   static const readMoreSetting = '/book/read/moreSetting';
-  static const search = '/book/search';
 
 }
