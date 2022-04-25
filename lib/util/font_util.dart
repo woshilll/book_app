@@ -1,5 +1,3 @@
-import 'package:book_app/log/log.dart';
-
 /// 字体工具
 class FontUtil {
   /// 字符转全角
@@ -53,5 +51,9 @@ class FontUtil {
       }
     }
     return list.join();
+  }
+
+  static String? getFontFamily() {
+    return null;
   }
 }

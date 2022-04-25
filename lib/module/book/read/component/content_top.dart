@@ -16,7 +16,7 @@ Widget contentTop(context, ReadController controller) {
             child: Container(
               alignment: Alignment.centerLeft,
               margin: const EdgeInsets.only(left: 15),
-              child: Text("${controller.book == null ? "" : controller.book!.name}", maxLines: 1, style: const TextStyle(height: 1, color: Colors.grey)),
+              child: Text("${controller.book == null ? "" : controller.book!.name}", maxLines: 1, style: const TextStyle(height: 1.1, color: Colors.grey, fontSize: 13)),
             ),
           ),
           Container(

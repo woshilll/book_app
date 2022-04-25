@@ -2,8 +2,9 @@ import 'package:book_app/module/book/read/component/content_bottom.dart';
 import 'package:book_app/module/book/read/component/content_top.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/theme/color.dart';
+import 'package:book_app/util/font_util.dart';
+import 'package:book_app/util/toast.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 Widget content(context, index, ReadController controller) {
   if (controller.pages.isEmpty || controller.pages.length < index) {
@@ -16,6 +17,7 @@ Widget content(context, index, ReadController controller) {
         child: SizedBox(
           width: controller.pages[index].width,
           child: Column(
+            crossAxisAlignment: controller.rotateScreen ? CrossAxisAlignment.start : CrossAxisAlignment.center,
             children: [
               if (controller.pages[index].index == 1)
                 Container(
@@ -27,7 +29,7 @@ Widget content(context, index, ReadController controller) {
                         color: hexToColor(controller.readSettingConfig.fontColor),
                         fontSize: 25,
                         fontWeight: FontWeight.bold,
-                        fontFamily: "fangSong"
+                        fontFamily: FontUtil.getFontFamily()
                     ),
                     maxLines: 1,
                     textScaleFactor: MediaQuery.of(context).textScaleFactor,
@@ -43,7 +45,7 @@ Widget content(context, index, ReadController controller) {
                     color: hexToColor(controller.readSettingConfig.fontColor),
                     fontSize: controller.readSettingConfig.fontSize,
                     height: controller.readSettingConfig.fontHeight,
-                    fontFamily: "fangSong",
+                    fontFamily: FontUtil.getFontFamily(),
                   )),
             ],
           ),
@@ -64,7 +66,7 @@ Widget content(context, index, ReadController controller) {
               if (controller.book!.type == 1) {
                 await controller.reloadPage();
               } else {
-                EasyLoading.showToast("本地导入文章,无法加载");
+                Toast.toast(toast: "本地导入文章,无法加载");
               }
             },
           ),

@@ -14,7 +14,8 @@ Widget contentBottom(context, index, ReadController controller) {
             margin: const EdgeInsets.only(left: 25),
             child: Text(
               "${controller.pages[index].chapterName}",
-              style: const TextStyle(fontSize: 12, color: Colors.grey, height: 1),
+              maxLines: 1,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ),
         ),
@@ -22,7 +23,7 @@ Widget contentBottom(context, index, ReadController controller) {
           margin: const EdgeInsets.only(right: 25),
           child: Text(
             "${controller.pages[index].index}/${controller.calThisChapterTotalPage(index)}",
-            style: const TextStyle(fontSize: 12, color: Colors.grey, height: 1),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         )
       ],

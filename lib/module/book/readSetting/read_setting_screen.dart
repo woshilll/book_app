@@ -6,6 +6,7 @@ import 'package:book_app/module/book/readSetting/component/read_setting_config.d
 import 'package:book_app/module/book/readSetting/read_setting_controller.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/constant.dart';
+import 'package:book_app/util/font_util.dart';
 import 'package:book_app/util/no_shadow_scroll_behavior.dart';
 import 'package:book_app/util/save_util.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -60,7 +61,7 @@ class ReadSettingScreen extends GetView<ReadSettingController> {
                                 TextSpan(text: "4.接下来是一段测试\n\n"),
                                 TextSpan(text: "得，好美，它如深山里的一泓泉水，带着清澈和甘甜，温润心灵；它如初春的那抹新绿，清新自然，点缀生命；它如花笺里的兰花，恬淡生香，芬芳怡人；它如清晨小草上的露珠，晶莹剔透，不染风尘。懂得，是蓝天与白云的相拥；是清风与花香的缠绵；是润物细无声的点点春雨；是清晨坐拥的满怀阳光。"),
                               ],
-                              style: TextStyle(fontSize: controller.config.fontSize, color: hexToColor(controller.config.fontColor), fontFamily: "fangSong")
+                              style: TextStyle(fontSize: controller.config.fontSize, color: hexToColor(controller.config.fontColor), fontFamily: FontUtil.getFontFamily())
                           )
                       ),
                     ),

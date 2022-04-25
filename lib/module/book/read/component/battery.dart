@@ -46,7 +46,7 @@ Widget battery() {
             ),
             Container(
               margin: const EdgeInsets.only(left: 5),
-              child: Text(TimeUtil.getSystemTime(), style: TextStyle(color: unActiveColor, fontSize: 10, height: 1),),
+              child: Text(TimeUtil.getSystemTime(), style: TextStyle(color: unActiveColor, fontSize: 10),),
             )
           ],
         );
@@ -68,7 +68,7 @@ Widget battery() {
               child: Container(
                 margin: const EdgeInsets.all(1),
                 alignment: Alignment.center,
-                child: Text("${controller.batteryLevel}", style: TextStyle(fontSize: 9, color: color),textScaleFactor: MediaQuery.of(globalContext).textScaleFactor,),
+                child: Text("${controller.batteryLevel}", style: TextStyle(fontSize: 9, color: color, height: 1.1),textScaleFactor: MediaQuery.of(globalContext).textScaleFactor,),
               ),
             ),
             Container(

@@ -18,6 +18,9 @@ class Drawer extends GetView<ReadController> {
     return GetBuilder<ReadController>(
       id: "drawer",
       builder: (controller) {
+        Future.delayed(const Duration(milliseconds: 100), (){
+          scrollController.jumpTo(controller.pages.isEmpty ? 0 : (controller.chapters.indexWhere((element) => controller.pages[controller.pageIndex.count].chapterId == element.id)) * 41);
+        });
         return Container(
           width: MediaQuery.of(context).size.width * .7,
           color: Colors.black,
@@ -51,6 +54,7 @@ class Drawer extends GetView<ReadController> {
                             child: Text(
                               "${controller.chapters[index]
                                   .name}",
+                              maxLines: 2,
                               style:
                               controller.pages.isEmpty ? null : controller.pages[controller.pageIndex.count].chapterId ==
                                   controller.chapters[index].id

@@ -1,17 +1,20 @@
+import 'package:book_app/util/bar_util.dart';
 import 'package:flutter/material.dart';
 
 class BottomBarBuild extends StatelessWidget {
   final String title;
   final Color backgroundColor;
+  final Color titleColor;
   final List<BottomBarBuildItem> items;
-  const BottomBarBuild(this.title, this.items, {Key? key, this.backgroundColor = Colors.black}) : super(key: key);
+  const BottomBarBuild(this.title, this.items, {Key? key, this.backgroundColor = Colors.black, this.titleColor = Colors.white}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    transparentBar();
     return Card(
       color: backgroundColor,
       child: SizedBox(
-        height: (items.length + 1) * 50 + items.length * 1,
+        height: (items.length + 1) * 50 + items.length * 1 + MediaQuery.of(context).padding.bottom,
         child: ListView.separated(
           physics: const NeverScrollableScrollPhysics(),
           cacheExtent: (items.length + 1) * 50 + items.length * 1,
@@ -21,17 +24,22 @@ class BottomBarBuild extends StatelessWidget {
               return Container(
                 height: 50,
                 alignment: Alignment.center,
-                child: Text(title, style: const TextStyle(height: 1, fontSize: 14),),
+                child: Text(title, style: TextStyle(height: 1, fontSize: 14, color: titleColor),),
               );
             }
             return InkWell(
               child: Container(
                 height: 50,
                 alignment: Alignment.center,
-                child: items[index - 1].useWidget ? items[index - 1].titleWidget : Text(items[index - 1].title, style: const TextStyle(height: 1, fontSize: 14),),
+                child: items[index - 1].useWidget ? items[index - 1].titleWidget : Text(items[index - 1].title, style: TextStyle(height: 1, fontSize: 14, color: titleColor),),
               ),
               onTap: () {
                 items[index - 1].function();
+              },
+              onLongPress: () {
+                if (items[index - 1].longFunction != null) {
+                  items[index - 1].longFunction!();
+                }
               },
             );
           },
@@ -50,9 +58,10 @@ class BottomBarBuild extends StatelessWidget {
 class BottomBarBuildItem {
   final String title;
   final Function function;
+  final Function? longFunction;
   final Widget? titleWidget;
   bool _useWidget = false;
-  BottomBarBuildItem(this.title, this.function, {this.titleWidget}) {
+  BottomBarBuildItem(this.title, this.function, {this.titleWidget, this.longFunction}) {
     if (titleWidget != null) {
       _useWidget = true;
     }

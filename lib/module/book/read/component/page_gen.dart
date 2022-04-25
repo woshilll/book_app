@@ -75,7 +75,7 @@ class PageGen{
       offset =
           _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
     } while (offset < content.characters.length);
-    if (offset > 0) {
+    if (offset > 0 && content.trim().isNotEmpty) {
       list.add(
           ContentPage(content, i, chapter.id, chapter.name, _contentWidth()));
     }

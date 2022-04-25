@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/util/content_fliter.dart';
+import 'package:book_app/util/random_user_agent.dart';
 import 'package:html/parser.dart';
 import 'package:html/dom.dart';
 import 'package:book_app/api/http_manager.dart';
@@ -129,9 +130,12 @@ class HtmlParseUtil {
     if (childUrl.startsWith("/")) {
       Uri uri = Uri.parse(url);
       url = uri.origin;
-    }
-    if (childUrl.startsWith("http") || childUrl.startsWith("www")) {
+    } else if (childUrl.startsWith("http") || childUrl.startsWith("www")) {
       url = "";
+    } else {
+      if (!url.endsWith("/")) {
+        url = url.substring(0, url.lastIndexOf("/") + 1);
+      }
     }
     List<Chapter> returnChapters = [];
     for (var element in chapters) {
@@ -141,7 +145,7 @@ class HtmlParseUtil {
   }
 
 
-  static Future<String> parseContent(String url, {String? originPageId}) async{
+  static Future<String> parseContent(String chapterName, String url, {String? originPageId}) async{
     try {
       var html = await getFileString(url);
       Document document = parse(html);
@@ -163,12 +167,12 @@ class HtmlParseUtil {
           if (!nextPageId.contains(originPageId)) {
             break;
           }
-          var nextPageContent = await parseContent(nextPageUrl, originPageId: originPageId);
+          var nextPageContent = await parseContent(chapterName, nextPageUrl, originPageId: originPageId);
           content += nextPageContent;
           break;
         }
       }
-      return _beautifulFormat(_beautyUnknownTag(_beautyNotes(_beautyScript(_beautyBrAndP(_trim(content))))));
+      return _removeChapterName(chapterName, _beautifulFormat(_beautyUnknownTag(_beautyNotes(_beautyScript(_beautyBrAndP(_trim(content)))))));
     } catch(err) {
       Log.e(err);
       return "";
@@ -219,9 +223,11 @@ class HtmlParseUtil {
     return await getString(url);
   }
   static Future<String?> getString(String url) async{
-    var request = await HttpManager.httpClient!.getUrl(Uri.parse(url));
+    var client = HttpManager.httpClient!;
+    var request = await client.getUrl(Uri.parse(url));
+    request.headers.remove("User-Agent", "Dart/2.16 (dart:io)");
     request.headers.add("Accept", "text/html;charset=UTF-8");
-    request.headers.add("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/96.0.4664.110");
+    request.headers.add("User-Agent", randomUserAgent());
     var response = await request.close();
     List<List<int>> dataBytes = await response.toList();
     return decodeToStr(dataBytes);
@@ -270,6 +276,11 @@ class HtmlParseUtil {
       }
     }
     return [url, body.getElementsByTagName("a")];
+  }
+
+  static String _removeChapterName(String chapterName, String beautifulFormat) {
+    chapterName = chapterName.replaceAll(" ", "");
+    return beautifulFormat.replaceAll(RegExp(".*$chapterName.*"), "");
   }
 }
 

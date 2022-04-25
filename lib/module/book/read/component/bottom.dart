@@ -8,9 +8,9 @@ import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/bottom_bar_build.dart';
 import 'package:book_app/util/limit_util.dart';
 import 'package:book_app/util/path_util.dart';
+import 'package:book_app/util/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -103,9 +103,7 @@ bottom(context) async {
                             return Positioned(
                               bottom: 20,
                               right: 20,
-                              child: Column(
-                                children: _actions(controller),
-                              ),
+                              child: _actions(controller),
                             );
                           }
                           return Container();
@@ -248,7 +246,19 @@ bottom(context) async {
       }));
 }
 
-List<Widget> _actions(ReadController controller) {
+Widget _actions(ReadController controller) {
+  if (controller.rotateScreen) {
+    return Row(
+      children: _actionsItems(controller),
+    );
+  } else {
+    return Column(
+      children: _actionsItems(controller),
+    );
+  }
+}
+
+List<Widget> _actionsItems(ReadController controller) {
   return [
     GestureDetector(
       child: CircleAvatar(
@@ -264,6 +274,7 @@ List<Widget> _actions(ReadController controller) {
     ),
     const SizedBox(
       height: 20,
+      width: 20,
     ),
     GestureDetector(
       child: CircleAvatar(
@@ -281,6 +292,7 @@ List<Widget> _actions(ReadController controller) {
     ),
     const SizedBox(
       height: 20,
+      width: 20,
     ),
     GestureDetector(
       child: CircleAvatar(
@@ -303,7 +315,7 @@ _share(ReadController controller) async {
   Get.bottomSheet(BottomBarBuild("分享", [
     BottomBarBuildItem("分享链接", () {
       if (controller.book!.type != 1) {
-        EasyLoading.showToast("本地书籍, 无法分享链接");
+        Toast.toast(toast: "本地书籍, 无法分享链接");
         return;
       }
       Share.share(
@@ -317,7 +329,7 @@ _share(ReadController controller) async {
         if (file.existsSync()) {
           Share.shareFiles([filePath]);
         } else {
-          EasyLoading.showToast("请先导出, 再分享");
+          Toast.toast(toast: "请先导出, 再分享");
         }
         return;
       }
@@ -366,10 +378,11 @@ _cache() {
             id: "downloading",
             builder: (controller) {
               return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     "$_downloadLength / $_length",
-                    style: const TextStyle(height: 1, fontSize: 14),
+                    style: const TextStyle(fontSize: 14, color: Colors.white),
                   ),
                   Container(
                     margin: const EdgeInsets.only(left: 10),
@@ -377,6 +390,7 @@ _cache() {
                       child: const Icon(Icons.close, color: Colors.white, size: 20,),
                       onTap: () {
                         controller.bookWithChapters!.interrupt();
+                        controller.bookWithChapters = null;
                         Get.back();
                       },
                     ),

@@ -78,4 +78,10 @@ class BookDbProvider extends BaseDbProvider {
     await db.rawUpdate("update $name set $columnCurChapter = ?, $columnCurPage = ? where $columnId = ?", [chapterId, page, id]);
   }
 
+  /// 更新名称
+  updateName(id, newName) async{
+    Database db = await getDataBase();
+    await db.rawUpdate("update $name set $columnName = ? where $columnId = ?", [newName, id]);
+  }
+
 }

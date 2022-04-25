@@ -1,6 +1,4 @@
 import 'package:book_app/model/base.dart';
-import 'package:book_app/theme/theme.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 class ReadSettingConfig extends Base{
   String backgroundColor;

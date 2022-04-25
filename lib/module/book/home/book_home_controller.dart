@@ -1,7 +1,6 @@
 import 'dart:io';
+import 'dart:isolate';
 
-import 'package:book_app/app_controller.dart';
-import 'package:book_app/di.dart';
 import 'package:book_app/log/log.dart';
 import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
@@ -13,10 +12,11 @@ import 'package:book_app/util/channel_utils.dart';
 import 'package:book_app/util/font_util.dart';
 import 'package:book_app/util/html_parse_util.dart';
 import 'package:book_app/util/parse_book.dart';
+import 'package:book_app/util/toast.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:woshilll_flutter_plugin/woshilll_flutter_plugin.dart';
@@ -27,10 +27,14 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
   List<Book> books = [];
   List<Book> localBooks = [];
   final List<BookWithChapters> _bookDownloads = [];
-  final RegExp chapterMatch = RegExp(r"^第.*章|^\d+$");
+  static final RegExp chapterMatch = RegExp(r"^第.*章|^\d+$");
+  late final ReceivePort mainIsolateReceivePort;
+  bool parseNow = false;
+  double parseProcess = 0;
   @override
   void onInit() {
     super.onInit();
+    mainIsolateReceivePort = ReceivePort();
     _listen();
   }
 
@@ -69,7 +73,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
       // 没有内容
       // 发起请求获取
       if (selected.type != 1) {
-        EasyLoading.showToast("本地小说无章节,请删除");
+        Toast.toast(toast: "本地小说无章节,请删除");
         return;
       }
     }
@@ -79,14 +83,13 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
     await WoshilllFlutterPlugin.setBrightnessDefault();
   }
 
-  void toSearch() async{
-    Get.toNamed(Routes.search);
-  }
-
   manageChoose(String value) async{
     switch(value) {
       case "1":
         _selectTextFile();
+        break;
+      case "2":
+        Get.snackbar("提示", "通过复制的链接, 打开APP后会自动识别", colorText: Colors.black);
         break;
     }
   }
@@ -114,12 +117,10 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
         String? filePath = file.path;
         File bookFile = File(filePath!);
         List<String> lines = await bookFile.readAsLines();
-        parseBookText(lines, fileName, filePath: filePath).then((value) => {
-          getBookList()
-        });
+        parseBookText(lines, fileName, filePath: filePath);
       }
     } catch(err) {
-      EasyLoading.showToast("解析失败");
+      Toast.toast(toast: "解析失败");
     }
   }
 
@@ -148,6 +149,10 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
     if (_pasteData != null) {
       String? _pasteText = _pasteData.text;
       if (_pasteText != null && _pasteText.isNotEmpty) {
+        if (_pasteText.isURL) {
+          _parse(_pasteText);
+          return;
+        }
         var _pastes = _pasteText.split("*#*");
         if (_pastes.length != 3) {
           return;
@@ -161,65 +166,70 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
         if (!_pastes.last.isURL) {
           return;
         }
-        Future.delayed(const Duration(milliseconds: 500), () {
-          Get.dialog(
-              AlertDialog(
-                title: const Text("小说解析"),
-                titlePadding: const EdgeInsets.all(10),
-                titleTextStyle: const TextStyle(color: Colors.black87, fontSize: 16),
-                content: Text.rich(
-                  TextSpan(
-                      text: "是否解析分享的小说 ",
-                      children: [
-                        TextSpan(
-                            text: _pastes[1],
-                            style: const TextStyle(color: Colors.lightBlue)
-                        ),
-                      ]
-                  ),
-                ),
-                contentPadding: const EdgeInsets.all(10),
-                //中间显示内容的文本样式
-                contentTextStyle: const TextStyle(color: Colors.black54, fontSize: 14),
-                actions: [
-                  ElevatedButton(
-                    child: const Text("取消"),
-                    onPressed: () {
-                      Get.back();
-                    },
-                  ),
-                  ElevatedButton(
-                    child: const Text("确定"),
-                    onPressed: () async{
-                      Get.back();
-                      await parseBook(_pastes[1], _pastes.last, isShare: true);
-                    },
-                  )
-                ],
-              ),
-              transitionDuration: const Duration(milliseconds: 200)
-          ).then((value) {
-            Clipboard.setData(const ClipboardData(text: ""));
-          });
-        });
+        _parse(_pastes.last, bookName: _pastes[1]);
       }
     }
+  }
+
+  _parse(String url, {String? bookName}) {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      Get.dialog(
+          AlertDialog(
+            title: const Text("小说解析"),
+            titlePadding: const EdgeInsets.all(10),
+            titleTextStyle: const TextStyle(color: Colors.black87, fontSize: 16),
+            content: Text.rich(
+              TextSpan(
+                  text: "是否解析${bookName == null ? '复制的链接' : '分享的小说'} ",
+                  children: [
+                    TextSpan(
+                        text: bookName ?? url,
+                        style: const TextStyle(color: Colors.lightBlue)
+                    ),
+                  ]
+              ),
+            ),
+            contentPadding: const EdgeInsets.all(10),
+            //中间显示内容的文本样式
+            contentTextStyle: const TextStyle(color: Colors.black54, fontSize: 14),
+            actions: [
+              ElevatedButton(
+                child: const Text("取消"),
+                onPressed: () {
+                  Get.back();
+                },
+              ),
+              ElevatedButton(
+                child: const Text("确定"),
+                onPressed: () async{
+                  bookName ??= "网络小说";
+                  Get.back();
+                  await parseBook(bookName!, url, isShare: true);
+                },
+              )
+            ],
+          ),
+          transitionDuration: const Duration(milliseconds: 200)
+      ).then((value) {
+        Clipboard.setData(const ClipboardData(text: ""));
+      });
+    });
   }
 
   downloadBook(int bookId, int chapterId) async {
     int index = _bookDownloads.indexWhere((element) => element.book.id == bookId);
     if (index >= 0) {
-      EasyLoading.showToast("已在下载队列中");
+      Toast.toast(toast: "已在下载队列中");
       return;
     }
     Book? book = await _bookDbProvider.getBookById(bookId);
     List<Chapter> chapters = await _chapterDbProvider.getChapters(chapterId, bookId);
     if (book == null) {
-      EasyLoading.showToast("小说不存在");
+      Toast.toast(toast: "小说不存在");
       return;
     }
     if (chapters.isEmpty) {
-      EasyLoading.showToast("无章节可缓存");
+      Toast.toast(toast: "无章节可缓存");
       return;
     }
     BookWithChapters bookWithChapters = BookWithChapters(book, chapters);
@@ -240,12 +250,13 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
         bookWithChapters.downloadChaptersAdd(chapter);
         continue;
       }
-      String content = await HtmlParseUtil.parseContent(chapter.url!);
+      String content = await HtmlParseUtil.parseContent(chapter.name!, chapter.url!);
       if (content.isEmpty) {
         // 下载失败
         continue;
       }
       Log.i("小说 -${bookWithChapters.book.id}- 章节 -${chapter.id}- 下载完成");
+      content = FontUtil.formatContent(content);
       _chapterDbProvider.updateContent(chapter.id, content);
       bookWithChapters.downloadChaptersAdd(chapter);
       await Future.delayed(const Duration(milliseconds: 1000), (){});
@@ -262,61 +273,107 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
   }
 
   Future parseBookText(List<String> lines, String fileName, {String? filePath}) async{
-
-    List<Chapter> chapters = [];
-    String content = "";
-    Chapter chapter = Chapter();
-    for (var line in lines) {
-      if (chapterMatch.hasMatch(line)) {
-        if (chapter.name == null) {
-          chapter.name = line;
-          content = "";
-        } else {
-          chapter.content = FontUtil.formatContent(content);
-          chapters.add(chapter);
-          chapter = Chapter(name: line);
-          content = "";
+    if (parseNow) {
+      Toast.toast(toast: "正在解析书籍，请稍后");
+      return;
+    }
+    parseNow = true;
+    update(["parseProcess"]);
+    compute(_parseBookText, {"lines": lines, "fileName": fileName, "filePath": filePath, "sendPort": mainIsolateReceivePort.sendPort}).then((value) async{
+      if (value != null) {
+        var book = value[0];
+        var chapters = value[1];
+        var bookId = await _bookDbProvider.commonInsert(book);
+        for (Chapter item in chapters) {
+          item.url = "";
+          item.bookId = bookId;
         }
+        await _chapterDbProvider.commonBatchInsert(chapters);
+        Toast.toast(toast: "添加成功");
+        getBookList();
       } else {
-        content = content + line + "\n";
+        Toast.toast(toast: "解析失败");
       }
+      parseNow = false;
+      parseProcess = 0;
+      update(["parseProcess"]);
+    });
+  }
+
+  static _parseBookText(data) async{
+    try {
+      List<String> lines = data["lines"];
+      String fileName = data["fileName"];
+      String? filePath = data["filePath"];
+      SendPort sendPort = data["sendPort"];
+      List<Chapter> chapters = [];
+      String content = "";
+      Chapter chapter = Chapter();
+      for (int i = 0; i < lines.length; i++) {
+        if (i % 100 == 0) {
+          sendPort.send(i * 100 / lines.length);
+        }
+        var line = lines[i].trim();
+        if (line == "") {
+          continue;
+        }
+        if (chapterMatch.hasMatch(line)) {
+          if (chapter.name == null) {
+            chapter.name = line;
+            content = "";
+          } else {
+            chapter.content = FontUtil.formatContent(content);
+            chapters.add(chapter);
+            chapter = Chapter(name: line);
+            content = "";
+          }
+        } else {
+          content = content + line + "\n";
+        }
+      }
+      chapter.content = FontUtil.formatContent(content);
+      chapters.add(chapter);
+      Book book = Book(type: filePath == null ? 3 : 2);
+      book.name = fileName;
+      book.url = filePath ?? "";
+      return [book, chapters];
+    } catch(e) {
+      Log.i(e);
+      return null;
     }
-    chapter.content = FontUtil.formatContent(content);
-    chapters.add(chapter);
-    Book book = Book(type: filePath == null ? 3 : 2);
-    book.name = fileName;
-    book.url = filePath ?? "";
-    int bookId = await _bookDbProvider.commonInsert(book);
-    for (Chapter item in chapters) {
-      item.bookId = bookId;
-      item.url = "";
-    }
-    await _chapterDbProvider.commonBatchInsert(chapters);
-    EasyLoading.showToast("添加成功");
   }
 
   _listen() {
     ChannelUtils.methodChannel.setMethodCallHandler((call) async{
       switch (call.method) {
         case 'bookPath':
-          Future.delayed(const Duration(milliseconds: 500), () async{
-            var path = call.arguments;
-            if (path != null) {
-              String? name = path["name"];
-              String? content = path["content"];
-              if (name != null && content != null) {
-                try{
-                  parseBookText(content.split("\n"), name).then((value) {
-                    BookHomeController homeController = Get.find();
-                    homeController.getBookList();
-                  });
-                }catch(e) {
-                  EasyLoading.showToast("解析失败");
-                }
-              }
-            }
-          });
+          parseBookWithShare(call);
       }
     });
+    mainIsolateReceivePort.listen((message) {
+      if (message is double) {
+        parseProcess = message;
+        update(["parseProcess"]);
+      }
+    });
+  }
+
+  parseBookWithShare(MethodCall call) {
+    Future.delayed(const Duration(milliseconds: 500), () async{
+      var path = call.arguments;
+      if (path != null) {
+        String? name = path["name"];
+        String? content = path["content"];
+        if (name != null && content != null) {
+          parseBookByShare(name, content);
+        }
+      }
+    });
+  }
+
+  updateBookName(int id, String nweName) async{
+    await _bookDbProvider.updateName(id, nweName);
+    Toast.toast(toast: "更新成功");
+    getBookList();
   }
 }
