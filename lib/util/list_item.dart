@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 Widget ListItem(
 String left,
 Widget right,
-Color? backgroundColor,
-Color? textColor,)
+{Color? backgroundColor,
+  Color? textColor})
 {
   return Container(
     height: 50,

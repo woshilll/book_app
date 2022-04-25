@@ -85,6 +85,8 @@ class ReadController extends GetxController {
   @override
   void onInit() async{
     readPageType = getReadPageTypeByStr(SaveUtil.getString(Constant.readType));
+    /// 背景色
+    readSettingConfig = _getReadSettingConfig();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     super.onInit();
     batteryLevel = await _battery.batteryLevel;
@@ -106,9 +108,6 @@ class ReadController extends GetxController {
   initData() async{
     /// 亮度 放在前面
     brightness = await WoshilllFlutterPlugin.getBrightness();
-    /// 背景色
-    readSettingConfig = _getReadSettingConfig();
-    update(["backgroundColor"]);
     if (isDark) {
       readSettingConfig = ReadSettingConfig.defaultDarkConfig(readSettingConfig.fontSize, readSettingConfig.fontHeight);
     }

@@ -50,8 +50,6 @@ class ReadMoreSettingScreen extends GetView<ReadMoreSettingController> {
                     controller.setAutoPage(value);
                   }
               ),
-                Theme.of(globalContext).textTheme.bodyText2!.color,
-                Theme.of(globalContext).textTheme.bodyText1!.color
             ),
             Container(
               padding: const EdgeInsets.only(left: 15, right: 15),
@@ -67,17 +65,17 @@ class ReadMoreSettingScreen extends GetView<ReadMoreSettingController> {
                 minValue: 3,
                 maxValue: 30,
                 itemCount: 1,
-                itemHeight: 20,
+                itemHeight: 30,
                 itemWidth: 50,
                 textMapper: (str) {
                   return "${str}s/页";
                 },
+                textStyle: const TextStyle(fontSize: 16),
+                selectedTextStyle: const TextStyle(fontSize: 16),
                 onChanged: (value) {
                   controller.setAutoPageRate(value);
                 },
               ),
-                Theme.of(globalContext).textTheme.bodyText2!.color,
-                Theme.of(globalContext).textTheme.bodyText1!.color
             ),
             Container(
               padding: const EdgeInsets.only(left: 15, right: 15),
@@ -94,8 +92,6 @@ class ReadMoreSettingScreen extends GetView<ReadMoreSettingController> {
                   controller.setGoodEyes(value);
                 }
             ),
-                Theme.of(globalContext).textTheme.bodyText2!.color,
-                Theme.of(globalContext).textTheme.bodyText1!.color
             ),
             Container(
               padding: const EdgeInsets.only(left: 15, right: 15),
@@ -117,8 +113,6 @@ class ReadMoreSettingScreen extends GetView<ReadMoreSettingController> {
                   },
                 )
               ,
-                Theme.of(globalContext).textTheme.bodyText2!.color,
-                Theme.of(globalContext).textTheme.bodyText1!.color
             ),
           ],
         );

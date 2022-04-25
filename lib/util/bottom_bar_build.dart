@@ -31,7 +31,7 @@ class BottomBarBuild extends StatelessWidget {
               child: Container(
                 height: 50,
                 alignment: Alignment.center,
-                child: items[index - 1].useWidget ? items[index - 1].titleWidget : Text(items[index - 1].title, style: const TextStyle(height: 1, fontSize: 14),),
+                child: items[index - 1].useWidget ? items[index - 1].titleWidget : Text(items[index - 1].title, style: TextStyle(height: 1, fontSize: 14, color: titleColor),),
               ),
               onTap: () {
                 items[index - 1].function();

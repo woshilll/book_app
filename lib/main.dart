@@ -1,14 +1,11 @@
 import 'package:book_app/app_binding.dart';
 import 'package:book_app/app_controller.dart';
 import 'package:book_app/di.dart';
-import 'package:book_app/lang/lang_service.dart';
 import 'package:book_app/route/route_pages.dart';
 import 'package:book_app/route/routes.dart';
-import 'package:book_app/theme/theme.dart';
 import 'package:book_app/util/bar_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 
 void main() async {
@@ -34,23 +31,12 @@ class App extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             enableLog: true,
             initialRoute: Routes.bookHome,
-            defaultTransition: Transition.fade,
+            defaultTransition: Transition.rightToLeft,
             getPages: RoutePages.routes,
             initialBinding: AppBinding(),
             smartManagement: SmartManagement.keepFactory,
             title: '轻阅读',
-            locale: LangService.locale,
-            fallbackLocale: LangService.fallbackLocale,
-            translations: LangService(),
-            theme: ThemeConfig.lightTheme,
             builder: EasyLoading.init(),
-            darkTheme: ThemeConfig.darkTheme,
-            themeMode: ThemeMode.light,
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
           ),
         );
       },

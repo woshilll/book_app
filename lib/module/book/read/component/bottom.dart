@@ -378,10 +378,11 @@ _cache() {
             id: "downloading",
             builder: (controller) {
               return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     "$_downloadLength / $_length",
-                    style: const TextStyle(height: 1, fontSize: 14),
+                    style: const TextStyle(fontSize: 14, color: Colors.white),
                   ),
                   Container(
                     margin: const EdgeInsets.only(left: 10),
@@ -389,6 +390,7 @@ _cache() {
                       child: const Icon(Icons.close, color: Colors.white, size: 20,),
                       onTap: () {
                         controller.bookWithChapters!.interrupt();
+                        controller.bookWithChapters = null;
                         Get.back();
                       },
                     ),

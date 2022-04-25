@@ -370,4 +370,10 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
       }
     });
   }
+
+  updateBookName(int id, String nweName) async{
+    await _bookDbProvider.updateName(id, nweName);
+    Toast.toast(toast: "更新成功");
+    getBookList();
+  }
 }

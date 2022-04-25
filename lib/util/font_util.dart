@@ -54,6 +54,6 @@ class FontUtil {
   }
 
   static String? getFontFamily() {
-    return "KaiTi";
+    return null;
   }
 }
