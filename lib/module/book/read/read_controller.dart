@@ -18,6 +18,7 @@ import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/bar_util.dart';
 import 'package:book_app/util/channel_utils.dart';
+import 'package:book_app/util/chapter_compare.dart';
 import 'package:book_app/util/constant.dart';
 import 'package:book_app/util/dialog_build.dart';
 import 'package:book_app/util/font_util.dart';
@@ -102,7 +103,13 @@ class ReadController extends GetxController {
   @override
   onReady() async{
     super.onReady();
-    FutureDo.doAfterExecutor300(() => initData());
+    FutureDo.doAfterExecutor300(() {
+      initData()?.then(
+              (_) {
+                _refreshBookChapter(book!);
+              }
+      );
+    });
   }
 
   initData() async{
@@ -636,6 +643,37 @@ class ReadController extends GetxController {
       chapterStrList.add(chapter.content);
     }
     return chapterStrList.join("\n");
+  }
+
+  _refreshBookChapter(Book book) async{
+    if (book.type != 1) {
+      return;
+    }
+    var today = DateTime.now();
+    if (book.updateTime != null) {
+      var date = book.updateTime!.split("-");
+      if (date[0] == today.year.toString()
+          && date[1] == today.month.toString()
+          && date[2] == today.day.toString()
+      ) {
+        // 已经刷新
+        return;
+      }
+    }
+    _bookDbProvider.updateTime(book.id, "${today.year}-${today.month}-${today.day}");
+    var oldList = await _chapterDbProvider.getChapters(null, book.id);
+    var result = await HtmlParseUtil.parseChapter(book.url!);
+    var newList = result[1];
+    var needAdd = chapterCompare(oldList, newList);
+    if (needAdd.isEmpty) {
+      return;
+    }
+    for (var element in needAdd) {
+      element.bookId = book.id;
+    }
+    _chapterDbProvider.commonBatchInsert(needAdd);
+    Toast.toast(toast: "更新${needAdd.length}章节");
+    chapters = await _chapterDbProvider.getChapters(null, book.id);
   }
 }
 

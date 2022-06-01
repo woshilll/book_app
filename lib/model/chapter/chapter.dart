@@ -23,4 +23,18 @@ class Chapter extends Base{
   String toString() {
     return 'Chapter{id: $id, bookId: $bookId, name: $name, content: $content, url: $url}';
   }
+
+  @override
+  int get hashCode => name?.hashCode ?? url.hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! Chapter) {
+      return false;
+    }
+    if (name == other.name || url == other.url) {
+      return true;
+    }
+    return false;
+  }
 }

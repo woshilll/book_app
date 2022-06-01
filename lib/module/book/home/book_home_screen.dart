@@ -33,78 +33,84 @@ class BookHomeScreen extends GetView<BookHomeController> {
         ],
       ),
       body: _body(context),
-      floatingActionButton: GetBuilder<BookHomeController>(
-        id: "parseProcess",
-        builder: (controller) {
-          if (controller.parseNow) {
-            return FloatingActionButton(
-              onPressed: null,
-              child: Text(
-                "${controller.parseProcess.toStringAsFixed(2)}%",
-                style: const TextStyle(color: Colors.white),
-              ),
-            );
-          } else {
-            return Container();
-          }
-        },
-      ),
     );
   }
 
   Widget _body(context) {
-    return Stack(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GetBuilder<BookHomeController>(
-          id: 'bookList',
+          id: "parseProcess",
           builder: (controller) {
-            int count = controller.books.length +
-                (controller.localBooks.isEmpty ? 0 : 1);
-            return Container(
-              margin: const EdgeInsets.only(left: 25, right: 25, top: 15),
-              child: ScrollConfiguration(
-                behavior: NoShadowScrollBehavior(),
-                child: GridView.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 40,
-                            mainAxisSpacing: 5,
-                            childAspectRatio: .65),
-                    itemCount: count,
-                    itemBuilder: (context, index) {
-                      if (controller.localBooks.isNotEmpty) {
-                        if (index == 0) {
-                          return _localWidget(context);
-                        }
-                        index = index - 1;
-                      }
-                      return Column(
-                        children: [
-                          Expanded(
-                              child: InkWell(
-                            child: _bookImageWidget(context, index),
-                            onLongPress: () {
-                              _longPressBook(controller.books[index]);
-                            },
-                            onTap: () =>
-                                controller.getBookInfo(controller.books[index]),
-                          )),
-                          Text("${controller.books[index].name}",
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context)
-                                      .textTheme
-                                      .bodyText1!
-                                      .color!),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis)
-                        ],
-                      );
-                    }),
-              ),
-            );
+            if (controller.parseNow) {
+              return LinearProgressIndicator(
+                value: controller.parseProcess / 100,
+              );
+              //   FloatingActionButton(
+              //   onPressed: null,
+              //   child: Text(
+              //     "${controller.parseProcess.toStringAsFixed(2)}%",
+              //     style: const TextStyle(color: Colors.white),
+              //   ),
+              // );
+            } else {
+              return Container();
+            }
           },
+        ),
+        Flexible(
+          child: GetBuilder<BookHomeController>(
+            id: 'bookList',
+            builder: (controller) {
+              int count = controller.books.length +
+                  (controller.localBooks.isEmpty ? 0 : 1);
+              return Container(
+                margin: const EdgeInsets.only(left: 25, right: 25, top: 15),
+                child: ScrollConfiguration(
+                  behavior: NoShadowScrollBehavior(),
+                  child: GridView.builder(
+                      gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 40,
+                          mainAxisSpacing: 5,
+                          childAspectRatio: .65),
+                      itemCount: count,
+                      itemBuilder: (context, index) {
+                        if (controller.localBooks.isNotEmpty) {
+                          if (index == 0) {
+                            return _localWidget(context);
+                          }
+                          index = index - 1;
+                        }
+                        return Column(
+                          children: [
+                            Expanded(
+                                child: InkWell(
+                                  child: _bookImageWidget(context, index),
+                                  onLongPress: () {
+                                    _longPressBook(controller.books[index]);
+                                  },
+                                  onTap: () =>
+                                      controller.getBookInfo(controller.books[index]),
+                                )),
+                            Text("${controller.books[index].name}",
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: Theme.of(context)
+                                        .textTheme
+                                        .bodyText1!
+                                        .color!),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis)
+                          ],
+                        );
+                      }),
+                ),
+              );
+            },
+          ),
         )
       ],
     );

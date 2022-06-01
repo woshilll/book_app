@@ -23,6 +23,7 @@ class BookDbProvider extends BaseDbProvider {
   final String columnCurPage = "curPage";
   final String columnUrl = "url";
   final String columnType = "type";
+  final String columnUpdateTime = "updateTime";
   @override
   createTableString() {
     return '''
@@ -36,7 +37,8 @@ class BookDbProvider extends BaseDbProvider {
         $columnCurChapter integer, 
         $columnCurPage integer,
         $columnUrl text not null,
-        $columnType integer not null
+        $columnType integer not null,
+        $columnUpdateTime text
       )
     ''';
   }
@@ -82,6 +84,11 @@ class BookDbProvider extends BaseDbProvider {
   updateName(id, newName) async{
     Database db = await getDataBase();
     await db.rawUpdate("update $name set $columnName = ? where $columnId = ?", [newName, id]);
+  }
+
+  updateTime(id, String updateTime) async{
+    Database db = await getDataBase();
+    await db.rawUpdate("update $name set $columnUpdateTime = ? where $columnId = ?", [updateTime, id]);
   }
 
 }

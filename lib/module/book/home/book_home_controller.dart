@@ -9,6 +9,7 @@ import 'package:book_app/model/book_with_chapters.dart';
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/util/channel_utils.dart';
+import 'package:book_app/util/chapter_compare.dart';
 import 'package:book_app/util/font_util.dart';
 import 'package:book_app/util/html_parse_util.dart';
 import 'package:book_app/util/parse_book.dart';
