@@ -11,7 +11,7 @@ import 'package:get/get.dart';
 import 'html_parse_util.dart';
 
 /// 小说解析
-parseBook(String bookName, String bookUrl, {bool isShare = false}) async {
+parseBook(String bookName, String bookUrl) async {
   BookDbProvider _bookDbProvider = BookDbProvider();
   ChapterDbProvider _chapterDbProvider = ChapterDbProvider();
   try {
@@ -24,10 +24,12 @@ parseBook(String bookName, String bookUrl, {bool isShare = false}) async {
     String? img;
     var results = (await HtmlParseUtil.parseChapter(bookUrl, img: (imgUrl) {
       img = imgUrl;
-    }, isShare: isShare));
+    }));
     bookUrl = results[0];
     var chapters = results[1];
     final Book book = Book(url: bookUrl, name: bookName, indexImg: img);
+    var day = DateTime.now();
+    book.updateTime = "${day.year}-${day.month}-${day.day}";
     var bookId = await _bookDbProvider.commonInsert(book);
     for (var e in chapters) {
       e.bookId = bookId;

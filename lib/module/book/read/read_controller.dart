@@ -582,7 +582,8 @@ class ReadController extends GetxController {
         Toast.toastL(toast: "重载中...");
         var chapterId = pages[pageIndex.count].chapterId;
         var chapter = chapters.firstWhere((element) => element.id == chapterId);
-        chapter.content = FontUtil.formatContent(await HtmlParseUtil.parseContent(chapter.name!, chapter.url!));
+        Chapter? nextChapter = await _chapterDbProvider.getNextChapter(chapter.id, book!.id);
+        chapter.content = FontUtil.formatContent(await HtmlParseUtil.parseContent(chapter.name!, chapter.url!, nextChapter?.url));
         await _chapterDbProvider.updateContent(chapter.id, chapter.content);
         reloadPage();
       },)

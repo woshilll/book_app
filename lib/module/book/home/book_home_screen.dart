@@ -46,6 +46,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
             if (controller.parseNow) {
               return LinearProgressIndicator(
                 value: controller.parseProcess / 100,
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.greenAccent),
               );
               //   FloatingActionButton(
               //   onPressed: null,
@@ -123,6 +124,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
         color: Colors.grey[200],
         child: Container(
           margin: const EdgeInsets.only(left: 5, right: 5, top: 15),
+          alignment: Alignment.topCenter,
           child: Text(
             "${controller.books[index].name}",
             textAlign: TextAlign.center,

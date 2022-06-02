@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/util/content_fliter.dart';
@@ -13,7 +14,7 @@ final RegExp contentFilter = contentFilterRegExp();
 final RegExp nextPageReg = RegExp("下(.{1})页");
 class HtmlParseUtil {
   static final List<String> ignoreContentHtmlTag = ["a", "option", "h1", "h2", "strong", "font", "button", "script"];
-  static Future<List<dynamic>> parseChapter(String url, {Function(String? url)? img, bool isShare = false}) async{
+  static Future<List<dynamic>> parseChapter(String url, {Function(String? url)? img, String? originUrl}) async{
     Document document = parse(await getFileString(url));
     var body = document.body;
     if (img != null) {
@@ -31,9 +32,8 @@ class HtmlParseUtil {
         }
       }
     }
-    List res = await _getChapterAllTags(body!, url, isShare: isShare);
-    var aTags = res[1];
-    url = res[0];
+    List res = await _getChapterAllTags(body!);
+    var aTags = res;
     Map<String, List<Map<String, dynamic>>> parseMap = {};
     int index = 0;
     for (int i = 0; i < aTags.length; i++) {
@@ -75,8 +75,25 @@ class HtmlParseUtil {
       }
     });
     List<Map<String, dynamic>> trueChapters = parseMap[maxKey]!;
-    return [url, format(trueChapters, url)];
+    var chapters = format(trueChapters, originUrl ?? url);
+    for (var a in aTags) {
+      if (a.text.contains(nextPageReg)) {
+        String? nextPageUrl = a.attributes["href"];
+        if (nextPageUrl == null || nextPageUrl == "javascript:") {
+          break;
+        }
+        // nextPageUrl = url.substring(0, url.lastIndexOf("/")) + nextPageUrl.substring(nextPageUrl.lastIndexOf('/'));
+        nextPageUrl = _getNextPageUrl(url, nextPageUrl);
+        originUrl ??= url;
+        await Future.delayed(const Duration(milliseconds: 1500));
+        var nextPageData = await parseChapter(nextPageUrl, originUrl: originUrl);
+        chapters.addAll(nextPageData[1]);
+        break;
+      }
+    }
+    return [originUrl ?? url, chapters];
   }
+
   static bool skip(String url) {
     return url.endsWith("/") || url.endsWith(".php") || url.endsWith(".js") || url.endsWith(".css");
   }
@@ -127,8 +144,10 @@ class HtmlParseUtil {
 
   static List<Chapter> format(List<Map<String, dynamic>> chapters, String url) {
     String childUrl = chapters[0]["url"];
-    if (childUrl.startsWith("/")) {
-      Uri uri = Uri.parse(url);
+    Uri uri = Uri.parse(url);
+    if (childUrl.startsWith("//")) {
+      url = uri.scheme + ":";
+    } else if (childUrl.startsWith("/")) {
       url = uri.origin;
     } else if (childUrl.startsWith("http") || childUrl.startsWith("www")) {
       url = "";
@@ -139,13 +158,13 @@ class HtmlParseUtil {
     }
     List<Chapter> returnChapters = [];
     for (var element in chapters) {
-      returnChapters.add(Chapter(name: element["name"], url: url + element["url"]));
+      returnChapters.add(Chapter(name: element["name"].trim(), url: url + element["url"]));
     }
     return returnChapters;
   }
 
 
-  static Future<String> parseContent(String chapterName, String url, {String? originPageId}) async{
+  static Future<String> parseContent(String chapterName, String url, String? nextChapterUrl, {String? originPageId, int maxPage = 0}) async{
     try {
       var html = await getFileString(url);
       Document document = parse(html);
@@ -158,16 +177,25 @@ class HtmlParseUtil {
       }
       // 有没有下一页
       String content = contentElement.innerHtml;
-      for (var a in contentElement.getElementsByTagName("a")) {
+      // 最多应该有10页
+      for (var a in body.getElementsByTagName("a")) {
+        if (maxPage >= 10) {
+          break;
+        }
         if (a.text.contains(nextPageReg)) {
           String? nextPageUrl = a.attributes["href"];
-          nextPageUrl = url.substring(0, url.lastIndexOf("/")) + nextPageUrl!.substring(nextPageUrl.lastIndexOf('/'));
-          originPageId ??= url.substring(url.lastIndexOf('/') + 1).split(".")[0];
-          String nextPageId = nextPageUrl.substring(nextPageUrl.lastIndexOf('/') + 1).split(".")[0];
-          if (!nextPageId.contains(originPageId)) {
+          if (nextPageUrl == null) {
             break;
           }
-          var nextPageContent = await parseContent(chapterName, nextPageUrl, originPageId: originPageId);
+          nextPageUrl = _getNextPageUrl(url, nextPageUrl);
+          originPageId ??= url;
+          if (nextChapterUrl != null && nextChapterUrl.isNotEmpty) {
+            if (nextPageUrl.contains(nextChapterUrl) || nextPageUrl == nextChapterUrl) {
+              break;
+            }
+          }
+          await Future.delayed(const Duration(milliseconds: 1500));
+          var nextPageContent = await parseContent(chapterName, nextPageUrl, nextChapterUrl,originPageId: originPageId, maxPage: maxPage + 1);
           content += nextPageContent;
           break;
         }
@@ -222,15 +250,23 @@ class HtmlParseUtil {
     Log.i("发起请求 --- $url");
     return await getString(url);
   }
-  static Future<String?> getString(String url) async{
-    var client = HttpManager.httpClient!;
-    var request = await client.getUrl(Uri.parse(url));
-    request.headers.remove("User-Agent", "Dart/2.16 (dart:io)");
-    request.headers.add("Accept", "text/html;charset=UTF-8");
-    request.headers.add("User-Agent", randomUserAgent());
-    var response = await request.close();
-    List<List<int>> dataBytes = await response.toList();
-    return decodeToStr(dataBytes);
+  static Future<String?> getString(String url, {bool retry = false, int retryTimes = 0}) async{
+    var client = retry ? HttpClient() : HttpManager.httpClient!;
+    try {
+      var request = await client.getUrl(Uri.parse(url));
+      request.headers.remove("User-Agent", "Dart/2.16 (dart:io)");
+      request.headers.add("Accept", "text/html;charset=UTF-8");
+      request.headers.add("User-Agent", randomUserAgent());
+      var response = await request.close();
+      List<List<int>> dataBytes = await response.toList();
+      return decodeToStr(dataBytes);
+    } catch(e) {
+      if (retryTimes > 0) {
+        rethrow;
+      }
+      await Future.delayed(const Duration(milliseconds: 1500));
+      return await getString(url, retry: true, retryTimes: retryTimes + 1);
+    }
   }
 
   static String decodeToStr(List<List<int>> dataBytes) {
@@ -258,29 +294,36 @@ class HtmlParseUtil {
   }
 
   /// 获取所有的章节
-  static Future<List<dynamic>> _getChapterAllTags(Element body, String url, {bool isShare = false}) async{
-    var aTags = body.getElementsByTagName("a");
-    if (!isShare) {
-      for (var a in aTags) {
-        if (a.text.contains("章节列表") || a.text.contains("目录") || a.text.contains("电脑版")) {
-          String? fullUrl = a.attributes["href"];
-          if (fullUrl != null) {
-            if (fullUrl.startsWith("/")) {
-              fullUrl = Uri.parse(url).origin + fullUrl;
-            }
-            var html = await getFileString(fullUrl);
-            Document document = parse(html);
-            return [fullUrl, document.body!.getElementsByTagName("a")];
-          }
-        }
-      }
-    }
-    return [url, body.getElementsByTagName("a")];
+  static Future<List<dynamic>> _getChapterAllTags(Element body) async{
+    return body.getElementsByTagName("a");
   }
 
   static String _removeChapterName(String chapterName, String beautifulFormat) {
     chapterName = chapterName.replaceAll(" ", "");
     return beautifulFormat.replaceAll(RegExp(".*$chapterName.*"), "");
+  }
+
+  static String _getNextPageUrl(String url, String nextPageUrl) {
+    var uri = Uri.parse(url);
+    /// //aaa/cvvv
+    if (nextPageUrl.startsWith("//")) {
+      return uri.scheme + ":" + nextPageUrl;
+    }
+    /// /aaa/cvvv
+    if (nextPageUrl.startsWith("/")) {
+      return uri.origin + nextPageUrl;
+    }
+    /// http://aaa/cvvv
+    if (nextPageUrl.startsWith("http")) {
+      return nextPageUrl;
+    }
+    if (nextPageUrl.startsWith("www")) {
+      return uri.scheme + ":" + "//" + nextPageUrl;
+    }
+    if (!url.endsWith("/")) {
+      url += "/";
+    }
+    return url + nextPageUrl;
   }
 }
 
@@ -289,7 +332,7 @@ String _trim(String text) {
 }
 String _beautyBrAndP(String text) {
   return text.replaceAll("<br>", "\n")
-      .replaceAll("<p>", "").replaceAll("</p>", "")
+      .replaceAll(RegExp(r"<p.*>"), "").replaceAll("</p>", "")
     .replaceAll(RegExp(r"<div.*>"), "")
     .replaceAll("</div>", "")
   ;

@@ -150,6 +150,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
     if (_pasteData != null) {
       String? _pasteText = _pasteData.text;
       if (_pasteText != null && _pasteText.isNotEmpty) {
+        _pasteText = _pasteText.trim();
         if (_pasteText.isURL) {
           _parse(_pasteText);
           return;
@@ -205,7 +206,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
                 onPressed: () async{
                   bookName ??= "网络小说";
                   Get.back();
-                  await parseBook(bookName!, url, isShare: true);
+                  await parseBook(bookName!, url);
                 },
               )
             ],
@@ -251,7 +252,8 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
         bookWithChapters.downloadChaptersAdd(chapter);
         continue;
       }
-      String content = await HtmlParseUtil.parseContent(chapter.name!, chapter.url!);
+      Chapter? nextChapter = await _chapterDbProvider.getNextChapter(chapter.id, bookWithChapters.book.id);
+      String content = await HtmlParseUtil.parseContent(chapter.name!, chapter.url!, nextChapter?.url);
       if (content.isEmpty) {
         // 下载失败
         continue;

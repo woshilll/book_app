@@ -56,6 +56,19 @@ class ChapterDbProvider extends BaseDbProvider {
     return list;
   }
 
+  Future<Chapter?> getNextChapter(startId, bookId) async {
+    Database db = await getDataBase();
+    List<Map<String, dynamic>> maps = await db.rawQuery("select $columnId, $columnName, $columnUrl from $name where $columnBookId = ? and id > ? order by $columnId asc limit 1", [bookId, startId]);
+    List<Chapter> list = [];
+    for (var element in maps) {
+      list.add(Chapter.fromJson(element));
+    }
+    if (list.isEmpty) {
+      return null;
+    }
+    return list.first;
+  }
+
   /// 获取章节列表详情
   Future<int?> getChapterCount(bookId) async {
     Database db = await getDataBase();
