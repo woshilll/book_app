@@ -33,8 +33,8 @@ class FontUtil {
     if (content.isEmpty) {
       return content;
     }
-    content = content.replaceAll(" ", "").replaceAll("\u3000", "").replaceAll("“", "\"").replaceAll("”", "\"");
-    content = "    " + content;
+    content = content.replaceAll(" ", "").replaceAll("\u3000", "");
+    content = "\u3000\u3000" + content;
     List<String> list = [];
     List<int> codes = content.codeUnits;
     for (int i = 0; i < codes.length; i++) {
@@ -47,7 +47,7 @@ class FontUtil {
             continue;
           }
         }
-        list.add("\n    ");
+        list.add("\n\u3000\u3000");
       }
     }
     return list.join();
@@ -55,5 +55,28 @@ class FontUtil {
 
   static String? getFontFamily() {
     return null;
+  }
+
+  static String toDBC(String input) {
+    var c = input.codeUnits;
+    var s = '';
+    for (var i = 0; i < c.length; i++) {
+      if (c[i] == 32) {
+        // 半角空格
+        s = s + String.fromCharCode(12288);
+      } else if (c[i] < 127) {
+        // 半角英文字符
+        //如果前后为换行符，则不转换
+        if (c[i] == 10) {
+          s = s + String.fromCharCode(c[i]);
+        } else {
+          s = s + String.fromCharCode(c[i] + 65248);
+        }
+      } else {
+        // 非半角字符
+        s = s + String.fromCharCode(c[i]);
+      }
+    }
+    return s;
   }
 }

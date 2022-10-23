@@ -248,8 +248,10 @@ bottom(context) async {
 
 Widget _actions(ReadController controller) {
   if (controller.rotateScreen) {
+    var widgets = _actionsItems(controller);
+    widgets.add(const SizedBox(width: 40,));
     return Row(
-      children: _actionsItems(controller),
+      children: widgets,
     );
   } else {
     return Column(

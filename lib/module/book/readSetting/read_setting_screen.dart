@@ -1,8 +1,6 @@
 import 'dart:convert';
 
-import 'package:book_app/log/log.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
-import 'package:book_app/module/book/readSetting/component/read_setting_config.dart';
 import 'package:book_app/module/book/readSetting/read_setting_controller.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/constant.dart';
@@ -26,7 +24,10 @@ class ReadSettingScreen extends GetView<ReadSettingController> {
           child: const Icon(Icons.arrow_back_ios),
           onTap: () => Get.back(),
         ),
+        elevation: 0,
+        backgroundColor: backgroundColor(),
       ),
+      backgroundColor: backgroundColor(),
       body: _body(context),
     );
   }
@@ -76,7 +77,7 @@ class ReadSettingScreen extends GetView<ReadSettingController> {
           left: 0,
           right: 0,
           child: Card(
-            color: Colors.white,
+            color: backgroundColorL2() ?? Colors.white,
             child: SizedBox(
               height: 150,
               child: Column(
@@ -87,19 +88,19 @@ class ReadSettingScreen extends GetView<ReadSettingController> {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         GestureDetector(
-                          child: const Text("阅读底色", style: TextStyle(color: Colors.black),),
+                          child: Text("阅读底色", style: TextStyle(color: textColor() ?? Colors.black),),
                           onTap: () => _colorPicker(context, true),
                         ),
                         GestureDetector(
-                          child: const Text("字体颜色", style: TextStyle(color: Colors.black)),
+                          child: Text("字体颜色", style: TextStyle(color: textColor() ?? Colors.black)),
                           onTap: () => _colorPicker(context, false),
                         ),
                         GestureDetector(
-                          child: const Text("Aa-", style: TextStyle(color: Colors.black)),
+                          child: Text("Aa-", style: TextStyle(color: textColor() ?? Colors.black)),
                           onTap: () => controller.fontSizeSub(),
                         ),
                         GestureDetector(
-                          child: const Text("Aa+", style: TextStyle(color: Colors.black)),
+                          child: Text("Aa+", style: TextStyle(color: textColor() ?? Colors.black)),
                           onTap: () => controller.fontSizeAdd(),
                         ),
                       ],
@@ -119,9 +120,9 @@ class ReadSettingScreen extends GetView<ReadSettingController> {
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                   borderRadius: const BorderRadius.all(Radius.circular(8)),
-                                  border: Border.all(color: Theme.of(context).primaryColor)
+                                  border: Border.all(color: textColor() ?? Theme.of(context).primaryColor)
                               ),
-                              child: Text("恢复默认设置", style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 15),),
+                              child: Text("恢复默认设置", style: TextStyle(color: textColor() ?? Theme.of(context).primaryColor, fontSize: 15),),
                             ),
                             onTap: () => controller.setDefault(),
                           ),
@@ -135,9 +136,9 @@ class ReadSettingScreen extends GetView<ReadSettingController> {
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                   borderRadius: const BorderRadius.all(Radius.circular(8)),
-                                  border: Border.all(color: Theme.of(context).primaryColor)
+                                  border: Border.all(color: textColor() ?? Theme.of(context).primaryColor)
                               ),
-                              child: Text("保存设置", style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 15)),
+                              child: Text("保存设置", style: TextStyle(color: textColor() ?? Theme.of(context).primaryColor, fontSize: 15)),
                             ),
                             onTap: () {
                               String data = json.encode(controller.config);
@@ -163,6 +164,10 @@ class ReadSettingScreen extends GetView<ReadSettingController> {
     String preHex;
     if (flag) {
       // 背景色
+      ReadController readController = Get.find();
+      if (readController.isDark) {
+        return;
+      }
       preHex = controller.config.backgroundColor;
     } else {
       // 字体颜色
@@ -174,6 +179,7 @@ class ReadSettingScreen extends GetView<ReadSettingController> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: backgroundColorL2(),
           content: SingleChildScrollView(
             child: ColorPicker(
               pickerColor: pre,
@@ -187,7 +193,10 @@ class ReadSettingScreen extends GetView<ReadSettingController> {
           ),
           actions: [
             ElevatedButton(
-              child: const Text("确定"),
+              child: Text("确定", style: TextStyle(color: textColor()),),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(backgroundColor())
+              ),
               onPressed: () {
                 if (selectColorHex.isNotEmpty) {
                   controller.setColor(selectColorHex, flag);

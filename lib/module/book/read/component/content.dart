@@ -1,8 +1,7 @@
 import 'package:book_app/module/book/read/component/content_bottom.dart';
-import 'package:book_app/module/book/read/component/content_top.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/theme/color.dart';
-import 'package:book_app/util/font_util.dart';
+import 'package:book_app/util/system_utils.dart';
 import 'package:book_app/util/toast.dart';
 import 'package:flutter/material.dart';
 
@@ -12,42 +11,44 @@ Widget content(context, index, ReadController controller) {
   }
   return Column(
     children: [
-      contentTop(context, controller),
+      SizedBox(height: controller.rotateScreen ? controller.pageGen.screenTop / 2 : controller.pageGen.screenTop,),
       Expanded(
-        child: SizedBox(
-          width: controller.pages[index].width,
-          child: Column(
-            crossAxisAlignment: controller.rotateScreen ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-            children: [
-              if (controller.pages[index].index == 1)
-                Container(
-                  height: controller.pageGen.titleHeight,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "${controller.pages[index].chapterName}\n",
-                    style: TextStyle(
-                        color: hexToColor(controller.readSettingConfig.fontColor),
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: FontUtil.getFontFamily()
+        child: Container(
+          alignment: Alignment.topCenter,
+          width: controller.pages[index].width + 2,
+          child: Text.rich(
+            TextSpan(
+                children: [
+                  if (controller.pages[index].index == 1)
+                    TextSpan(
+                      text: "${controller.pages[index].chapterName}\n",
+                      style: TextStyle(
+                          color: hexToColor(controller.readSettingConfig.fontColor),
+                          fontSize: controller.pageGen.titleStyle.fontSize,
+                          fontWeight: controller.pageGen.titleStyle.fontWeight,
+                          fontFamily: controller.pageGen.titleStyle.fontFamily
+                      ),
                     ),
-                    maxLines: 1,
-                    textScaleFactor: MediaQuery.of(context).textScaleFactor,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              Text(
-                  controller.pages[index].content,
-                  textWidthBasis: TextWidthBasis.longestLine,
-                  textAlign: TextAlign.justify,
-                  textScaleFactor: MediaQuery.of(context).textScaleFactor,
-                  style: TextStyle(
-                    color: hexToColor(controller.readSettingConfig.fontColor),
-                    fontSize: controller.readSettingConfig.fontSize,
-                    height: controller.readSettingConfig.fontHeight,
-                    fontFamily: FontUtil.getFontFamily(),
-                  )),
-            ],
+                  TextSpan(
+                      text: controller.pages[index].content,
+                      style: TextStyle(
+                          color: hexToColor(controller.readSettingConfig.fontColor),
+                          fontSize: controller.pageGen.contentStyle.fontSize,
+                          fontWeight: controller.pageGen.contentStyle.fontWeight,
+                          fontFamily: controller.pageGen.contentStyle.fontFamily
+                      )),
+                ]
+            ),
+            textAlign: TextAlign.justify,
+            textScaleFactor: MediaQuery.of(globalContext).textScaleFactor,
+            textWidthBasis: TextWidthBasis.longestLine,
+            locale: WidgetsBinding.instance!.window.locale,
+            textDirection: TextDirection.ltr,
+            strutStyle: StrutStyle(
+                forceStrutHeight: true,
+                fontSize: controller.pageGen.contentStyle.fontSize,
+                height: controller.pageGen.contentStyle.height
+            ),
           ),
         ),
       ),

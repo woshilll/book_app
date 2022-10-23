@@ -1,24 +1,25 @@
 import 'package:another_transformer_page_view/another_transformer_page_view.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
+import 'package:book_app/util/custom_page_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'content.dart';
-/// 平滑
-Widget smooth({PageTransformer? transformer}) {
+/// 滑动翻页
+Widget slide({Axis scrollDirection = Axis.horizontal}) {
   return GetBuilder<ReadController>(
-    id: "content",
+    id: ReadRefreshKey.content,
     builder: (controller) {
       return Listener(
-        child: TransformerPageView(
-          transformer: transformer,
+        child: CustomPageView.builder(
+          scrollDirection: scrollDirection,
           controller: controller.contentPageController,
           itemCount: controller.pages.length,
           itemBuilder: (context, index) {
             return content(context, index, controller);
           },
           onPageChanged: (index) async {
-            controller.pageIndex.setCount(index!);
+            controller.pageIndex.setCount(index);
           },
         ),
         onPointerDown: (e) {

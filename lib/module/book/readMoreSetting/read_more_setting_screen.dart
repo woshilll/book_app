@@ -3,6 +3,7 @@ import 'package:book_app/model/read_page_type.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/module/book/readMoreSetting/component/page_style_bottom.dart';
 import 'package:book_app/module/book/readMoreSetting/read_more_setting_controller.dart';
+import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/list_item.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
@@ -20,8 +21,10 @@ class ReadMoreSettingScreen extends GetView<ReadMoreSettingController> {
         appBar: AppBar(
           title: const Text("更多设置"),
           centerTitle: true,
+          elevation: 0,
+          backgroundColor: backgroundColor(),
         ),
-        backgroundColor: const Color.fromRGBO(220, 220, 220, 1),
+        backgroundColor: backgroundColor(),
         body: _body(context),
       ),
       onWillPop: () async {
@@ -50,6 +53,7 @@ class ReadMoreSettingScreen extends GetView<ReadMoreSettingController> {
                     controller.setAutoPage(value);
                   }
               ),
+              textColor: textColor()
             ),
             Container(
               padding: const EdgeInsets.only(left: 15, right: 15),
@@ -70,12 +74,13 @@ class ReadMoreSettingScreen extends GetView<ReadMoreSettingController> {
                 textMapper: (str) {
                   return "${str}s/页";
                 },
-                textStyle: const TextStyle(fontSize: 16),
-                selectedTextStyle: const TextStyle(fontSize: 16),
+                textStyle: TextStyle(fontSize: 16, color: textColor()),
+                selectedTextStyle: TextStyle(fontSize: 16, color: textColor()),
                 onChanged: (value) {
                   controller.setAutoPageRate(value);
                 },
               ),
+                textColor: textColor()
             ),
             Container(
               padding: const EdgeInsets.only(left: 15, right: 15),
@@ -92,6 +97,7 @@ class ReadMoreSettingScreen extends GetView<ReadMoreSettingController> {
                   controller.setGoodEyes(value);
                 }
             ),
+                textColor: textColor()
             ),
             Container(
               padding: const EdgeInsets.only(left: 15, right: 15),
@@ -104,14 +110,15 @@ class ReadMoreSettingScreen extends GetView<ReadMoreSettingController> {
                 GestureDetector(
                   child: Row(
                     children: [
-                      Text(_pageStyleStr(_readController.readPageType), style: TextStyle(color: Theme.of(globalContext).textTheme.bodyText1!.color, height: 1, fontSize: 14),),
-                      Icon(Icons.keyboard_arrow_right, color: Theme.of(globalContext).textTheme.bodyText1!.color, size: 25,)
+                      Text(_pageStyleStr(_readController.readPageType), style: TextStyle(color: textColor(), height: 1, fontSize: 14),),
+                      Icon(Icons.keyboard_arrow_right, color: textColor(), size: 25,)
                     ],
                   ),
                   onTap: () {
                     pageStyleBottom(context, controller);
                   },
-                )
+                ),
+              textColor: textColor()
               ,
             ),
           ],
@@ -123,21 +130,11 @@ class ReadMoreSettingScreen extends GetView<ReadMoreSettingController> {
   String _pageStyleStr(ReadPageType pageType) {
     switch(pageType) {
       case ReadPageType.point:
-        return "点击";
-      case ReadPageType.smooth:
-        return "滑动";
-      case ReadPageType.smooth_1:
-        return "滑动_动画一";
-      case ReadPageType.smooth_2:
-        return "滑动_动画二";
-      case ReadPageType.smooth_3:
-        return "滑动_动画三";
-      case ReadPageType.smooth_4:
-        return "滑动_动画四";
-      case ReadPageType.smooth_5:
-        return "滑动_动画五";
-      case ReadPageType.smooth_6:
-        return "滑动_动画六";
+        return "点击翻页";
+      case ReadPageType.slide:
+        return "滑动翻页";
+      case ReadPageType.slideUpDown:
+        return "上下滑动翻页";
     }
   }
 }

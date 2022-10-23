@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:book_app/module/book/home/book_home_controller.dart';
+import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/bottom_bar_build.dart';
 import 'package:book_app/util/dialog_build.dart';
 import 'package:book_app/util/future_do.dart';
@@ -23,15 +24,9 @@ class BookHomeScreen extends GetView<BookHomeController> {
         title: const Text("书架"),
         centerTitle: true,
         elevation: 0,
-        actions: [
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(right: 10),
-              child: _managePop(),
-            ),
-          )
-        ],
+        backgroundColor: backgroundColor(),
       ),
+      backgroundColor: backgroundColor(),
       body: _body(context),
     );
   }
@@ -40,6 +35,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Divider(height: 1, color: Colors.grey[800],),
         GetBuilder<BookHomeController>(
           id: "parseProcess",
           builder: (controller) {
@@ -48,13 +44,6 @@ class BookHomeScreen extends GetView<BookHomeController> {
                 value: controller.parseProcess / 100,
                 valueColor: const AlwaysStoppedAnimation<Color>(Colors.greenAccent),
               );
-              //   FloatingActionButton(
-              //   onPressed: null,
-              //   child: Text(
-              //     "${controller.parseProcess.toStringAsFixed(2)}%",
-              //     style: const TextStyle(color: Colors.white),
-              //   ),
-              // );
             } else {
               return Container();
             }
@@ -77,36 +66,17 @@ class BookHomeScreen extends GetView<BookHomeController> {
                           crossAxisSpacing: 40,
                           mainAxisSpacing: 5,
                           childAspectRatio: .65),
-                      itemCount: count,
+                      itemCount: count + 1,
                       itemBuilder: (context, index) {
                         if (controller.localBooks.isNotEmpty) {
                           if (index == 0) {
                             return _localWidget(context);
                           }
-                          index = index - 1;
                         }
-                        return Column(
-                          children: [
-                            Expanded(
-                                child: InkWell(
-                                  child: _bookImageWidget(context, index),
-                                  onLongPress: () {
-                                    _longPressBook(controller.books[index]);
-                                  },
-                                  onTap: () =>
-                                      controller.getBookInfo(controller.books[index]),
-                                )),
-                            Text("${controller.books[index].name}",
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    color: Theme.of(context)
-                                        .textTheme
-                                        .bodyText1!
-                                        .color!),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis)
-                          ],
-                        );
+                        if (index == count) {
+                          return _addBookWidget(context);
+                        }
+                        return _networkBookWidget(context, index);
                       }),
                 ),
               );
@@ -120,19 +90,16 @@ class BookHomeScreen extends GetView<BookHomeController> {
   Widget _bookImageWidget(context, index) {
     String? img = controller.books[index].indexImg;
     if (img == null || img.isEmpty) {
-      return Card(
-        color: Colors.grey[200],
-        child: Container(
-          margin: const EdgeInsets.only(left: 5, right: 5, top: 15),
-          alignment: Alignment.topCenter,
-          child: Text(
-            "${controller.books[index].name}",
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.black54),
-          ),
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.all(Radius.circular(4)),
-          ),
+      return Container(
+        padding: const EdgeInsets.only(left: 5, right: 5, top: 15),
+        alignment: Alignment.topCenter,
+        child: Text(
+          "${controller.books[index].name}",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: textColor() ?? Colors.black54),
+        ),
+        decoration: const BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(4)),
         ),
       );
     }
@@ -151,6 +118,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
             child: Text(
               "无封面\n\n${controller.books[index].name}",
               textAlign: TextAlign.center,
+              style: TextStyle(color: textColor()),
             ),
             decoration: const BoxDecoration(
               borderRadius: BorderRadius.all(Radius.circular(4)),
@@ -161,39 +129,80 @@ class BookHomeScreen extends GetView<BookHomeController> {
     );
   }
 
+  Widget _networkBookWidget(context, index) {
+    if (controller.localBooks.isNotEmpty) {
+      index = index - 1;
+    }
+    return Column(
+      children: [
+        Expanded(
+            child: Card(
+              color: backgroundColorL2(),
+              child: InkWell(
+                child: _bookImageWidget(context, index),
+                borderRadius: BorderRadius.circular(4),
+                onLongPress: () {
+                  _longPressBook(controller.books[index]);
+                },
+                onTap: () =>
+                    controller.getBookInfo(controller.books[index]),
+              ),
+            )),
+        Text("${controller.books[index].name}",
+            style: TextStyle(
+                fontSize: 12,
+                color: textColor()),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis)
+      ],
+    );
+  }
+
+  Widget _addBookWidget(context) {
+    return Column(
+      children: [
+        Expanded(
+            child: Card(
+              color: backgroundColorL2() ?? Colors.grey[200],
+              child: InkWell(
+                borderRadius: BorderRadius.circular(4),
+                child: Container(
+                  alignment: Alignment.center,
+                  child: Icon(Icons.add, color: textColor() ?? Colors.black54, size: 45,),
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(4)),
+                  ),
+                ),
+                onTap: () {
+                  _showSelect();
+                },
+              ),
+            ),),
+        const Text("新增",
+            style: TextStyle(
+                fontSize: 12, color: Colors.transparent),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis)
+      ],
+    );
+  }
+
   _handleDelete(Book book) async {
     Get.dialog(DialogBuild(
         "温馨提示",
         Text.rich(
-          TextSpan(text: "你确定要删除 ", children: [
+          TextSpan(text: "你确定要删除", children: [
             TextSpan(
                 text: "${book.name}",
                 style: const TextStyle(color: Colors.redAccent)),
             const TextSpan(text: "吗?")
-          ]),
+          ],
+            style: TextStyle(color: textColor())
+          ),
         ), confirmFunction: () async {
       controller.deleteBook(book);
       Get.back();
     }));
-  }
-
-  Widget _managePop() {
-    return PopupMenuButton<String>(
-      itemBuilder: (context) => <PopupMenuItem<String>>[
-        const PopupMenuItem<String>(
-          child: Text("本地导入"),
-          value: "1",
-        ),
-        const PopupMenuItem<String>(
-          child: Text("导入选项"),
-          value: "2",
-        ),
-      ],
-      offset: const Offset(20, 30),
-      onSelected: (value) async {
-        await controller.manageChoose(value);
-      },
-    );
   }
 
   Widget _localWidget(context) {
@@ -206,9 +215,9 @@ class BookHomeScreen extends GetView<BookHomeController> {
         Expanded(
           child: GestureDetector(
             child: Card(
-              color: Colors.grey[200],
+              color: backgroundColorL2() ?? Colors.grey[200],
               child: Container(
-                margin: const EdgeInsets.only(left: 5, right: 5, top: 8),
+                padding: const EdgeInsets.only(left: 5, right: 5, top: 8),
                 child: GridView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -220,9 +229,9 @@ class BookHomeScreen extends GetView<BookHomeController> {
                     return Container(
                       child: const Icon(Icons.menu_book_outlined),
                       alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(4)),
-                          color: Color(0xFFBDBDBD)),
+                      decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.all(Radius.circular(4)),
+                          color: textColor()),
                     );
                   },
                   itemCount: (controller.localBooks.length > 4
@@ -236,15 +245,12 @@ class BookHomeScreen extends GetView<BookHomeController> {
             },
           ),
         ),
-        Container(
-          alignment: Alignment.centerLeft,
-          child: Text("本地书籍 : ${controller.localBooks.length}",
-              style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).textTheme.bodyText1!.color!),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis),
-        )
+        Text("本地书籍 : ${controller.localBooks.length}",
+            style: TextStyle(
+                fontSize: 12,
+                color: textColor()),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis)
       ],
     );
   }
@@ -264,9 +270,9 @@ class BookHomeScreen extends GetView<BookHomeController> {
               children: [
                 Container(
                   margin: const EdgeInsets.only(left: 15, right: 15),
-                  child: const Icon(
+                  child: Icon(
                     Icons.menu_book_outlined,
-                    color: Colors.black,
+                    color: textColor(),
                   ),
                 ),
                 Expanded(
@@ -277,8 +283,8 @@ class BookHomeScreen extends GetView<BookHomeController> {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           "${e.name}",
-                          style: const TextStyle(
-                              color: Colors.black, fontSize: 14),
+                          style: TextStyle(
+                              color: textColor(), fontSize: 14),
                           maxLines: 1,
                         ),
                       ),
@@ -286,7 +292,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           "大小 : ${getFileSize(e.url)}",
-                          style: const TextStyle(color: Colors.grey),
+                          style: TextStyle(color: textColor()),
                         ),
                       ),
                     ],
@@ -295,8 +301,6 @@ class BookHomeScreen extends GetView<BookHomeController> {
               ],
             ));
       }).toList(),
-      backgroundColor: Colors.white,
-      titleColor: Colors.black,
     );
   }
 
@@ -337,8 +341,6 @@ class BookHomeScreen extends GetView<BookHomeController> {
               style: TextStyle(color: Colors.redAccent),
             ))
       ],
-      backgroundColor: Colors.white,
-      titleColor: Colors.black,
     ));
   }
 
@@ -349,7 +351,12 @@ class BookHomeScreen extends GetView<BookHomeController> {
         TextField(
           controller: textEditingController,
           autofocus: true,
-          decoration: InputDecoration(hintText: book.name),
+          cursorColor: textColor(),
+          style: TextStyle(color: textColor()),
+          decoration: InputDecoration(
+            hintText: book.name,
+            hintStyle: TextStyle(color: textColor()),
+          ),
         ), confirmFunction: () async {
           var text = textEditingController.text.trim();
           if (text.isNotEmpty && text.length > 20) {
@@ -361,5 +368,29 @@ class BookHomeScreen extends GetView<BookHomeController> {
             await controller.updateBookName(book.id!, text);
           }
     }));
+  }
+
+  void _showSelect() {
+    Get.bottomSheet(BottomBarBuild(
+      "选项",
+      [
+        BottomBarBuildItem(
+          "本地导入",
+              () async{
+                Get.back();
+                await controller.manageChoose("1");
+          },
+          longFunction: () {
+            Get.back();
+          },
+        ),
+        BottomBarBuildItem("解析链接", () async{
+          Get.back();
+          await controller.manageChoose("2");
+        }, longFunction: () {
+          Get.back();
+        },)
+      ],
+    ));
   }
 }

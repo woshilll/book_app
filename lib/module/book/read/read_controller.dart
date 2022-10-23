@@ -25,6 +25,7 @@ import 'package:book_app/util/font_util.dart';
 import 'package:book_app/util/future_do.dart';
 import 'package:book_app/util/html_parse_util.dart';
 import 'package:book_app/util/notify/counter_notify.dart';
+import 'package:book_app/util/notify/object_notify.dart';
 import 'package:book_app/util/path_util.dart';
 import 'package:book_app/util/save_util.dart';
 import 'package:book_app/util/toast.dart';
@@ -35,6 +36,12 @@ import 'component/content_page.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+enum ReadRefreshKey {
+  content,
+  page,
+  background
+}
 
 class ReadController extends GetxController {
   /// 数据库
@@ -51,7 +58,7 @@ class ReadController extends GetxController {
   /// 当前阅读页索引
   CounterNotify pageIndex = CounterNotify();
   /// 页面监听
-  IndexController contentPageController = IndexController();
+  PageController contentPageController = PageController();
   /// 阅读进度
   int readChapterIndex = 0;
   /// 底部类型 1-正常 2-亮度 3-设置
@@ -67,7 +74,7 @@ class ReadController extends GetxController {
   /// x轴移动距离
   double xMove = 0;
   /// 是否为暗色模式
-  bool isDark = Get.isDarkMode;
+  bool isDark = Get.isPlatformDarkMode;
   /// 自动翻页
   Timer? autoPage;
   /// 电池
@@ -77,20 +84,26 @@ class ReadController extends GetxController {
   /// 电池状态
   BatteryState batteryState = BatteryState.unknown;
   /// 阅读方式
-  ReadPageType readPageType = ReadPageType.smooth;
+  ReadPageType readPageType = ReadPageType.slide;
   /// 小说页面生成
   late PageGen pageGen;
   ZoomDrawerController zoomDrawerController = ZoomDrawerController();
   bool loading = false;
   BookWithChapters? bookWithChapters;
+  /// 页面是否在滑动中
+  ObjectNotify<bool> isSliding = ObjectNotify();
+  /// 是否需要更新文本
+  bool _needUpdateContent = false;
   @override
   void onInit() async{
     readPageType = getReadPageTypeByStr(SaveUtil.getString(Constant.readType));
-    /// 背景色
     readSettingConfig = _getReadSettingConfig();
+    if (isDark) {
+      readSettingConfig = ReadSettingConfig.defaultDarkConfig(readSettingConfig.fontSize, readSettingConfig.fontHeight);
+    }
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     super.onInit();
-    batteryLevel = await _battery.batteryLevel;
+    batteryLevel = await _batteryNumber();
     var map = Get.arguments;
     book = map["book"];
     _batteryListen();
@@ -98,6 +111,7 @@ class ReadController extends GetxController {
     _pageIndexChangeListen();
     ChannelUtils.setConfig(Constant.pluginVolumeFlag, true);
     _volumeChangeListen();
+    _isSlidingListener();
   }
 
   @override
@@ -115,9 +129,6 @@ class ReadController extends GetxController {
   initData() async{
     /// 亮度 放在前面
     brightness = await WoshilllFlutterPlugin.getBrightness();
-    if (isDark) {
-      readSettingConfig = ReadSettingConfig.defaultDarkConfig(readSettingConfig.fontSize, readSettingConfig.fontHeight);
-    }
     pageGen = PageGen(TextStyle(color: hexToColor(readSettingConfig.fontColor), fontSize: readSettingConfig.fontSize, height: readSettingConfig.fontHeight, fontFamily: FontUtil.getFontFamily()));
     /// 加载章节
     chapters = await _chapterDbProvider.getChapters(null, book!.id);
@@ -167,7 +178,7 @@ class ReadController extends GetxController {
           _jumpPageIndex(pageIndex.count);
         }
       } else {
-        update(["content"]);
+        update([ReadRefreshKey.content]);
       }
       if (firstInit) {
         update(["drawer"]);
@@ -269,7 +280,7 @@ class ReadController extends GetxController {
         Chapter pre = chapters[chapterIndex - 1];
         pageGen.genPages(pre, book!, (returnPages) {
           pages.insertAll(0, returnPages);
-          update(["content"]);
+          update([ReadRefreshKey.content]);
           pageIndex.setCount(returnPages.length - 1);
           _prePageStyle();
           Toast.cancel();
@@ -280,10 +291,10 @@ class ReadController extends GetxController {
   }
 
   _prePageStyle() {
-    if (readPageType.toString().contains(ReadPageType.smooth.toString())) {
-      contentPageController.move(pageIndex.count, animation: false);
+    if (readPageType.toString().contains(ReadPageType.slide.toString())) {
+      contentPageController.jumpToPage(pageIndex.count);
     }
-    update(["content"]);
+    update([ReadRefreshKey.content]);
   }
 
   // 计算进度
@@ -337,6 +348,8 @@ class ReadController extends GetxController {
 
   setBrightness(double value) async{
     brightness = value;
+    BookHomeController homeController = Get.find();
+    homeController.onBrightness = brightness;
     WoshilllFlutterPlugin.setBrightness(value);
     update(["brightness"]);
   }
@@ -347,14 +360,11 @@ class ReadController extends GetxController {
     }
     if (readSettingConfig.backgroundColor != backgroundColor) {
       readSettingConfig.backgroundColor = backgroundColor;
-      update(["backgroundColor", "bottomType"]);
+      update([ReadRefreshKey.background, "bottomType"]);
     }
   }
 
   toSetting() async{
-    if (isDark) {
-      return;
-    }
     ReadSettingConfig temp = ReadSettingConfig(readSettingConfig.backgroundColor, readSettingConfig.fontSize, readSettingConfig.fontColor, readSettingConfig.fontHeight);
     var value = await Get.toNamed(Routes.readSetting, arguments: {"config": temp});
     if (value != null && value["config"] != null) {
@@ -365,7 +375,7 @@ class ReadController extends GetxController {
         await _reload();
       }
       readSettingConfig = value["config"];
-      update(["backgroundColor"]);
+      update([ReadRefreshKey.background]);
     }
   }
 
@@ -385,12 +395,14 @@ class ReadController extends GetxController {
   void onClose() async{
     super.onClose();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    if (isDark) {
-      var config = _getReadSettingConfig();
-      readSettingConfig.backgroundColor = config.backgroundColor;
-      readSettingConfig.fontColor = config.fontColor;
+    var config = _getReadSettingConfig();
+    if (!isDark) {
+      config.backgroundColor = readSettingConfig.backgroundColor;
+      config.fontColor = readSettingConfig.fontColor;
     }
-    String data = json.encode(readSettingConfig);
+    config.fontSize = readSettingConfig.fontSize;
+    config.fontHeight = readSettingConfig.fontHeight;
+    String data = json.encode(config);
     SaveUtil.setString(Constant.readSettingConfig, data);
     autoPage?.cancel();
     _batteryTimer?.cancel();
@@ -398,6 +410,7 @@ class ReadController extends GetxController {
     ChannelUtils.setConfig(Constant.pluginVolumeFlag, false);
     SaveUtil.setString(Constant.readType, readPageType.name);
     bookWithChapters?.dispose();
+    isSliding.dispose();
   }
 
 
@@ -406,7 +419,7 @@ class ReadController extends GetxController {
     if (readSettingConfig.fontHeight > 1) {
       readSettingConfig.fontHeight = readSettingConfig.fontHeight - 0.1;
       await _reload();
-      update(["content"]);
+      update([ReadRefreshKey.content]);
     }
   }
   /// 行高加0.1
@@ -414,7 +427,7 @@ class ReadController extends GetxController {
     if (readSettingConfig.fontHeight < 3.5) {
       readSettingConfig.fontHeight = readSettingConfig.fontHeight + 0.1;
       await _reload();
-      update(["content"]);
+      update([ReadRefreshKey.content]);
     }
   }
 
@@ -435,7 +448,7 @@ class ReadController extends GetxController {
       pageGen.heightWidthSwap();
       await _reload();
     }
-    update(["preContent"]);
+    update([ReadRefreshKey.page]);
   }
 
 
@@ -445,16 +458,16 @@ class ReadController extends GetxController {
       var config = _getReadSettingConfig();
       readSettingConfig.backgroundColor = config.backgroundColor;
       readSettingConfig.fontColor = config.fontColor;
-      update(["backgroundColor"]);
+      update([ReadRefreshKey.background]);
       // await _reload(readSettingConfig);
       isDark = false;
-      update(["content", "bottomType"]);
+      update([ReadRefreshKey.content, "bottomType"]);
     } else {
       readSettingConfig = ReadSettingConfig.defaultDarkConfig(readSettingConfig.fontSize, readSettingConfig.fontHeight);
-      update(["backgroundColor"]);
+      update([ReadRefreshKey.background]);
       // await _reload(readSettingConfig);
       isDark = true;
-      update(["content", "bottomType"]);
+      update([ReadRefreshKey.content, "bottomType"]);
     }
   }
 
@@ -498,7 +511,7 @@ class ReadController extends GetxController {
     Timer(Duration(seconds: second), () {
       update(["battery"]);
       _batteryTimer = Timer.periodic(_oneMinute, (timer) async {
-        batteryLevel = await _battery.batteryLevel;
+        batteryLevel = await _batteryNumber();
         update(["battery"]);
       });
     });
@@ -506,7 +519,7 @@ class ReadController extends GetxController {
 
   void setPageType(ReadPageType pageType) {
     readPageType = pageType;
-    update(["preContent"]);
+    update([ReadRefreshKey.page]);
   }
 
   /// 重新加载章节
@@ -518,7 +531,7 @@ class ReadController extends GetxController {
     Chapter chapter = chapters.firstWhere((element) => element.id == chapterId);
     pageGen.genPages(chapter, book!, (list) {
       pages.insertAll(firstIndex, list);
-      update(["content"]);
+      update([ReadRefreshKey.content]);
       Toast.cancel();
     });
     Toast.cancel();
@@ -539,10 +552,10 @@ class ReadController extends GetxController {
 
   void _jumpPageIndex(int index) {
     pageIndex.setCount(index);
-    if (readPageType.toString().contains(ReadPageType.smooth.toString())) {
-      contentPageController.move(index, animation: false);
+    if (readPageType.toString().contains(ReadPageType.slide.toString())) {
+      contentPageController.jumpToPage(index);
     }
-    update(["content"]);
+    update([ReadRefreshKey.content]);
   }
 
   /// 音量物理键变化
@@ -566,6 +579,9 @@ class ReadController extends GetxController {
 
   /// 重置设置
   resetReadSetting() async{
+    if (isDark) {
+      return;
+    }
     readSettingConfig = ReadSettingConfig.defaultConfig();
     await _reload();
   }
@@ -577,7 +593,7 @@ class ReadController extends GetxController {
       return;
     }
     Get.dialog(
-      DialogBuild("重载章节", const Text("该操作会重新从网络上下载该资源, 请确认"), confirmFunction: () async{
+      DialogBuild("重载章节", Text("该操作会重新从网络上下载该资源, 请确认", style: TextStyle(color: textColor()),), confirmFunction: () async{
         Get.back();
         Toast.toastL(toast: "重载中...");
         var chapterId = pages[pageIndex.count].chapterId;
@@ -675,6 +691,18 @@ class ReadController extends GetxController {
     _chapterDbProvider.commonBatchInsert(needAdd);
     Toast.toast(toast: "更新${needAdd.length}章节");
     chapters = await _chapterDbProvider.getChapters(null, book.id);
+  }
+
+  Future<int> _batteryNumber() async{
+    try {
+      return await _battery.batteryLevel;
+    } catch(_) {
+      return 0;
+    }
+  }
+
+  void _isSlidingListener() {
+    isSliding.addListener(() { });
   }
 }
 

@@ -1,3 +1,4 @@
+import 'package:book_app/theme/color.dart';
 import 'package:flutter/material.dart';
 
 class DialogBuild extends StatelessWidget {
@@ -13,7 +14,8 @@ class DialogBuild extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(title),
+      title: Text(title, style: TextStyle(color: textColor()),),
+      backgroundColor: backgroundColorL2(),
       titlePadding: const EdgeInsets.all(10),
       titleTextStyle: const TextStyle(color: Colors.black87, fontSize: 16),
       content: body,
@@ -22,7 +24,10 @@ class DialogBuild extends StatelessWidget {
       contentTextStyle: const TextStyle(color: Colors.black54, fontSize: 14),
       actions: [
         ElevatedButton(
-          child: Text(cancelText),
+          child: Text(cancelText, style: TextStyle(color: textColor()),),
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all(backgroundColor())
+          ),
           onPressed: () {
             if (cancelFunction != null) {
               cancelFunction!();
@@ -32,7 +37,10 @@ class DialogBuild extends StatelessWidget {
           },
         ),
         ElevatedButton(
-          child: Text(confirmText),
+          child: Text(confirmText, style: TextStyle(color: textColor()),),
+          style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all(backgroundColor())
+          ),
           onPressed: () {
             if (confirmFunction != null) {
               confirmFunction!();

@@ -8,7 +8,7 @@ import 'content.dart';
 /// 覆盖
 Widget cover() {
   return GetBuilder<ReadController>(
-    id: "content",
+    id: ReadRefreshKey.content,
     builder: (controller) {
       return Listener(
         child: TransformerPageView(

@@ -7,7 +7,7 @@ import 'content.dart';
 /// 点击
 Widget point() {
   return GetBuilder<ReadController>(
-    id: 'content',
+    id: ReadRefreshKey.content,
     builder: (controller) {
       if (controller.pages.isEmpty) {
         return Container();

@@ -25,6 +25,7 @@ Widget battery() {
           children: [
             Container(
               width: 28,
+              height: 16,
               margin: const EdgeInsets.only(left: 10),
               decoration: BoxDecoration(
                   border: Border.all(color: activeColor)
@@ -61,6 +62,7 @@ Widget battery() {
         return Row(
           children: [
             Container(
+              height: 16,
               width: 28,
               decoration: BoxDecoration(
                   border: Border.all(color: color)

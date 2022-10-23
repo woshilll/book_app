@@ -8,8 +8,10 @@ import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/book_with_chapters.dart';
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/route/routes.dart';
+import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/channel_utils.dart';
 import 'package:book_app/util/chapter_compare.dart';
+import 'package:book_app/util/dialog_build.dart';
 import 'package:book_app/util/font_util.dart';
 import 'package:book_app/util/html_parse_util.dart';
 import 'package:book_app/util/parse_book.dart';
@@ -32,6 +34,8 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
   late final ReceivePort mainIsolateReceivePort;
   bool parseNow = false;
   double parseProcess = 0;
+  double defaultBrightness = 0;
+  double onBrightness = -1;
   @override
   void onInit() {
     super.onInit();
@@ -43,6 +47,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
   void onReady() async{
     super.onReady();
     WidgetsBinding.instance!.addObserver(this);
+    defaultBrightness = await WoshilllFlutterPlugin.getBrightness();
     await getBookList();
   }
 
@@ -81,7 +86,8 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
     selected.chapters = [];
     await Get.toNamed(Routes.read, arguments: {"book": selected})!;
     await getBookList();
-    await WoshilllFlutterPlugin.setBrightnessDefault();
+    _iosBrightnessChange(true);
+    onBrightness = -1;
   }
 
   manageChoose(String value) async{
@@ -90,7 +96,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
         _selectTextFile();
         break;
       case "2":
-        Get.snackbar("提示", "通过复制的链接, 打开APP后会自动识别", colorText: Colors.black);
+        _pasteDo();
         break;
     }
   }
@@ -129,6 +135,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch(state) {
       case AppLifecycleState.inactive:
+        _iosBrightnessChange(true);
         break;
       case AppLifecycleState.resumed:
         _appActive();
@@ -142,6 +149,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
 
   /// app前台状态
   _appActive() async{
+    _iosBrightnessChange(false);
     _pasteDo();
   }
 
@@ -176,40 +184,24 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
   _parse(String url, {String? bookName}) {
     Future.delayed(const Duration(milliseconds: 500), () {
       Get.dialog(
-          AlertDialog(
-            title: const Text("小说解析"),
-            titlePadding: const EdgeInsets.all(10),
-            titleTextStyle: const TextStyle(color: Colors.black87, fontSize: 16),
-            content: Text.rich(
-              TextSpan(
-                  text: "是否解析${bookName == null ? '复制的链接' : '分享的小说'} ",
-                  children: [
-                    TextSpan(
-                        text: bookName ?? url,
-                        style: const TextStyle(color: Colors.lightBlue)
-                    ),
-                  ]
+          DialogBuild(
+              "小说解析",
+              Text.rich(
+                TextSpan(
+                    text: "是否解析${bookName == null ? '复制的链接' : '分享的小说'} ",
+                    children: [
+                      TextSpan(
+                          text: bookName ?? url,
+                          style: const TextStyle(color: Colors.lightBlue)
+                      ),
+                    ],
+                    style: TextStyle(color: textColor())
+                ),
               ),
-            ),
-            contentPadding: const EdgeInsets.all(10),
-            //中间显示内容的文本样式
-            contentTextStyle: const TextStyle(color: Colors.black54, fontSize: 14),
-            actions: [
-              ElevatedButton(
-                child: const Text("取消"),
-                onPressed: () {
-                  Get.back();
-                },
-              ),
-              ElevatedButton(
-                child: const Text("确定"),
-                onPressed: () async{
-                  bookName ??= "网络小说";
-                  Get.back();
-                  await parseBook(bookName!, url);
-                },
-              )
-            ],
+              confirmFunction: () async{
+                Get.back();
+                await parseBook(bookName, url);
+              },
           ),
           transitionDuration: const Duration(milliseconds: 200)
       ).then((value) {
@@ -378,5 +370,19 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
     await _bookDbProvider.updateName(id, nweName);
     Toast.toast(toast: "更新成功");
     getBookList();
+  }
+
+  void _iosBrightnessChange(bool toDefault) async{
+    if (!Platform.isIOS) {
+      await WoshilllFlutterPlugin.setBrightnessDefault();
+      return;
+    }
+    if (toDefault) {
+      WoshilllFlutterPlugin.setBrightness(defaultBrightness);
+    } else {
+      if (onBrightness >= 0 && Get.currentRoute != Routes.bookHome) {
+        WoshilllFlutterPlugin.setBrightness(onBrightness);
+      }
+    }
   }
 }

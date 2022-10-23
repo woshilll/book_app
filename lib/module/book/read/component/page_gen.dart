@@ -7,7 +7,13 @@ import 'package:flutter/material.dart';
 import 'content_page.dart';
 
 class PageGen{
-  final TextPainter _painter = TextPainter(textDirection: TextDirection.ltr, locale: WidgetsBinding.instance!.window.locale, textScaleFactor: MediaQuery.of(globalContext).textScaleFactor);
+  final TextPainter _painter = TextPainter(
+      textAlign: TextAlign.justify,
+      textDirection: TextDirection.ltr,
+      locale: WidgetsBinding.instance!.window.locale,
+      textScaleFactor: MediaQuery.of(globalContext).textScaleFactor,
+      textWidthBasis: TextWidthBasis.longestLine
+  );
   late TextStyle _contentStyle;
   late double _screenWidth;
   late double _titleHeight;
@@ -16,13 +22,16 @@ class PageGen{
   late double _screenBottom;
   late double _wordHeight;
   final double _paddingWidth = 40;
+  final double _paddingBottom = 15;
   late double _screenLeft;
   late double _screenRight;
+  final TextStyle _titleStyle = const TextStyle(
+      fontSize: 25,
+      fontWeight: FontWeight.bold);
 
   PageGen(TextStyle contentStyle) {
     _contentStyle = contentStyle;
     _initSize();
-    _calTitleHeight();
   }
 
 
@@ -37,6 +46,7 @@ class PageGen{
 
   Future<List<ContentPage>> _genPages(Chapter chapter) async {
     List<ContentPage> list = [];
+    _calTitleHeight(chapter.name);
     _calWordHeightAndWidth();
     int maxLines = _calMaxLines(firstPage: true);
     String content = chapter.content??"";
@@ -74,7 +84,7 @@ class PageGen{
       paintHeight = _painter.height;
       offset =
           _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
-    } while (offset < content.characters.length);
+    } while (offset < content.characters.length && content.trim().isNotEmpty);
     if (offset > 0 && content.trim().isNotEmpty) {
       list.add(
           ContentPage(content, i, chapter.id, chapter.name, _contentWidth()));
@@ -91,10 +101,8 @@ class PageGen{
 
 
 
-  _calTitleHeight() {
-    _painter.text = const TextSpan(text: "哈", style: TextStyle(
-        fontSize: 25,
-        fontWeight: FontWeight.bold));
+  _calTitleHeight(String? title) {
+    _painter.text = TextSpan(text: title, style: _titleStyle);
     _painter.layout(maxWidth: _screenWidth);
     var cal = _painter.computeLineMetrics()[0];
     _titleHeight = cal.height;
@@ -130,8 +138,15 @@ class PageGen{
     if (firstPage) {
       extend = _titleHeight;
     }
+    if (((_screenHeight -
+        _screenTop - _screenBottom - extend) %
+        _wordHeight) >= 10) {
+      return (_screenHeight -
+          _screenTop - _screenBottom - extend) ~/
+          _wordHeight;
+    }
     return (_screenHeight -
-        _screenTop - _screenBottom - extend) ~/
+        _screenTop - _screenBottom - extend - _paddingBottom) ~/
         _wordHeight;
   }
 
@@ -165,4 +180,7 @@ class PageGen{
   double get titleHeight => _titleHeight;
 
   double get screenWidth => _screenWidth;
+
+  TextStyle get contentStyle => _contentStyle;
+  TextStyle get titleStyle => _titleStyle;
 }

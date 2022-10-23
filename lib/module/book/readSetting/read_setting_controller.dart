@@ -1,3 +1,4 @@
+import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/module/book/readSetting/component/read_setting_config.dart';
 import 'package:get/get.dart';
 
@@ -36,7 +37,9 @@ class ReadSettingController extends GetxController {
   }
 
   void setDefault() {
-    config = ReadSettingConfig.defaultConfig();
+    ReadController readController = Get.find();
+    var defaultConfig = ReadSettingConfig.defaultConfig();
+    config = readController.isDark ? ReadSettingConfig.defaultDarkConfig(defaultConfig.fontSize, defaultConfig.fontHeight) : defaultConfig;
     update(["setting"]);
   }
 }

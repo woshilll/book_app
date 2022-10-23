@@ -1,12 +1,18 @@
+import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/bar_util.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
+// ignore: must_be_immutable
 class BottomBarBuild extends StatelessWidget {
   final String title;
-  final Color backgroundColor;
-  final Color titleColor;
+  Color? backgroundColor;
+  Color? titleColor;
   final List<BottomBarBuildItem> items;
-  const BottomBarBuild(this.title, this.items, {Key? key, this.backgroundColor = Colors.black, this.titleColor = Colors.white}) : super(key: key);
+  BottomBarBuild(this.title, this.items, {Key? key, this.backgroundColor, this.titleColor}) : super(key: key){
+    backgroundColor = backgroundColor ?? (Get.isPlatformDarkMode ? Colors.black : Colors.white);
+    titleColor = titleColor ?? (Get.isPlatformDarkMode ? hexToColor("#a9a9a9") : Colors.black);
+  }
 
   @override
   Widget build(BuildContext context) {

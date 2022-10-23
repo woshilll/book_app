@@ -14,7 +14,7 @@ final RegExp contentFilter = contentFilterRegExp();
 final RegExp nextPageReg = RegExp("下(.{1})页");
 class HtmlParseUtil {
   static final List<String> ignoreContentHtmlTag = ["a", "option", "h1", "h2", "strong", "font", "button", "script"];
-  static Future<List<dynamic>> parseChapter(String url, {Function(String? url)? img, String? originUrl}) async{
+  static Future<List<dynamic>> parseChapter(String url, {Function(String? url)? img, Function(String name)? name, String? originUrl}) async{
     Document document = parse(await getFileString(url));
     var body = document.body;
     if (img != null) {
@@ -22,7 +22,9 @@ class HtmlParseUtil {
       if (imgs.isNotEmpty) {
         for (var imgE in imgs) {
           String? _uri = imgE.attributes['src'];
-          if (_uri != null && (_uri.endsWith("jpg") || _uri.endsWith("jpeg") || _uri.endsWith("png"))) {
+          String? _width = imgE.attributes['width'];
+          String? _height = imgE.attributes['height'];
+          if (_uri != null && _width != null && _height != null) {
             if (_uri.startsWith("/")) {
               _uri = Uri.parse(url).origin + _uri;
             }
@@ -31,6 +33,14 @@ class HtmlParseUtil {
           }
         }
       }
+    }
+    if (name != null) {
+      var _h1S = document.getElementsByTagName("h1");
+      String? _bookName;
+      if (_h1S.isNotEmpty) {
+        _bookName = _h1S.first.text;
+      }
+      name(_bookName ?? "网络小说");
     }
     List res = await _getChapterAllTags(body!);
     var aTags = res;

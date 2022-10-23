@@ -4,7 +4,7 @@ import 'package:book_app/module/book/read/component/bottom.dart';
 import 'package:book_app/module/book/read/component/cover.dart';
 import 'package:book_app/module/book/read/component/drawer.dart' as dr;
 import 'package:book_app/module/book/read/component/point.dart';
-import 'package:book_app/module/book/read/component/smooth.dart';
+import 'package:book_app/module/book/read/component/slide.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/color.dart';
@@ -23,25 +23,15 @@ class ReadScreen extends GetView<ReadController>{
       child: ZoomDrawer(
         controller: controller.zoomDrawerController,
         menuScreen: dr.Drawer(),
-        mainScreen: Stack(
-          children: [
-            Positioned(
-              top: 0,
-              right: 0,
-              left: 0,
-              bottom: 0,
-              child: GetBuilder<ReadController>(
-                id: "backgroundColor",
-                builder: (controller) {
-                  return Container(
-                    color: hexToColor(
-                        controller.readSettingConfig.backgroundColor),
-                  );
-                },
-              ),
-            ),
-            _body(context),
-          ],
+        mainScreen: GetBuilder<ReadController>(
+          id: ReadRefreshKey.background,
+          builder: (controller) {
+            return Container(
+              color: hexToColor(
+                  controller.readSettingConfig.backgroundColor),
+              child: _body(context),
+            );
+          },
         ),
         angle: 0,
         mainScreenScale: 0,
@@ -58,7 +48,7 @@ class ReadScreen extends GetView<ReadController>{
 
   Widget _body(context) {
     return GetBuilder<ReadController>(
-        id: "preContent",
+        id: ReadRefreshKey.page,
         builder: (controller) {
           return GestureDetector(
             child: _content(),
@@ -95,22 +85,12 @@ class ReadScreen extends GetView<ReadController>{
 
   _content() {
     switch (controller.readPageType) {
-      case ReadPageType.smooth:
-        return smooth();
+      case ReadPageType.slide:
+        return slide();
       case ReadPageType.point:
         return point();
-      case ReadPageType.smooth_1:
-        return smooth(transformer: AccordionTransformer());
-      case ReadPageType.smooth_2:
-        return smooth(transformer: ThreeDTransformer());
-      case ReadPageType.smooth_3:
-        return smooth(transformer: ZoomInPageTransformer());
-      case ReadPageType.smooth_4:
-        return smooth(transformer: ZoomOutPageTransformer());
-      case ReadPageType.smooth_5:
-        return smooth(transformer: DeepthPageTransformer());
-      case ReadPageType.smooth_6:
-        return smooth(transformer: ScaleAndFadeTransformer());
+      case ReadPageType.slideUpDown:
+        return slide(scrollDirection: Axis.vertical);
     }
   }
 
