@@ -357,8 +357,17 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
     Future.delayed(const Duration(milliseconds: 500), () async{
       var path = call.arguments;
       if (path != null) {
-        String? name = path["name"];
-        String? content = path["content"];
+        String? name;
+        String? content;
+        if (Platform.isIOS) {
+          // path是地址
+          String _path = (path["name"] as String);
+          name = Uri.decodeComponent(_path.substring(_path.lastIndexOf("/") + 1));
+          name = name.substring(0, name.lastIndexOf("."));
+        } else {
+          name = path["name"];
+        }
+        content = path["content"];
         if (name != null && content != null) {
           parseBookByShare(name, content);
         }

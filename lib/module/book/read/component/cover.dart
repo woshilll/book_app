@@ -1,6 +1,4 @@
-import 'package:another_transformer_page_view/another_transformer_page_view.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
-import 'package:book_app/util/transformers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -11,14 +9,7 @@ Widget cover() {
     id: ReadRefreshKey.content,
     builder: (controller) {
       return Listener(
-        child: TransformerPageView(
-          // transformer: DeepthPageTransformer(),
-          itemCount: controller.pages.length,
-          itemBuilder: (context, index) {
-            return content(context, index, controller);
-          },
-
-        ),
+        child: Container(),
         // onPointerDown: (e) {
         //   controller.autoPageCancel();
         //   controller.xMove = e.position.dx;

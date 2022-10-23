@@ -48,13 +48,11 @@ dependencies:
   flutter_switch: ^0.3.2
   numberpicker: ^2.1.1
   file_picker: ^4.6.1
-  battery_plus: ^2.0.1
   permission_handler: ^8.3.0
   fast_gbk: ^1.0.0
   woshilll_flutter_plugin:
     git:
       url: git@github.com:woshilll/woshilll_flutter_plugin.git
-  another_transformer_page_view: ^1.1.0
   flutter_zoom_drawer: ^2.3.1+1
   draggable_scrollbar: ^0.1.0
   share_plus: ^4.0.1

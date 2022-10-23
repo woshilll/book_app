@@ -1,6 +1,9 @@
 import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/module/book/read/component/content_gen.dart';
+import 'package:book_app/module/book/readSetting/component/read_setting_config.dart';
+import 'package:book_app/theme/color.dart';
+import 'package:book_app/util/font_util.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:flutter/material.dart';
 
@@ -10,7 +13,7 @@ class PageGen{
   final TextPainter _painter = TextPainter(
       textAlign: TextAlign.justify,
       textDirection: TextDirection.ltr,
-      locale: WidgetsBinding.instance!.window.locale,
+      locale: WidgetsBinding.instance.window.locale,
       textScaleFactor: MediaQuery.of(globalContext).textScaleFactor,
       textWidthBasis: TextWidthBasis.longestLine
   );
@@ -22,16 +25,24 @@ class PageGen{
   late double _screenBottom;
   late double _wordHeight;
   final double _paddingWidth = 40;
-  final double _paddingBottom = 15;
   late double _screenLeft;
   late double _screenRight;
   final TextStyle _titleStyle = const TextStyle(
       fontSize: 25,
       fontWeight: FontWeight.bold);
 
-  PageGen(TextStyle contentStyle) {
-    _contentStyle = contentStyle;
+  PageGen(ReadSettingConfig readSettingConfig) {
+    _contentStyle = _readSettingConfigToTextStyle(readSettingConfig);
     _initSize();
+  }
+
+  TextStyle _readSettingConfigToTextStyle(ReadSettingConfig readSettingConfig) {
+    return TextStyle(
+        color: hexToColor(readSettingConfig.fontColor),
+        fontSize: readSettingConfig.fontSize,
+        height: readSettingConfig.fontHeight,
+        fontWeight: FontUtil.intToFontWeight(readSettingConfig.fontWeight),
+        fontFamily: FontUtil.getFontFamily());
   }
 
 
@@ -94,8 +105,8 @@ class PageGen{
 
 
 
-  changeContentStyle(TextStyle contentStyle) {
-    _contentStyle = contentStyle;
+  changeContentStyle(ReadSettingConfig readSettingConfig) {
+    _contentStyle = _readSettingConfigToTextStyle(readSettingConfig);
   }
 
 
@@ -138,15 +149,14 @@ class PageGen{
     if (firstPage) {
       extend = _titleHeight;
     }
-    if (((_screenHeight -
+    double _remainHeight = (_screenHeight -
         _screenTop - _screenBottom - extend) %
-        _wordHeight) >= 10) {
-      return (_screenHeight -
-          _screenTop - _screenBottom - extend) ~/
-          _wordHeight;
+        _wordHeight;
+    if (_remainHeight < (_wordHeight / 2)) {
+      _remainHeight = _wordHeight / 2;
     }
     return (_screenHeight -
-        _screenTop - _screenBottom - extend - _paddingBottom) ~/
+        _screenTop - _screenBottom - extend - (_remainHeight ~/ 1)) ~/
         _wordHeight;
   }
 

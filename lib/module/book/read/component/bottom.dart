@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:book_app/log/log.dart';
-import 'package:book_app/module/book/read/component/battery.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/bottom_bar_build.dart';
@@ -29,15 +28,8 @@ bottom(context) async {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Container(
-                height: MediaQuery.of(context).padding.top,
-                color: Colors.black,
-                padding: const EdgeInsets.only(top: 10, bottom: 10, right: 15),
-                child: Row(
-                  children: [Expanded(child: Container()), battery()],
-                ),
-              ),
-              Container(
-                height: 56,
+                height: 56 + MediaQuery.of(context).padding.top,
+                padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
                 color: Colors.black,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -243,7 +235,9 @@ bottom(context) async {
           child: AnnotatedRegion<SystemUiOverlayStyle>(
               value: SystemUiOverlayStyle.light, child: child),
         );
-      }));
+      })).then((value) {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  });
 }
 
 Widget _actions(ReadController controller) {

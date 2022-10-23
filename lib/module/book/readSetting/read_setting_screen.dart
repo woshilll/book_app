@@ -59,10 +59,16 @@ class ReadSettingScreen extends GetView<ReadSettingController> {
                                 TextSpan(text: "1.你可以设置背景色\n\n"),
                                 TextSpan(text: "2.你可以设置字体颜色\n\n"),
                                 TextSpan(text: "3.你可以设置字体大小\n\n"),
-                                TextSpan(text: "4.接下来是一段测试\n\n"),
+                                TextSpan(text: "4.你可以设置字体粗细\n\n"),
+                                TextSpan(text: "5.接下来是一段测试\n\n"),
                                 TextSpan(text: "得，好美，它如深山里的一泓泉水，带着清澈和甘甜，温润心灵；它如初春的那抹新绿，清新自然，点缀生命；它如花笺里的兰花，恬淡生香，芬芳怡人；它如清晨小草上的露珠，晶莹剔透，不染风尘。懂得，是蓝天与白云的相拥；是清风与花香的缠绵；是润物细无声的点点春雨；是清晨坐拥的满怀阳光。"),
                               ],
-                              style: TextStyle(fontSize: controller.config.fontSize, color: hexToColor(controller.config.fontColor), fontFamily: FontUtil.getFontFamily())
+                              style: TextStyle(
+                                  fontSize: controller.config.fontSize,
+                                  color: hexToColor(controller.config.fontColor),
+                                  fontFamily: FontUtil.getFontFamily(),
+                                  fontWeight: FontUtil.intToFontWeight(controller.config.fontWeight)
+                              )
                           )
                       ),
                     ),
@@ -102,6 +108,14 @@ class ReadSettingScreen extends GetView<ReadSettingController> {
                         GestureDetector(
                           child: Text("Aa+", style: TextStyle(color: textColor() ?? Colors.black)),
                           onTap: () => controller.fontSizeAdd(),
+                        ),
+                        GestureDetector(
+                          child: Text("B-", style: TextStyle(color: textColor() ?? Colors.black)),
+                          onTap: () => controller.fontWeightSub(),
+                        ),
+                        GestureDetector(
+                          child: Text("B+", style: TextStyle(color: textColor() ?? Colors.black)),
+                          onTap: () => controller.fontWeightAdd(),
                         ),
                       ],
                     ),

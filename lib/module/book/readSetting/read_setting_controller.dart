@@ -12,7 +12,7 @@ class ReadSettingController extends GetxController {
   }
 
   fontSizeAdd() {
-    if (config.fontSize >= 30) {
+    if (config.fontSize >= 40) {
       return;
     }
     config.fontSize = config.fontSize + 1;
@@ -24,6 +24,22 @@ class ReadSettingController extends GetxController {
       return;
     }
     config.fontSize = config.fontSize - 1;
+    update(["setting"]);
+  }
+
+  fontWeightAdd() {
+    if (config.fontWeight >= 8) {
+      return;
+    }
+    config.fontWeight = config.fontWeight + 1;
+    update(["setting"]);
+  }
+
+  fontWeightSub() {
+    if (config.fontWeight <= 0) {
+      return;
+    }
+    config.fontWeight = config.fontWeight - 1;
     update(["setting"]);
   }
 

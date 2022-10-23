@@ -9,23 +9,19 @@ Widget contentBottom(context, index, ReadController controller) {
     margin: const EdgeInsets.only(bottom: 4),
     child: Row(
       children: [
+        const SizedBox(width: 25,),
         Expanded(
-          child: Container(
-            margin: const EdgeInsets.only(left: 25),
-            child: Text(
-              "${controller.pages[index].chapterName}",
-              maxLines: 1,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.only(right: 25),
           child: Text(
-            "${controller.pages[index].index}/${controller.calThisChapterTotalPage(index)}",
+            "${controller.pages[index].chapterName}",
+            maxLines: 1,
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
-        )
+        ),
+        Text(
+          "${controller.pages[index].index}/${controller.calThisChapterTotalPage(index)}",
+          style: const TextStyle(fontSize: 12, color: Colors.grey),
+        ),
+        const SizedBox(width: 25,),
       ],
     ),
   );

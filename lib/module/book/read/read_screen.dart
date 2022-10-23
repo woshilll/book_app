@@ -8,8 +8,8 @@ import 'package:book_app/module/book/read/component/slide.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/color.dart';
-import 'package:book_app/util/transformers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:get/get.dart';
 
@@ -75,7 +75,10 @@ class ReadScreen extends GetView<ReadController>{
               } else {
                 // 中间
                 // Get.toNamed(Routes.readBottom);
-                await bottom(context);
+                SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge).then((value) {
+                  bottom(context);
+                });
+
               }
             },
           );

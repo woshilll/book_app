@@ -3,6 +3,7 @@ import 'package:book_app/mapper/book_db_provider.dart';
 import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
 import 'package:book_app/module/book/home/book_home_controller.dart';
+import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/dialog_build.dart';
 import 'package:book_app/util/toast.dart';
 import 'package:flutter/material.dart';
@@ -59,7 +60,7 @@ parseBookByShare(String bookName, String content) async{
               children: [
                 TextSpan(text: bookName, style: const TextStyle(color: Colors.lightBlueAccent))
               ],
-              style: const TextStyle(color: Colors.black, fontSize: 14)
+              style: TextStyle(color: textColor(), fontSize: 14)
             )
           ),
         confirmFunction: () {
