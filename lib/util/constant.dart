@@ -17,6 +17,8 @@ class Constant {
   /// 启动页
   static const String initRoute = "initRoute";
 
+  static const String privateRead = "privateRead1.1.0";
+
   /// ------------------------- 插件 start -------------------------
   static const String pluginVolumeFlag = "volumeFlag";
 

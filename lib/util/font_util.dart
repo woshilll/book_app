@@ -35,7 +35,9 @@ class FontUtil {
     if (content.isEmpty) {
       return content;
     }
-    content = content.replaceAll(" ", "").replaceAll("\u3000", "");
+    content = content
+        .replaceAll(" ", "")
+        .replaceAll("\u3000", "");
     content = "\u3000\u3000" + content;
     List<String> list = [];
     List<int> codes = content.codeUnits;
@@ -45,7 +47,7 @@ class FontUtil {
         list.add(char);
       } else {
         if (list.isNotEmpty) {
-          if (list[list.length - 1].contains(" ")) {
+          if (list[list.length - 1].contains("\n")) {
             continue;
           }
         }

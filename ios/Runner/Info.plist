@@ -4,6 +4,8 @@
 <dict>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>App需要您的同意,用于保存数据到手机</string>
+	<key>UISupportsDocumentBrowser</key>
+	<true/>
 	<key>LSApplicationCategoryType</key>
 	<string></string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -49,17 +51,17 @@
 	<true/>
 	<key>CFBundleDocumentTypes</key>
 	<array>
-	<dict>
-                <key>CFBundleTypeName</key>
-                <string>Text</string>
-                <key>LSHandlerRank</key>
-                <string>Alternate</string>
-                <key>LSItemContentTypes</key>
-                <array>
-                    <string>public.text</string>
-                    <string>public.plain-text</string>
-                </array>
-            </dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Text</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.text</string>
+				<string>public.plain-text</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

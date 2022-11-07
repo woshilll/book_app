@@ -1,12 +1,9 @@
-import 'package:book_app/log/log.dart';
 import 'package:book_app/model/read_page_type.dart';
 import 'package:book_app/module/book/read/component/bottom.dart';
-import 'package:book_app/module/book/read/component/cover.dart';
 import 'package:book_app/module/book/read/component/drawer.dart' as dr;
 import 'package:book_app/module/book/read/component/point.dart';
 import 'package:book_app/module/book/read/component/slide.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
-import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

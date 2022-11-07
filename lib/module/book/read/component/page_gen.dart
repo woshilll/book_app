@@ -1,3 +1,4 @@
+import 'package:book_app/log/log.dart';
 import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/module/book/read/component/content_gen.dart';
@@ -11,7 +12,7 @@ import 'content_page.dart';
 
 class PageGen{
   final TextPainter _painter = TextPainter(
-      textAlign: TextAlign.justify,
+      textAlign: TextAlign.start,
       textDirection: TextDirection.ltr,
       locale: WidgetsBinding.instance.window.locale,
       textScaleFactor: MediaQuery.of(globalContext).textScaleFactor,
@@ -47,6 +48,11 @@ class PageGen{
 
 
   Future<List<ContentPage>> genPages(Chapter chapter, Book book, Function(List<ContentPage>)? finishFunc) async{
+    _painter.strutStyle = StrutStyle(
+        forceStrutHeight: true,
+        fontSize: contentStyle.fontSize,
+        height: contentStyle.height,
+    );
     await contentGen(chapter, book);
     List<ContentPage> list = await _genPages(chapter);
     if (finishFunc != null) {
@@ -95,6 +101,7 @@ class PageGen{
       paintHeight = _painter.height;
       offset =
           _painter.getPositionForOffset(Offset(paintWidth, paintHeight)).offset;
+      await Future.delayed(const Duration(microseconds: 200));
     } while (offset < content.characters.length && content.trim().isNotEmpty);
     if (offset > 0 && content.trim().isNotEmpty) {
       list.add(
@@ -147,7 +154,7 @@ class PageGen{
   int _calMaxLines({bool firstPage = false}) {
     double extend = 0;
     if (firstPage) {
-      extend = _titleHeight;
+      extend = _titleHeight + _wordHeight;
     }
     double _remainHeight = (_screenHeight -
         _screenTop - _screenBottom - extend) %
@@ -193,4 +200,5 @@ class PageGen{
 
   TextStyle get contentStyle => _contentStyle;
   TextStyle get titleStyle => _titleStyle;
+  TextPainter get textPainter => _painter;
 }

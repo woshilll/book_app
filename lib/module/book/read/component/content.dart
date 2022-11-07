@@ -13,9 +13,8 @@ Widget content(context, index, ReadController controller) {
     children: [
       SizedBox(height: controller.rotateScreen ? controller.pageGen.screenTop / 2 : controller.pageGen.screenTop,),
       Expanded(
-        child: Container(
-          alignment: Alignment.topCenter,
-          width: controller.pages[index].width + 2,
+        child: SizedBox(
+          width: controller.pages[index].width,
           child: Text.rich(
             TextSpan(
                 children: [
@@ -39,15 +38,15 @@ Widget content(context, index, ReadController controller) {
                       )),
                 ]
             ),
-            textAlign: TextAlign.justify,
+            textAlign: TextAlign.start,
             textScaleFactor: MediaQuery.of(globalContext).textScaleFactor,
             textWidthBasis: TextWidthBasis.longestLine,
-            locale: WidgetsBinding.instance!.window.locale,
+            locale: WidgetsBinding.instance.window.locale,
             textDirection: TextDirection.ltr,
             strutStyle: StrutStyle(
                 forceStrutHeight: true,
                 fontSize: controller.pageGen.contentStyle.fontSize,
-                height: controller.pageGen.contentStyle.height
+                height: controller.pageGen.contentStyle.height,
             ),
           ),
         ),

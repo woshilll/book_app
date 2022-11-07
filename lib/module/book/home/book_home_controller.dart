@@ -10,16 +10,21 @@ import 'package:book_app/model/chapter/chapter.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/channel_utils.dart';
-import 'package:book_app/util/chapter_compare.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:book_app/util/constant.dart';
 import 'package:book_app/util/dialog_build.dart';
 import 'package:book_app/util/font_util.dart';
 import 'package:book_app/util/html_parse_util.dart';
+import 'package:book_app/util/limit_util.dart';
 import 'package:book_app/util/parse_book.dart';
+import 'package:book_app/util/save_util.dart';
 import 'package:book_app/util/toast.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:woshilll_flutter_plugin/woshilll_flutter_plugin.dart';
@@ -36,6 +41,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
   double parseProcess = 0;
   double defaultBrightness = 0;
   double onBrightness = -1;
+  bool _pasting = false;
   @override
   void onInit() {
     super.onInit();
@@ -49,6 +55,8 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
     WidgetsBinding.instance!.addObserver(this);
     defaultBrightness = await WoshilllFlutterPlugin.getBrightness();
     await getBookList();
+
+    _showPrivate();
   }
 
   getBookList() async{
@@ -96,7 +104,11 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
         _selectTextFile();
         break;
       case "2":
-        _pasteDo();
+        LimitUtil.throttle(() {
+          _pasting = true;
+          _pasteDo();
+          _pasting = false;
+        }, durationTime: 3000, throttleId: "paste");
         break;
     }
   }
@@ -132,13 +144,15 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
+  void didChangeAppLifecycleState(AppLifecycleState state) async{
     switch(state) {
       case AppLifecycleState.inactive:
         _iosBrightnessChange(true);
         break;
       case AppLifecycleState.resumed:
-        _appActive();
+        LimitUtil.throttle(() {
+          _appActive();
+        }, durationTime: 3000, throttleId: "paste");
         break;
       case AppLifecycleState.paused:
         break;
@@ -150,10 +164,15 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
   /// app前台状态
   _appActive() async{
     _iosBrightnessChange(false);
-    _pasteDo();
+    _pasting = true;
+    await _pasteDo();
+    _pasting = false;
   }
 
   _pasteDo() async{
+    if (EasyLoading.isShow || Get.isDialogOpen!) {
+      return;
+    }
     ClipboardData? _pasteData = await Clipboard.getData(Clipboard.kTextPlain);
     if (_pasteData != null) {
       String? _pasteText = _pasteData.text;
@@ -177,36 +196,45 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
           return;
         }
         _parse(_pastes.last, bookName: _pastes[1]);
+      } else {
+        Toast.toast(toast: "链接不正确");
       }
+    } else {
+      Toast.toast(toast: "链接不正确");
     }
   }
 
-  _parse(String url, {String? bookName}) {
-    Future.delayed(const Duration(milliseconds: 500), () {
-      Get.dialog(
-          DialogBuild(
-              "小说解析",
-              Text.rich(
-                TextSpan(
-                    text: "是否解析${bookName == null ? '复制的链接' : '分享的小说'} ",
-                    children: [
-                      TextSpan(
-                          text: bookName ?? url,
-                          style: const TextStyle(color: Colors.lightBlue)
-                      ),
-                    ],
-                    style: TextStyle(color: textColor())
-                ),
-              ),
-              confirmFunction: () async{
-                Get.back();
-                await parseBook(bookName, url);
-              },
+  _parse(String url, {String? bookName}) async{
+    await Future.delayed(const Duration(milliseconds: 500));
+    Get.dialog(
+        DialogBuild(
+          "小说解析",
+          Text.rich(
+            TextSpan(
+                text: "是否解析${bookName == null ? '复制的链接' : '分享的小说'} ",
+                children: [
+                  TextSpan(
+                      text: bookName ?? url,
+                      style: const TextStyle(color: Colors.lightBlue)
+                  ),
+                ],
+                style: TextStyle(color: textColor())
+            ),
           ),
-          transitionDuration: const Duration(milliseconds: 200)
-      ).then((value) {
-        Clipboard.setData(const ClipboardData(text: ""));
-      });
+          confirmFunction: () async{
+            Get.back();
+            await parseBook(bookName, url);
+            _pasting = false;
+          },
+          cancelFunction: () {
+            Get.back();
+            _pasting = false;
+          },
+        ),
+        transitionDuration: const Duration(milliseconds: 200)
+    ).then((value) {
+      Clipboard.setData(const ClipboardData(text: ""));
+      _pasting = false;
     });
   }
 
@@ -392,6 +420,40 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
       if (onBrightness >= 0 && Get.currentRoute != Routes.bookHome) {
         WoshilllFlutterPlugin.setBrightness(onBrightness);
       }
+    }
+  }
+
+  void _showPrivate() {
+    var privateRead = SaveUtil.getTrue(Constant.privateRead);
+    if (privateRead == null || !privateRead) {
+      Get.dialog(DialogBuild(
+        "隐私协议",
+        Text.rich(TextSpan(
+            text: "为了更好的体验完整功能，请您仔细阅读并同意",
+            children: [
+              TextSpan(
+                  text: "隐私协议",
+                style: const TextStyle(color: Colors.lightBlue),
+                recognizer: TapGestureRecognizer()..onTap = () async{
+                  String url = "http://book.private.woshilll.top/book_private.html";
+                  launchUrl(Uri.parse(url));
+                }
+              )
+            ],
+          style: TextStyle(color: textColor())
+        )),
+        cancelText: "取消并退出",
+        confirmText: "同意协议",
+        confirmFunction: () {
+          SaveUtil.setTrue(Constant.privateRead);
+          Get.back();
+        },
+        cancelFunction: () {
+          exit(0);
+        },
+      ),
+        barrierDismissible: false
+      );
     }
   }
 }

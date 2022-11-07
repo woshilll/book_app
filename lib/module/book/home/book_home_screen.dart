@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:book_app/module/book/home/book_home_controller.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/bottom_bar_build.dart';
+import 'package:book_app/util/constant.dart';
 import 'package:book_app/util/dialog_build.dart';
 import 'package:book_app/util/future_do.dart';
 import 'package:book_app/util/no_shadow_scroll_behavior.dart';
+import 'package:book_app/util/save_util.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:book_app/util/toast.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -98,8 +100,9 @@ class BookHomeScreen extends GetView<BookHomeController> {
           textAlign: TextAlign.center,
           style: TextStyle(color: textColor() ?? Colors.black54),
         ),
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(4)),
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.all(Radius.circular(4)),
+          color: backgroundColorL2() ?? Colors.grey[200]
         ),
       );
     }
@@ -113,6 +116,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
       ),
       errorWidget: (context, url, error) {
         return Card(
+          color: backgroundColorL2() ?? Colors.grey[200],
           child: Container(
             alignment: Alignment.center,
             child: Text(
@@ -231,7 +235,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                           borderRadius: const BorderRadius.all(Radius.circular(4)),
-                          color: textColor()),
+                          color: textColor() ?? Colors.grey[350]),
                     );
                   },
                   itemCount: (controller.localBooks.length > 4

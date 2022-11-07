@@ -263,11 +263,11 @@ class HtmlParseUtil {
   static Future<String?> getString(String url, {bool retry = false, int retryTimes = 0}) async{
     var client = retry ? HttpClient() : HttpManager.httpClient!;
     try {
-      var request = await client.getUrl(Uri.parse(url));
+      var request = await client.getUrl(Uri.parse(url)).timeout(const Duration(seconds: 10));
       request.headers.remove("User-Agent", "Dart/2.16 (dart:io)");
       request.headers.add("Accept", "text/html;charset=UTF-8");
       request.headers.add("User-Agent", randomUserAgent());
-      var response = await request.close();
+      var response = await request.close().timeout(const Duration(seconds: 10));
       List<List<int>> dataBytes = await response.toList();
       return decodeToStr(dataBytes);
     } catch(e) {
@@ -309,8 +309,12 @@ class HtmlParseUtil {
   }
 
   static String _removeChapterName(String chapterName, String beautifulFormat) {
-    chapterName = chapterName.replaceAll(" ", "");
-    return beautifulFormat.replaceAll(RegExp(".*$chapterName.*"), "");
+    try {
+      chapterName = chapterName.replaceAll(" ", "");
+      return beautifulFormat.replaceAll(RegExp(".*$chapterName.*"), "");
+    } catch(_) {
+      return beautifulFormat;
+    }
   }
 
   static String _getNextPageUrl(String url, String nextPageUrl) {
@@ -369,7 +373,7 @@ String _beautifulFormat(String str) {
     if (element.contains(contentFilter)) {
       continue;
     }
-    newStr.add(element);
+    newStr.add(element.replaceAll(" ", "").replaceAll("\u3000", ""));
   }
   return newStr.join('\n').trim();
 }

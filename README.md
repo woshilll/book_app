@@ -57,4 +57,8 @@
 - 可以解析分页小说链接（对于一些小说网站，频繁访问可能导致访问限制）
 - 每日第一次打开小说会尝试更新
 
-## 本人练习-仅供学习
+## Support
+
+Support of your project name
+If you have any questions, please contact us by this email and we give reply to you as soon as possible.
+Email: iamlilili@yeah.net
