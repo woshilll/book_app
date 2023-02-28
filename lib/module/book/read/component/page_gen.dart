@@ -69,7 +69,7 @@ class PageGen{
     String content = chapter.content??"";
     if (content.isEmpty) {
       list.add(
-          ContentPage("", 1, chapter.id, chapter.name, _contentWidth(), noContent: true));
+          ContentPage("", 1, chapter.id, chapter.name, _contentWidth(), 0, _contentStyle, noContent: true));
       return list;
     }
     _painter.text = TextSpan(text: content, style: _contentStyle);
@@ -85,7 +85,7 @@ class PageGen{
     do {
       String subContent = content.substring(0, offset);
       list.add(
-          ContentPage(subContent, i, chapter.id, chapter.name, _contentWidth()));
+          ContentPage(subContent, i, chapter.id, chapter.name, _contentWidth(), paintHeight, _contentStyle));
       i++;
       if (i == 2) {
         maxLines = _calMaxLines();
@@ -105,7 +105,7 @@ class PageGen{
     } while (offset < content.characters.length && content.trim().isNotEmpty);
     if (offset > 0 && content.trim().isNotEmpty) {
       list.add(
-          ContentPage(content, i, chapter.id, chapter.name, _contentWidth()));
+          ContentPage(content, i, chapter.id, chapter.name, _contentWidth(), paintHeight, _contentStyle));
     }
     return list;
   }

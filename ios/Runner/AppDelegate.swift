@@ -15,8 +15,16 @@ import Flutter
   }
     
     override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        let text = try! String(contentsOfFile: url.path, encoding: String.Encoding.utf8)
-        WoshilllPlugin.seedBookPath(path: ["name": url.absoluteString, "content": text])
+        do {
+            let text = try String(contentsOfFile: url.path, encoding: .utf8)
+            WoshilllPlugin.seedBookPath(path: ["name": url.absoluteString, "content": text])
+        } catch {
+            do {
+                let enc = CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue))
+                let text = try NSString(contentsOfFile: url.path, encoding: enc) as String
+                WoshilllPlugin.seedBookPath(path: ["name": url.absoluteString, "content": text])
+            } catch {}
+        }
         return super.application(app, open: url, options: options)
     }
 }

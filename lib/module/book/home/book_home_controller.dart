@@ -7,9 +7,12 @@ import 'package:book_app/mapper/chapter_db_provider.dart';
 import 'package:book_app/model/book/book.dart';
 import 'package:book_app/model/book_with_chapters.dart';
 import 'package:book_app/model/chapter/chapter.dart';
+import 'package:book_app/model/message.dart';
 import 'package:book_app/route/routes.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/channel_utils.dart';
+import 'package:book_app/util/parse_network_book.dart';
+import 'package:fast_gbk/fast_gbk.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:book_app/util/constant.dart';
 import 'package:book_app/util/dialog_build.dart';
@@ -24,10 +27,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:woshilll_flutter_plugin/woshilll_flutter_plugin.dart';
+
+enum BookHomeRefreshKey {
+  networkParse,
+}
 
 class BookHomeController extends GetxController with WidgetsBindingObserver{
   static final BookDbProvider _bookDbProvider = BookDbProvider();
@@ -41,7 +47,9 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
   double parseProcess = 0;
   double defaultBrightness = 0;
   double onBrightness = -1;
-  bool _pasting = false;
+  bool autoBrightness = true;
+  final List<Map<String, dynamic>> needParseUrlList = [];
+  ParseNetworkBook? _parseNetworkBook;
   @override
   void onInit() {
     super.onInit();
@@ -52,7 +60,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
   @override
   void onReady() async{
     super.onReady();
-    WidgetsBinding.instance!.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
     defaultBrightness = await WoshilllFlutterPlugin.getBrightness();
     await getBookList();
 
@@ -64,6 +72,10 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
     books = await _bookDbProvider.getBooks();
     for (var book in books) {
       if (book.type != 1) {
+        // 1.1.2 查询已读章节数
+        var _total = await _chapterDbProvider.getChapterCount(book.id);
+        var _cur = await _chapterDbProvider.getCurChapterCount(book.id, book.curChapter);
+        book.curTotal = "$_cur/$_total";
         localBooks.add(book);
       }
     }
@@ -105,9 +117,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
         break;
       case "2":
         LimitUtil.throttle(() {
-          _pasting = true;
           _pasteDo();
-          _pasting = false;
         }, durationTime: 3000, throttleId: "paste");
         break;
     }
@@ -135,8 +145,13 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
         String fileName = file.name;
         String? filePath = file.path;
         File bookFile = File(filePath!);
-        List<String> lines = await bookFile.readAsLines();
-        parseBookText(lines, fileName, filePath: filePath);
+        try {
+          List<String> lines = await bookFile.readAsLines();
+          parseBookText(lines, fileName, filePath: filePath);
+        } catch(_) {
+          List<String> lines = await bookFile.readAsLines(encoding: gbk);
+          parseBookText(lines, fileName, filePath: filePath);
+        }
       }
     } catch(err) {
       Toast.toast(toast: "解析失败");
@@ -145,16 +160,21 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async{
+    if (autoBrightness) {
+      defaultBrightness = await WoshilllFlutterPlugin.getBrightness();
+    }
     switch(state) {
       case AppLifecycleState.inactive:
         _iosBrightnessChange(true);
         break;
       case AppLifecycleState.resumed:
+        defaultBrightness = await WoshilllFlutterPlugin.getBrightness();
         LimitUtil.throttle(() {
           _appActive();
         }, durationTime: 3000, throttleId: "paste");
         break;
       case AppLifecycleState.paused:
+        defaultBrightness = await WoshilllFlutterPlugin.getBrightness();
         break;
       case AppLifecycleState.detached:
         break;
@@ -164,19 +184,20 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
   /// app前台状态
   _appActive() async{
     _iosBrightnessChange(false);
-    _pasting = true;
     await _pasteDo();
-    _pasting = false;
   }
 
   _pasteDo() async{
-    if (EasyLoading.isShow || Get.isDialogOpen!) {
+    if (Get.isDialogOpen!) {
       return;
     }
     ClipboardData? _pasteData = await Clipboard.getData(Clipboard.kTextPlain);
     if (_pasteData != null) {
       String? _pasteText = _pasteData.text;
       if (_pasteText != null && _pasteText.isNotEmpty) {
+        if (needParseUrlList.isNotEmpty) {
+          return;
+        }
         _pasteText = _pasteText.trim();
         if (_pasteText.isURL) {
           _parse(_pasteText);
@@ -196,11 +217,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
           return;
         }
         _parse(_pastes.last, bookName: _pastes[1]);
-      } else {
-        Toast.toast(toast: "链接不正确");
       }
-    } else {
-      Toast.toast(toast: "链接不正确");
     }
   }
 
@@ -223,18 +240,44 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
           ),
           confirmFunction: () async{
             Get.back();
-            await parseBook(bookName, url);
-            _pasting = false;
+            dynamic count = await _bookDbProvider.getBookCount(url);
+            if (count > 0) {
+              Toast.toast(toast: "小说已存在书架");
+              return;
+            }
+            needParseUrlList.add({
+              "url": url,
+              "name": bookName,
+            });
+            _parseNetworkBook = ParseNetworkBook(url, mainIsolateReceivePort.sendPort, name: bookName);
+            _parseNetworkBook!.parseInBackground().then((value) async{
+              if (value.isEmpty) {
+                Toast.toast(toast: "解析失败");
+                needParseUrlList.clear();
+                update([BookHomeRefreshKey.networkParse]);
+                return;
+              }
+              Book book = value.first;
+              List<Chapter> chapters = value.last;
+              chapters = chapters.toSet().toList();
+              var bookId = await _bookDbProvider.commonInsert(book);
+              for (var e in chapters) {
+                e.bookId = bookId;
+              }
+              await _chapterDbProvider.commonBatchInsert(chapters);
+              Toast.toast(toast: "解析完成, 共 ${chapters.length} 章节");
+              needParseUrlList.clear();
+              update([BookHomeRefreshKey.networkParse]);
+              getBookList();
+            });
           },
           cancelFunction: () {
             Get.back();
-            _pasting = false;
           },
         ),
         transitionDuration: const Duration(milliseconds: 200)
     ).then((value) {
       Clipboard.setData(const ClipboardData(text: ""));
-      _pasting = false;
     });
   }
 
@@ -334,7 +377,7 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
       Chapter chapter = Chapter();
       for (int i = 0; i < lines.length; i++) {
         if (i % 100 == 0) {
-          sendPort.send(i * 100 / lines.length);
+          sendPort.send(Message(MessageType.parseTextBook, i * 100 / lines.length));
         }
         var line = lines[i].trim();
         if (line == "") {
@@ -366,6 +409,35 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
     }
   }
 
+  /// 小说解析
+  static parseBook(data) async {
+    String? bookName = data["name"];
+    String bookUrl = data["url"];
+    SendPort sendPort = data["sendPort"];
+    try {
+      String? img;
+      var results = (await HtmlParseUtil.parseChapter(bookUrl, img: (imgUrl) {
+        img = imgUrl;
+      },
+          pageFunc: (page) {
+            sendPort.send(Message(MessageType.parseNetworkBook, page));
+          },
+          name: (_bookName) {
+            bookName = bookName ?? _bookName;
+          }));
+      bookUrl = results[0];
+      var chapters = results[1];
+      final Book book = Book(url: bookUrl, name: bookName, indexImg: img);
+      var day = DateTime.now();
+      book.updateTime = "${day.year}-${day.month}-${day.day}";
+      return [book, chapters];
+    } catch (err) {
+      Log.e(err);
+      Toast.cancel();
+      Toast.toast(toast: "解析失败");
+    }
+  }
+
   _listen() {
     ChannelUtils.methodChannel.setMethodCallHandler((call) async{
       switch (call.method) {
@@ -374,9 +446,20 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
       }
     });
     mainIsolateReceivePort.listen((message) {
-      if (message is double) {
-        parseProcess = message;
-        update(["parseProcess"]);
+      if (message is Message) {
+        switch(message.type) {
+          case MessageType.parseNetworkBook:
+            needParseUrlList.first["page"] = message.data;
+            update([BookHomeRefreshKey.networkParse]);
+            break;
+          case MessageType.parseTextBook:
+            parseProcess = message.data;
+            update(["parseProcess"]);
+            break;
+          case MessageType.killParse:
+            // TODO: Handle this case.
+            break;
+        }
       }
     });
   }
@@ -417,8 +500,10 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
     if (toDefault) {
       WoshilllFlutterPlugin.setBrightness(defaultBrightness);
     } else {
-      if (onBrightness >= 0 && Get.currentRoute != Routes.bookHome) {
+      if (onBrightness >= 0 && Get.currentRoute != Routes.bookHome && !autoBrightness) {
         WoshilllFlutterPlugin.setBrightness(onBrightness);
+      } else {
+        WoshilllFlutterPlugin.setBrightness(defaultBrightness);
       }
     }
   }
@@ -455,5 +540,18 @@ class BookHomeController extends GetxController with WidgetsBindingObserver{
         barrierDismissible: false
       );
     }
+  }
+
+  void killParse() {
+    Get.dialog(DialogBuild(
+      "中断解析",
+      Text("是否要中断解析?", style: TextStyle(color: textColor()),),
+      confirmFunction: () {
+        Get.back();
+        _parseNetworkBook?.kill();
+        needParseUrlList.clear();
+        update([BookHomeRefreshKey.networkParse]);
+      },
+    ));
   }
 }

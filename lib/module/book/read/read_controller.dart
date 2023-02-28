@@ -667,6 +667,24 @@ class ReadController extends GetxController {
       }
     });
   }
+
+  void changeAutoBrightness() async {
+    BookHomeController home = Get.find();
+    home.autoBrightness = !home.autoBrightness;
+    if (home.autoBrightness) {
+      if (Platform.isAndroid) {
+        await WoshilllFlutterPlugin.setBrightnessDefault();
+      } else{
+        await WoshilllFlutterPlugin.setBrightness(home.defaultBrightness);
+      }
+      brightness = await WoshilllFlutterPlugin.getBrightness();
+    }
+    update(["brightness"]);
+  }
+
+  void initBrightness() async{
+    brightness = await WoshilllFlutterPlugin.getBrightness();
+  }
 }
 
 

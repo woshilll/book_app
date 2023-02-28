@@ -17,6 +17,7 @@ class Book extends Base{
   int? type;
   List<Chapter>? chapters;
   String? updateTime;
+  String? curTotal;
 
   Book({this.id, this.name, this.description, this.author, this.indexImg,
     this.curChapter, this.curPage, this.url, this.type = 1, this.chapters, this.updateTime});

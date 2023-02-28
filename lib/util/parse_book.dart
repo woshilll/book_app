@@ -11,45 +11,6 @@ import 'package:get/get.dart';
 
 import 'html_parse_util.dart';
 
-/// 小说解析
-parseBook(String? bookName, String bookUrl) async {
-  BookDbProvider _bookDbProvider = BookDbProvider();
-  ChapterDbProvider _chapterDbProvider = ChapterDbProvider();
-  try {
-    dynamic count = await _bookDbProvider.getBookCount(bookUrl);
-    if (count > 0) {
-      Toast.toast(toast: "小说已存在书架");
-      return;
-    }
-    Toast.toastL(toast: "解析中...");
-    String? img;
-    var results = (await HtmlParseUtil.parseChapter(bookUrl, img: (imgUrl) {
-      img = imgUrl;
-    },
-    name: (_bookName) {
-      bookName = bookName ?? _bookName;
-    }));
-    bookUrl = results[0];
-    var chapters = results[1];
-    final Book book = Book(url: bookUrl, name: bookName, indexImg: img);
-    var day = DateTime.now();
-    book.updateTime = "${day.year}-${day.month}-${day.day}";
-    var bookId = await _bookDbProvider.commonInsert(book);
-    for (var e in chapters) {
-      e.bookId = bookId;
-    }
-    await _chapterDbProvider.commonBatchInsert(chapters);
-    Toast.cancel();
-    Toast.toast(toast: "解析完成, 共 ${chapters.length} 章节");
-    BookHomeController homeController = Get.find();
-    homeController.getBookList();
-  } catch (err) {
-    Log.e(err);
-    Toast.cancel();
-    Toast.toast(toast: "解析失败");
-  }
-}
-
 parseBookByShare(String bookName, String content) async{
   Get.dialog(
       DialogBuild(

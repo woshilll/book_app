@@ -3,11 +3,9 @@ import 'dart:io';
 import 'package:book_app/module/book/home/book_home_controller.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/bottom_bar_build.dart';
-import 'package:book_app/util/constant.dart';
 import 'package:book_app/util/dialog_build.dart';
 import 'package:book_app/util/future_do.dart';
 import 'package:book_app/util/no_shadow_scroll_behavior.dart';
-import 'package:book_app/util/save_util.dart';
 import 'package:book_app/util/system_utils.dart';
 import 'package:book_app/util/toast.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -51,7 +49,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
             }
           },
         ),
-        Flexible(
+        Expanded(
           child: GetBuilder<BookHomeController>(
             id: 'bookList',
             builder: (controller) {
@@ -84,7 +82,38 @@ class BookHomeScreen extends GetView<BookHomeController> {
               );
             },
           ),
-        )
+        ),
+        GetBuilder<BookHomeController>(
+          id: BookHomeRefreshKey.networkParse,
+          builder: (controller) {
+            if (controller.needParseUrlList.isNotEmpty) {
+              return GestureDetector(
+                child: Container(
+                  margin: const EdgeInsets.only(left: 15, right: 15),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text("${controller.needParseUrlList.first["name"] ?? "网络小说"}解析",
+                          style: TextStyle(color: textColor()),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 5,),
+                      Text(controller.needParseUrlList.first["page"] == null ? "点击取消" : "第${controller.needParseUrlList.first["page"]}页", style: TextStyle(color: textColor()),),
+                    ],
+                  ),
+                ),
+                onTap: () {
+                  controller.killParse();
+                },
+                behavior: HitTestBehavior.opaque,
+              );
+            }
+            return const SizedBox();
+          },
+        ),
+        const SizedBox(height: 16,),
       ],
     );
   }
@@ -295,7 +324,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
                       Container(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          "大小 : ${getFileSize(e.url)}",
+                          "已读 : ${e.curTotal}",
                           style: TextStyle(color: textColor()),
                         ),
                       ),
@@ -378,6 +407,31 @@ class BookHomeScreen extends GetView<BookHomeController> {
     Get.bottomSheet(BottomBarBuild(
       "选项",
       [
+        BottomBarBuildItem(
+          "如何使用?",
+              () async{
+            Get.back();
+            Get.dialog(DialogBuild(
+                "如何使用?",
+                Text.rich(
+                  TextSpan(children: const [
+                    TextSpan(
+                        text: "1. 本地导入，选择对应的txt文件即可导入，文件中需包含第x章，否则可能无法导入成功\n\n",
+                    ),
+                    TextSpan(
+                      text: "2. 链接导入，通过复制链接再返回到APP中即可解析链接。注：最好解析笔趣阁等网站",
+                    ),
+                  ],
+                      style: TextStyle(color: textColor())
+                  ),
+                ), confirmFunction: () async {
+              Get.back();
+            }));
+          },
+          longFunction: () {
+            Get.back();
+          },
+        ),
         BottomBarBuildItem(
           "本地导入",
               () async{

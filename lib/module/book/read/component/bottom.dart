@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:book_app/log/log.dart';
+import 'package:book_app/module/book/home/book_home_controller.dart';
 import 'package:book_app/module/book/read/read_controller.dart';
 import 'package:book_app/theme/color.dart';
 import 'package:book_app/util/bottom_bar_build.dart';
@@ -373,25 +374,18 @@ _cache() {
           titleWidget: GetBuilder<ReadController>(
             id: "downloading",
             builder: (controller) {
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "$_downloadLength / $_length",
-                    style: const TextStyle(fontSize: 14, color: Colors.white),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(left: 10),
-                    child: GestureDetector(
-                      child: const Icon(Icons.close, color: Colors.white, size: 20,),
-                      onTap: () {
-                        controller.bookWithChapters!.interrupt();
-                        controller.bookWithChapters = null;
-                        Get.back();
-                      },
-                    ),
-                  )
-                ],
+              return GestureDetector(
+                child: Text(
+                  "$_downloadLength / $_length",
+                  style: TextStyle(fontSize: 14, color: textColor()),
+                ),
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  controller.bookWithChapters!.interrupt();
+                  controller.bookWithChapters = null;
+                  Get.back();
+                  Toast.toast(toast: "已取消");
+                },
               );
             },
           )),
@@ -493,6 +487,10 @@ Widget _bottomType(ReadController controller) {
                       max: 1,
                       value: controller.brightness,
                       onChanged: (value) async {
+                        BookHomeController home = Get.find();
+                        if (home.autoBrightness) {
+                          return;
+                        }
                         await controller.setBrightness(value);
                       },
                       onChangeStart: (value) {},
@@ -512,6 +510,42 @@ Widget _bottomType(ReadController controller) {
                   ),
                 ),
               ),
+            ),
+            GestureDetector(
+              child: Container(
+                alignment: Alignment.center,
+                margin: const EdgeInsets.only(right: 15),
+                child: GetBuilder<ReadController>(
+                  id: "brightness",
+                  builder: (controller) {
+                    BookHomeController home = Get.find();
+                    if (home.autoBrightness) {
+                      return Container(
+                        padding: const EdgeInsets.all(4),
+                        alignment: Alignment.center,
+                        child:
+                        const Text("Auto", style: TextStyle(fontSize: 14, color: Colors.blue)),
+                        decoration: BoxDecoration(
+                            borderRadius: const BorderRadius.all(Radius.circular(8)),
+                            border: Border.all(color: Colors.blue)),
+                      );
+                    }
+                    return Container(
+                      padding: const EdgeInsets.all(4),
+                      alignment: Alignment.center,
+                      child:
+                      const Text("Auto", style: TextStyle(fontSize: 14, color: Colors.white)),
+                      decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
+                          border: Border.all(color: Colors.white)),
+                    );
+                  },
+                ),
+              ),
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                  controller.changeAutoBrightness();
+              },
             ),
           ],
         ),

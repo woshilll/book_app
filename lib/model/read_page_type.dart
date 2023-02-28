@@ -19,7 +19,9 @@ enum ReadPageType {
   /// 滑动翻页
   slide,
   /// 上下滑动
-  slideUpDown
+  slideUpDown,
+  /// 上下平滑
+  // list,
 }
 ReadPageType getReadPageTypeByStr(String? str) {
   switch(str) {

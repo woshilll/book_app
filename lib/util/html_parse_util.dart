@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:book_app/model/chapter/chapter.dart';
+import 'package:book_app/model/message.dart';
 import 'package:book_app/util/content_fliter.dart';
 import 'package:book_app/util/random_user_agent.dart';
 import 'package:html/parser.dart';
@@ -11,10 +12,10 @@ import 'package:book_app/log/log.dart';
 import 'package:fast_gbk/fast_gbk.dart';
 final RegExp chinese = RegExp(r"[\u4E00-\u9FA5]");
 final RegExp contentFilter = contentFilterRegExp();
-final RegExp nextPageReg = RegExp("下(.{1})页");
+final RegExp nextPageReg = RegExp(r"下[1一]?页");
 class HtmlParseUtil {
   static final List<String> ignoreContentHtmlTag = ["a", "option", "h1", "h2", "strong", "font", "button", "script"];
-  static Future<List<dynamic>> parseChapter(String url, {Function(String? url)? img, Function(String name)? name, String? originUrl}) async{
+  static Future<List<dynamic>> parseChapter(String url, {Function(String? url)? img, Function(String name)? name, Function(int page)? pageFunc, String? originUrl, int page = 1}) async{
     Document document = parse(await getFileString(url));
     var body = document.body;
     if (img != null) {
@@ -95,8 +96,11 @@ class HtmlParseUtil {
         // nextPageUrl = url.substring(0, url.lastIndexOf("/")) + nextPageUrl.substring(nextPageUrl.lastIndexOf('/'));
         nextPageUrl = _getNextPageUrl(url, nextPageUrl);
         originUrl ??= url;
+        if (pageFunc != null) {
+          pageFunc(page);
+        }
         await Future.delayed(const Duration(milliseconds: 1500));
-        var nextPageData = await parseChapter(nextPageUrl, originUrl: originUrl);
+        var nextPageData = await parseChapter(nextPageUrl, originUrl: originUrl, page: page + 1, pageFunc: pageFunc);
         chapters.addAll(nextPageData[1]);
         break;
       }
@@ -167,7 +171,14 @@ class HtmlParseUtil {
       }
     }
     List<Chapter> returnChapters = [];
+    RegExp chapterMatch = RegExp(r"^第.*章|^\d+$");
     for (var element in chapters) {
+      var name = element["name"] as String;
+      if (name.contains(RegExp("(正序)|(倒序)|(首页)|(尾页)|(上一页)|(下一页)"))) {
+        if (!chapterMatch.hasMatch(name)) {
+          continue;
+        }
+      }
       returnChapters.add(Chapter(name: element["name"].trim(), url: url + element["url"]));
     }
     return returnChapters;
@@ -187,6 +198,9 @@ class HtmlParseUtil {
       }
       // 有没有下一页
       String content = contentElement.innerHtml;
+      if (!content.contains("<br>")) {
+        content = contentElement.parent!.innerHtml;
+      }
       // 最多应该有10页
       for (var a in body.getElementsByTagName("a")) {
         if (maxPage >= 10) {
@@ -245,7 +259,7 @@ class HtmlParseUtil {
     Element? returnElement;
     int max = 0;
     for (var element in elements) {
-      var content = element.innerHtml;
+      var content = element.innerHtml.replaceAll(RegExp(r"<a+.*?>([\s\S]*?)</a>"), "");
       var allMatch = chinese.allMatches(content);
       if (allMatch.length > max) {
         returnElement = element;
@@ -258,14 +272,20 @@ class HtmlParseUtil {
 
   static getFileString(String url) async{
     Log.i("发起请求 --- $url");
-    return await getString(url);
+    var res = await getString(url);
+    return res;
   }
   static Future<String?> getString(String url, {bool retry = false, int retryTimes = 0}) async{
-    var client = retry ? HttpClient() : HttpManager.httpClient!;
+    // var client = retry ? HttpClient() : HttpManager.httpClient!;
+    var client = HttpClient();
+    client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+      return true;
+    };
     try {
       var request = await client.getUrl(Uri.parse(url)).timeout(const Duration(seconds: 10));
       request.headers.remove("User-Agent", "Dart/2.16 (dart:io)");
       request.headers.add("Accept", "text/html;charset=UTF-8");
+      request.headers.add("content-type", "text/html; charset=utf-8");
       request.headers.add("User-Agent", randomUserAgent());
       var response = await request.close().timeout(const Duration(seconds: 10));
       List<List<int>> dataBytes = await response.toList();
@@ -342,13 +362,16 @@ class HtmlParseUtil {
 }
 
 String _trim(String text) {
-  return text.replaceAll("&nbsp;", "").replaceAll(" ", "");
+  return text
+      .replaceAll("&nbsp;", "")
+      .replaceAll("&gt;", "")
+      .replaceAll(" ", "");
 }
 String _beautyBrAndP(String text) {
-  return text.replaceAll("<br>", "\n")
-      .replaceAll(RegExp(r"<p.*>"), "").replaceAll("</p>", "")
-    .replaceAll(RegExp(r"<div.*>"), "")
-    .replaceAll("</div>", "")
+  return text.replaceAll(RegExp(r"<p[^>]*>"), "")
+      .replaceAll("</p>", "<br>").replaceAll(RegExp(r"<div[^>]*>"), "")
+    .replaceAll(RegExp(r"<span[^>]*>"), "").replaceAll("</div>", "")
+    .replaceAll("</span>", "<br>").replaceAll("<br>", "\n")
   ;
 }
 String _beautyScript(String text) {
@@ -367,7 +390,8 @@ String _beautifulFormat(String str) {
     if (element.isEmpty) {
       continue;
     }
-    if (chinese.allMatches(element).isEmpty) {
+    var match = chinese.allMatches(element);
+    if (match.isEmpty || match.length <= 1) {
       continue;
     }
     if (element.contains(contentFilter)) {

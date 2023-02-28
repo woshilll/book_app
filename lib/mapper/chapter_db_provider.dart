@@ -75,6 +75,15 @@ class ChapterDbProvider extends BaseDbProvider {
     return Sqflite.firstIntValue(await db.rawQuery("select count(*) from $name where $columnBookId = ?", [bookId]));
   }
 
+  /// 获取当前章节位置
+  Future<int?> getCurChapterCount(bookId, chapterId) async {
+    if (chapterId == null) {
+      return 0;
+    }
+    Database db = await getDataBase();
+    return Sqflite.firstIntValue(await db.rawQuery("select count(*) from $name where $columnBookId = ? and $columnId <= ?", [bookId, chapterId]));
+  }
+
   Future<void> updateContent(id, content) async{
     Database db = await getDataBase();
     await db.rawUpdate(
