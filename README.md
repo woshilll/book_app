@@ -1,5 +1,9 @@
 # 小说阅读
 
+## 废了。。。
+
+更新后无法上架IOS了。。。给我说4.3，后来我回复邮件也不行，懒得搞了。有想体验可以下载个testflight，加入这个[测试链接](https://testflight.apple.com/join/ubhOVPdq)就好了
+
 ## 功能
 
 - 本地小说解析

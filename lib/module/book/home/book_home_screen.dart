@@ -419,7 +419,7 @@ class BookHomeScreen extends GetView<BookHomeController> {
                         text: "1. 本地导入，选择对应的txt文件即可导入，文件中需包含第x章，否则可能无法导入成功\n\n",
                     ),
                     TextSpan(
-                      text: "2. 链接导入，通过复制链接再返回到APP中即可解析链接。注：最好解析笔趣阁等网站",
+                      text: "2. 链接导入，通过复制链接再返回到APP中即可解析链接。",
                     ),
                   ],
                       style: TextStyle(color: textColor())
